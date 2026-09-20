@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus PassPro • Advisor & HOD Clearance Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between p-4 md:p-8">
+
+  <!-- Ambient Glows -->
+  <div class="fixed -top-40 -left-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+  <div class="fixed -bottom-40 -right-40 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+
+  <div class="max-w-6xl w-full mx-auto space-y-6 relative z-10">
+
+    <!-- Header Section -->
+    <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 backdrop-blur-xl shadow-2xl flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-500 to-indigo-400 p-0.5 shadow-[0_0_20px_rgba(168,85,247,0.3)] flex items-center justify-center">
+          <div class="w-full h-full bg-slate-900 rounded-[14px] flex items-center justify-center text-purple-400">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 14l9-5-9-5-9 5 9 5z"></path><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path></svg>
+          </div>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-white tracking-wide">Campus PassPro • Class Advisor & HOD Portal</h1>
+          <p class="text-xs text-purple-400 font-mono">Tier-2 & Tier-3 Academic Governance</p>
+        </div>
+      </div>
+
+      <!-- Mode Selector -->
+      <div class="flex items-center gap-3">
+        <select id="roleSelect" onchange="loadPasses()" class="bg-slate-950 border border-purple-500/40 text-xs text-purple-300 font-bold rounded-xl px-4 py-2.5 focus:outline-none">
+          <option value="advisor">Role: Class Advisor</option>
+          <option value="hod">Role: Head of Department (HOD)</option>
+        </select>
+        <button onclick="loadPasses()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs text-slate-300 font-mono transition flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+          <span>Refresh</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Active Requests Queue -->
+    <div class="bg-slate-900/90 border border-slate-800 rounded-3xl backdrop-blur-xl shadow-2xl overflow-hidden">
+      <div class="p-5 border-b border-slate-800">
+        <h2 id="queueTitle" class="text-sm font-bold text-white">Pending Requests for Class Advisor Review</h2>
+        <p id="queueSubtitle" class="text-xs text-slate-400 mt-0.5">Students pre-verified by counselors with parent call confirmation</p>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-950/70 text-slate-400 uppercase tracking-wider font-mono border-b border-slate-800">
+            <tr>
+              <th class="px-5 py-3.5">Roll No</th>
+              <th class="px-5 py-3.5">Student Name</th>
+              <th class="px-5 py-3.5">Class / Batch</th>
+              <th class="px-5 py-3.5">Reason</th>
+              <th class="px-5 py-3.5">Counselor Audit</th>
+              <th class="px-5 py-3.5 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody id="advisorTableBody" class="divide-y divide-slate-800/60">
+            <tr>
+              <td colspan="6" class="text-center py-8 text-slate-500 font-mono">Loading pending passes...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="text-center text-[11px] text-slate-600 py-6 relative z-10">
+    <p>Campus PassPro Institutional Engine • Developed by <span class="text-emerald-400 font-semibold">Surya</span></p>
+  </footer>
+
+  <script>
+    window.addEventListener('load', () => {
+      loadPasses();
+    });
+
+    async function loadPasses() {
+      const role = document.getElementById('roleSelect').value;
+      const status = role === 'advisor' ? 'Pending Advisor' : 'Pending HOD';
+      const title = document.getElementById('queueTitle');
+      const subtitle = document.getElementById('queueSubtitle');
+      const tbody = document.getElementById('advisorTableBody');
+
+      if (role === 'advisor') {
+        title.innerText = 'Pending Requests for Class Advisor Review';
+        subtitle.innerText = 'Students pre-verified by counselors with parent call confirmation';
+      } else {
+        title.innerText = 'Pending Requests for HOD Authorization';
+        subtitle.innerText = 'Requests reviewed & forwarded by Class Advisors awaiting final departmental sign-off';
+      }
+
+      try {
+        const res = await fetch(`/api/passes?status=${encodeURIComponent(status)}`);
+        const passes = await res.json();
+
+        if (!passes || passes.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-500">No applications currently pending for this stage.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = passes.map(p => `
+          <tr class="hover:bg-slate-800/40 transition">
+            <td class="px-5 py-4 font-mono font-bold text-emerald-400">${p.rollNo}</td>
+            <td class="px-5 py-4 font-semibold text-white">
+              <div>${p.name}</div>
+              <div class="text-[11px] text-slate-400 font-normal">Father: <span class="text-slate-200 font-semibold">${p.fatherName || p.parentName || '-'}</span> | Parent: <span class="font-mono">${p.parentContact || '-'}</span></div>
+            </td>
+            <td class="px-5 py-4 text-slate-300 font-mono">${p.dept || 'CSE'} ${p.year || 'III'}-${p.sec || 'A'} (${p.batch || '-'})</td>
+            <td class="px-5 py-4 text-slate-300 max-w-xs">
+              ${((/hoste?l|^h$/i.test(p.accommodation || '') && !/day/i.test(p.accommodation || ''))) ? `
+                <div class="mb-1.5 p-2 rounded bg-amber-950/40 border border-amber-500/30 text-[11px] text-amber-200">
+                  <div><b>Departure:</b> ${p.departureDate || '-'} ${p.departureTime ? 'at ' + p.departureTime : ''}</div>
+                  <div><b>Expected Return:</b> ${p.expectedReturnDate ? p.expectedReturnDate + (p.expectedReturnTime ? ' at ' + p.expectedReturnTime : '') : (p.expectedReturnDateTime || '-')}</div>
+                </div>
+              ` : `
+                <div class="mb-1.5 p-2 rounded bg-indigo-950/40 border border-indigo-500/30 text-[11px] text-indigo-200">
+                  <div><b>Date:</b> ${p.leaveDate || p.departureDate || (p.appliedTime ? p.appliedTime.split(' ')[0] : '-')}</div>
+                  <div><b>Time:</b> ${p.leaveTime || p.departureTime || '-'}</div>
+                </div>
+              `}
+              <div>${p.reason}</div>
+            </td>
+            <td class="px-5 py-4">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                <span>${p.counselorApproval?.counselorName || 'Counselor'} (Called Parent)</span>
+              </span>
+            </td>
+            <td class="px-5 py-4 text-right">
+              <button 
+                onclick="processApproval('${p._id}', '${role}')"
+                class="px-4 py-2 ${role === 'advisor' ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-purple-600 hover:bg-purple-500'} text-white font-bold rounded-xl text-xs shadow transition active:scale-95 whitespace-nowrap inline-flex items-center gap-1.5"
+              >
+                <span>${role === 'advisor' ? 'Approve to HOD' : 'Authorize to Principal'}</span>
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-rose-400">Error loading passes.</td></tr>`;
+      }
+    }
+
+    async function processApproval(passId, role) {
+      const endpoint = role === 'advisor' ? '/api/approve/advisor' : '/api/approve/hod';
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ passId })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert(data.message);
+          loadPasses();
+        } else {
+          alert(data.message || 'Error processing approval');
+        }
+      } catch (err) {
+        alert('Server communication error.');
+      }
+    }
+
+    setInterval(loadPasses, 6000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "name": "gate-pass-app",
+  "version": "1.0.0",
+  "description": "College Gate Pass Verification System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "clear:passes": "node scripts/clearPasses.js",
+    "clear:db": "node scripts/clearDatabase.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mongoose": "^8.3.2",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^10.0.10",
+    "xlsx": "^0.18.5"
+  }
+}

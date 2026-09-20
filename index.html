@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus PassPro • GRT Institute of Engineering and Technology</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://unpkg.com/@zxing/library@latest"></script>
+
+  <!-- External Design System Stylesheet -->
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body class="text-slate-800 min-h-screen flex flex-col justify-between p-3 md:p-6 relative">
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toastContainer"></div>
+
+  <!-- SPLASH SCREEN -->
+  <div id="splashScreen"
+    class="fixed inset-0 z-50 bg-cover bg-center flex flex-col items-center justify-center text-white transition-all duration-700 p-4"
+    style="background-image: url('https://grt.edu.in/wp-content/uploads/2026/06/1-slide.jpg');">
+    <div class="absolute inset-0 bg-slate-950/75 backdrop-blur-xs"></div>
+    <div class="relative z-10 flex flex-col items-center text-center max-w-xl mx-auto space-y-4">
+      <div class="bg-white p-3 rounded-2xl shadow-2xl border-2 border-amber-400">
+        <img
+          src="/public/grt-logo.png"
+          alt="GRT Logo" class="w-24 h-24 object-contain">
+      </div>
+      <span class="px-3.5 py-1 bg-red-700 text-white rounded-full text-xs font-bold tracking-widest uppercase shadow-md">
+        Autonomous Institution
+      </span>
+      <h1 class="text-2xl md:text-3xl font-black uppercase tracking-wider text-amber-400 leading-snug drop-shadow-md">
+        GRT Institute of Engineering and Technology
+      </h1>
+      <p class="text-xs md:text-sm font-semibold text-slate-200 uppercase tracking-widest drop-shadow">
+        Campus PassPro Institutional Outpass & Governance System
+      </p>
+    </div>
+  </div>
+
+  <script>
+    setTimeout(function () {
+      const splash = document.getElementById('splashScreen');
+      if (splash) {
+        splash.style.opacity = '0';
+        setTimeout(() => splash.remove(), 600);
+      }
+    }, 1500);
+  </script>
+
+  <!-- OFFICIAL HEADER -->
+  <header class="max-w-7xl w-full mx-auto glass-panel p-4 sm:p-5 rounded-3xl border border-white/60 shadow-md mb-6">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-4 text-center md:text-left">
+        <img src="/public/grt-logo.png" alt="GRTIET Official Emblem" class="w-16 h-16 object-contain drop-shadow-sm">
+        <div>
+          <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug uppercase">
+            GRT Institute of Engineering and Technology
+          </h1>
+          <p class="text-xs sm:text-sm font-bold text-red-700 tracking-wide uppercase">
+            Tiruttani • (An Autonomous Institution)
+          </p>
+          <p class="text-xs font-semibold text-slate-600 mt-0.5">
+            Campus PassPro • Institutional Outpass Clearance & Governance Engine
+          </p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-center gap-2">
+        <span class="px-3 py-1 bg-amber-50 border border-amber-300 text-amber-900 rounded-lg text-xs font-extrabold tracking-wide">
+          NAAC A++ ACCREDITED
+        </span>
+        <span class="px-3 py-1 bg-blue-50 border border-blue-300 text-blue-900 rounded-lg text-xs font-extrabold tracking-wide">
+          AICTE APPROVED
+        </span>
+        <span class="px-3 py-1 bg-indigo-50 border border-indigo-300 text-indigo-900 rounded-lg text-xs font-extrabold tracking-wide">
+          ANNA UNIVERSITY AFFILIATED
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- SCREEN 1: SINGLE COMMON LOGIN PORTAL -->
+  <main id="singleLoginPortalScreen"
+    class="max-w-xl w-full mx-auto my-auto py-8 px-4 sm:px-6 z-10">
+    <div class="glass-panel p-6 sm:p-10 rounded-3xl border border-white/70 shadow-2xl relative overflow-hidden space-y-6">
+      <!-- Decorative ambient glows -->
+      <div class="absolute -top-24 -right-24 w-48 h-48 bg-red-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      <!-- Header / Portal Identity -->
+      <div class="text-center space-y-2 relative z-10">
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-red-700 via-rose-700 to-amber-600 p-0.5 shadow-md flex items-center justify-center">
+          <div class="w-full h-full bg-white rounded-[14px] flex items-center justify-center text-red-800">
+            <svg class="w-7 h-7 fill-current" viewBox="0 0 24 24"><path d="M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3zm0 2.84L18 11.24V18h-2v-6H8v6H6v-6.76L12 5.84z"/></svg>
+          </div>
+        </div>
+        <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Institutional Login</h2>
+        <p class="text-sm text-slate-600 font-medium">
+          Campus PassPro • Unified Outpass & Governance Portal
+        </p>
+        <div class="pt-1 flex flex-wrap items-center justify-center gap-2">
+          <span class="px-2.5 py-0.5 bg-slate-100 border border-slate-200 text-slate-700 rounded-md text-xs font-bold">Students</span>
+          <span class="text-slate-300">•</span>
+          <span class="px-2.5 py-0.5 bg-slate-100 border border-slate-200 text-slate-700 rounded-md text-xs font-bold">Counselors</span>
+          <span class="text-slate-300">•</span>
+          <span class="px-2.5 py-0.5 bg-slate-100 border border-slate-200 text-slate-700 rounded-md text-xs font-bold">Advisors</span>
+          <span class="text-slate-300">•</span>
+          <span class="px-2.5 py-0.5 bg-slate-100 border border-slate-200 text-slate-700 rounded-md text-xs font-bold">HODs</span>
+          <span class="text-slate-300">•</span>
+          <span class="px-2.5 py-0.5 bg-slate-100 border border-slate-200 text-slate-700 rounded-md text-xs font-bold">Principal</span>
+          <span class="text-slate-300">•</span>
+          <span class="px-2.5 py-0.5 bg-slate-100 border border-slate-200 text-slate-700 rounded-md text-xs font-bold">Wardens</span>
+        </div>
+      </div>
+
+      <!-- Error Alert Box -->
+      <div id="loginErrorAlert"
+        class="hidden p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl text-xs sm:text-sm font-semibold leading-relaxed text-center">
+      </div>
+
+      <!-- Single Common Login Form -->
+      <form id="commonLoginForm" autocomplete="off" onsubmit="event.preventDefault(); handleCommonLogin(event);" class="space-y-4 relative z-10">
+        <div>
+          <label for="commonLoginId" class="block text-sm font-bold text-slate-800 tracking-wide mb-1.5 flex items-center justify-between">
+            <span>Login ID / Register Number</span>
+            <span class="text-xs text-slate-500 font-normal">Roll No or Staff ID</span>
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
+            </div>
+            <input
+              type="text"
+              id="commonLoginId"
+              required
+              placeholder="Enter Roll Number or Staff ID"
+              autocomplete="off"
+              value=""
+              class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-300 rounded-2xl text-sm font-semibold text-slate-900 focus:outline-none focus:border-red-600 focus:bg-white focus:ring-2 focus:ring-red-600/20 transition shadow-2xs font-mono"
+            >
+          </div>
+        </div>
+
+        <div>
+          <label for="commonPassword" class="block text-sm font-bold text-slate-800 tracking-wide mb-1.5 flex items-center justify-between">
+            <span>Password</span>
+            <span class="text-xs text-slate-500 font-normal">Enter Account Password</span>
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
+            </div>
+            <input
+              type="password"
+              id="commonPassword"
+              required
+              placeholder="Enter Password"
+              autocomplete="new-password"
+              value=""
+              class="w-full pl-11 pr-12 py-3.5 bg-slate-50 border border-slate-300 rounded-2xl text-sm font-semibold text-slate-900 focus:outline-none focus:border-red-600 focus:bg-white focus:ring-2 focus:ring-red-600/20 transition shadow-2xs"
+            >
+            <button
+              type="button"
+              onclick="togglePasswordVisibility('commonPassword', 'passwordEyeIcon')"
+              class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-700 transition"
+              title="Toggle password visibility"
+            >
+              <span id="passwordEyeIcon">
+                <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/></svg>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          id="commonLoginBtn"
+          class="w-full py-3.5 bg-red-700 hover:bg-red-800 text-white font-bold rounded-2xl text-sm shadow-md transition-all active:scale-[0.99] flex items-center justify-center gap-2 mt-2"
+        >
+          <span>Sign In to Dashboard</span>
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+        </button>
+      </form>
+
+      <!-- Institutional Helper Links -->
+      <div class="pt-4 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-slate-500 font-medium">
+        <a href="/admin.html" class="font-bold text-red-700 hover:text-red-900 flex items-center gap-1.5 transition">
+          <span>Administrator Control Portal</span>
+          <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+        </a>
+        <a href="/security" class="hover:text-slate-900 font-semibold flex items-center gap-1.5 transition">
+          <span>Gate Security Scanner</span>
+          <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <!-- SCREEN 3: WORKING DASHBOARD -->
+  <div id="dashScreen" class="hidden max-w-7xl w-full mx-auto my-auto space-y-6 z-10">
+    <div class="glass-panel rounded-3xl p-6 shadow-sm flex flex-wrap items-center justify-between gap-4">
+      <div class="space-y-1">
+        <h3 id="dashGreeting" class="text-lg md:text-xl font-bold text-slate-900 tracking-tight">Welcome</h3>
+        <p id="dashRoleSubtitle" class="text-xs font-bold text-red-800 tracking-wide uppercase font-mono"></p>
+      </div>
+
+      <div class="flex items-center flex-wrap gap-2.5">
+        <button id="topBulkPdfBtn" onclick="downloadMasterPDF()"
+          class="hidden px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs md:text-sm font-bold shadow-xs transition-all flex items-center gap-2 active:scale-95">
+          <span>Master Audit (PDF)</span>
+        </button>
+        <button id="topBulkLettersBtn" onclick="downloadAllCompleteLettersPDF()"
+          class="hidden px-4 py-2.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded-xl text-xs md:text-sm font-bold shadow-xs transition-all flex items-center gap-2 active:scale-95">
+          <span>Download All Letters (PDF)</span>
+        </button>
+        <button id="clearAllDataBtn" onclick="confirmAndClearAllData()"
+          class="hidden px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/80 rounded-xl text-xs md:text-sm font-bold shadow-2xs transition-all flex items-center gap-2 active:scale-95"
+          title="Clear all leave applications and gate passes from database">
+          <span>Clear All Passes</span>
+        </button>
+        <button onclick="logout()"
+          class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 hover:text-slate-900 border border-slate-200 rounded-xl text-xs md:text-sm font-bold text-slate-700 shadow-2xs transition-all active:scale-95">
+          Exit Dashboard
+        </button>
+      </div>
+    </div>
+
+    <!-- ROLE DASHBOARD CONTENT (Unified 4-Section Architecture & KPI Bar) -->
+    <div id="roleDashboardContent"></div>
+
+    <!-- STUDENT VIEW -->
+    <div id="studentPersonalView" class="hidden glass-panel rounded-3xl p-6 md:p-8 shadow-sm space-y-4">
+      <!-- DYNAMIC FULLY-APPROVED OFFICIAL GATE PASS LETTER DISPLAY (HIDDEN UNTIL ALL APPROVALS COMPLETE) -->
+      <div id="studentApprovedPassCardContainer" class="space-y-4"></div>
+
+      <div class="flex items-center justify-between border-b border-slate-200/80 pb-3">
+        <div>
+          <h4 class="font-bold text-slate-900 text-base">Your Leave Applications & Live Sign-Off Status</h4>
+          <p class="text-xs text-slate-500 mt-0.5">Real-time status tracking across institutional clearance tiers.</p>
+        </div>
+        <button onclick="loadStudentPersonalStatus()"
+          class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-bold text-slate-700 transition flex items-center gap-1.5 active:scale-95">
+          <span>Refresh</span>
+        </button>
+      </div>
+      <div class="overflow-x-auto rounded-2xl border border-slate-200">
+        <table class="enterprise-table min-w-[750px]">
+          <thead>
+            <tr>
+              <th>Applied Timestamp (IST)</th>
+              <th>Standing & Reason</th>
+              <th>Institutional Clearances</th>
+              <th>Gate Pass Validity</th>
+              <th>Campus Exit</th>
+              <th class="text-right">Official Downloads</th>
+            </tr>
+          </thead>
+          <tbody id="studentPersonalBody">
+            <tr>
+              <td colspan="6" class="p-8 text-center text-slate-500 font-medium">Loading your passes...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- STUDENT ON-DUTY VIEW -->
+    <div id="studentOnDutyHistoryView" class="hidden glass-panel rounded-3xl p-6 md:p-8 shadow-sm space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200/80 pb-3">
+        <div>
+          <h4 class="font-bold text-slate-900 text-base">Your On-Duty Requests & Live Academic Approval Track</h4>
+          <p class="text-xs text-slate-500 mt-0.5">Academic hierarchy clearance: Counsellor &rarr; Class Advisor &rarr; HOD &rarr; Completed</p>
+        </div>
+        <button onclick="loadStudentOnDutyStatus()"
+          class="px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 rounded-xl text-xs font-bold text-indigo-700 transition flex items-center gap-1.5 active:scale-95">
+          <span>Refresh OD</span>
+        </button>
+      </div>
+      <div class="overflow-x-auto rounded-2xl border border-slate-200">
+        <table class="enterprise-table min-w-[750px]">
+          <thead>
+            <tr>
+              <th>Applied Date (IST)</th>
+              <th>Timing / Schedule</th>
+              <th>OD Purpose & Reason</th>
+              <th>3-Tier Approval Workflow</th>
+              <th>Status</th>
+              <th class="text-right">Action / Letter</th>
+            </tr>
+          </thead>
+          <tbody id="studentOnDutyBody">
+            <tr>
+              <td colspan="6" class="p-8 text-center text-slate-500 font-medium">Loading your On-Duty requests...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORMAL LETTER MODAL (OFFICIAL INSTITUTIONAL LETTERHEAD) -->
+  <div id="letterModal"
+    class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4">
+    <div
+      class="bg-white rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-2xl border border-slate-100 space-y-5 max-h-[90vh] overflow-y-auto">
+      
+      <!-- LETTERHEAD HEADER -->
+      <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+        <div class="flex items-center gap-3">
+          <img src="/public/grt-logo.png"
+            alt="GRT" class="w-12 h-12 object-contain bg-white rounded-xl p-0.5 border border-slate-200">
+          <div>
+            <h3 class="text-sm font-bold text-slate-900 uppercase">GRT Institute of Engineering and Technology</h3>
+            <p id="letterModalSubtitle" class="text-xs font-semibold text-red-700 uppercase">Tiruttani • Formal Leave Requisition</p>
+          </div>
+        </div>
+        <button onclick="closeLetterModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition" aria-label="Close dialog"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+      </div>
+
+      <!-- DOCUMENT PREVIEW BODY -->
+      <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-inner">
+        <pre id="letterModalContent"
+          class="whitespace-pre-wrap font-mono text-xs md:text-sm text-slate-800 leading-relaxed"></pre>
+      </div>
+
+      <div class="flex flex-wrap justify-end gap-2.5 pt-2 border-t border-slate-100">
+        <button id="modalDownloadLetterBtn"
+          class="px-4 py-2.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded-xl text-xs md:text-sm font-bold shadow-xs transition active:scale-95 flex items-center gap-2">
+          <span>Download Official Letter (PDF)</span>
+        </button>
+        <button onclick="closeLetterModal()"
+          class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs md:text-sm font-bold shadow-xs transition active:scale-95">
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- REJECTION REASON MODAL -->
+  <div id="rejectModal"
+    class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4">
+    <div
+      class="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border border-slate-100 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+            <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+          </div>
+          <h3 id="rejectModalTitle" class="text-base font-bold text-slate-900">Reject Leave Application</h3>
+        </div>
+        <button onclick="closeRejectModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition" aria-label="Close dialog"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+      </div>
+      <p class="text-xs text-slate-600 leading-relaxed">Please select or type the official institutional reason for rejecting this requisition.</p>
+      
+      <!-- PRESET REASON CHIPS -->
+      <div id="presetChipsContainer" class="flex flex-wrap gap-1.5">
+        <button type="button" onclick="setRejectReason('Parent disclaimed permission during verification call')"
+          class="px-2.5 py-1 bg-slate-100 hover:bg-rose-50 hover:text-rose-700 rounded-lg text-xs font-semibold text-slate-700 transition">
+          Parent Disclaimed
+        </button>
+        <button type="button" onclick="setRejectReason('Inadequate academic attendance (<75%)')"
+          class="px-2.5 py-1 bg-slate-100 hover:bg-rose-50 hover:text-rose-700 rounded-lg text-xs font-semibold text-slate-700 transition">
+          Inadequate Attendance
+        </button>
+        <button type="button" onclick="setRejectReason('Scheduled internal examination / lab assessment')"
+          class="px-2.5 py-1 bg-slate-100 hover:bg-rose-50 hover:text-rose-700 rounded-lg text-xs font-semibold text-slate-700 transition">
+          Exam Scheduled
+        </button>
+        <button type="button" onclick="setRejectReason('Disciplinary hold by department authority')"
+          class="px-2.5 py-1 bg-slate-100 hover:bg-rose-50 hover:text-rose-700 rounded-lg text-xs font-semibold text-slate-700 transition">
+          Disciplinary Hold
+        </button>
+      </div>
+
+      <input type="hidden" id="rejectPassId" value="" />
+      <input type="hidden" id="rejectRoleLabel" value="" />
+      <input type="hidden" id="rejectIsOD" value="false" />
+      <div>
+        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Official Rejection Statement <span class="text-rose-600">*</span></label>
+        <textarea id="rejectReasonInput" rows="3"
+          placeholder="State reason clearly..."
+          class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs md:text-sm focus:outline-none focus:border-rose-500 focus:bg-white transition text-slate-800"></textarea>
+      </div>
+      <div class="flex justify-end gap-2.5 pt-2">
+        <button onclick="closeRejectModal()"
+          class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs md:text-sm font-semibold transition active:scale-95">Cancel</button>
+        <button onclick="submitRejectPass()"
+          class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs md:text-sm font-semibold shadow-xs transition active:scale-95">Confirm Rejection</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function setRejectReason(reason) {
+      const input = document.getElementById('rejectReasonInput');
+      if (input) input.value = reason;
+    }
+  </script>
+
+  <!-- FOOTER -->
+  <footer
+    class="max-w-7xl w-full mx-auto text-center pt-6 pb-2 border-t border-slate-800/40 text-xs font-semibold text-slate-400 space-y-1 z-10">
+    <div>GRT Institute of Engineering and Technology • Tiruttani - Chennai Highway, Tiruttani - 631 209</div>
+    <div class="text-slate-500">Autonomous Institution • Campus PassPro Governance Engine</div>
+  </footer>
+
+  <!-- Application Modular Components -->
+  <script src="/js/utils.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/services/pdfService.js"></script>
+  <script src="/js/modules/studentPortal.js"></script>
+  <script src="/js/modules/onDutyPortal.js"></script>
+  <script src="/js/modules/counselorQueue.js"></script>
+  <script src="/js/modules/advisorQueue.js"></script>
+  <script src="/js/modules/hodQueue.js"></script>
+  <script src="/js/modules/principalQueue.js"></script>
+  <script src="/js/modules/wardenQueue.js"></script>
+  <script src="/js/modules/auditLogs.js"></script>
+  <script src="/js/dashboard.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+
+</html>
