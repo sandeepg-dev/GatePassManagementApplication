@@ -1,0 +1,9 @@
+{
+  "name": "gate-pass-security-scanner",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Standalone Gate Pass Security Scanner for GRT IET",
+  "scripts": {
+    "build": "echo 'Static build ready'"
+  }
+}
