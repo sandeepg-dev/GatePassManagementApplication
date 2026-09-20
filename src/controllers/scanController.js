@@ -23,7 +23,7 @@ async function scanPass(req, res) {
     const now = new Date();
     const nowIST = getISTTimeString(now);
 
-    // 1. Fetch student pass records to verify accommodation
+    // 1. Fetch student pass records
     const studentPasses = await Pass.find({ rollNo: cleanRollNo }).sort({ createdAt: -1 });
 
     if (!studentPasses || studentPasses.length === 0) {
@@ -34,111 +34,159 @@ async function scanPass(req, res) {
       });
     }
 
-    // 2. ENFORCE REQUIREMENT: Only Hostellers can use the Exit/Return scanner
+    // 2. Identify Student Accommodation (Hosteller vs Day Scholar)
     const latestPass = studentPasses[0];
     const isHosteller = (/hoste?l|^h$/i.test(latestPass.accommodation || '') && !/day/i.test(latestPass.accommodation || ''));
+    const accommodation = isHosteller ? 'Hosteller' : 'Day Scholar';
 
-    if (!isHosteller) {
-      const studentName = latestPass.name || cleanRollNo;
-      return res.status(403).json({
-        success: false,
-        action: 'denied',
-        isHosteller: false,
-        message: `Access Denied: Exit & Return scanner is restricted to HOSTELLER students only. Student ${studentName} (${cleanRollNo}) is registered as Day Scholar.`
-      });
-    }
-
-    // 3. Find active passes for this hosteller
+    // 3. Find active passes in various states
     const exitedPass = studentPasses.find(p => p.status === 'Exited');
     const approvedPass = studentPasses.find(p => p.status === 'Approved');
     const returnedPass = studentPasses.find(p => p.status === 'Returned');
 
     // =========================================================================
-    // CASE A: Explicit Return Scan OR Auto Scan when student is currently Exited
+    // CASE 1: DAY SCHOLARS (Exit Scan Only; Return Scan Not Required)
     // =========================================================================
-    if (scanType === 'return' || scanType === 'entry' || (scanType === 'auto' && exitedPass)) {
-      if (exitedPass) {
-        exitedPass.status = 'Returned';
-        exitedPass.exitStatus = 'Returned to College';
-        exitedPass.returnStatus = 'Returned';
-        exitedPass.returnTime = nowIST; // Actual scanned return date and time in IST
-        await exitedPass.save();
-
-        return res.json({
-          success: true,
-          action: 'return',
-          message: `Hostel Return recorded for ${exitedPass.name} (${cleanRollNo}) at ${nowIST}. Safely returned to campus.`,
-          pass: exitedPass
-        });
-      }
-
-      // If explicit return requested but student is not in 'Exited' state
+    if (!isHosteller) {
+      // Day Scholars do NOT require a return scan
       if (scanType === 'return' || scanType === 'entry') {
-        if (approvedPass) {
-          return res.status(400).json({
-            success: false,
-            message: `Cannot record return: Student ${approvedPass.name} (${cleanRollNo}) has not scanned for exit yet (Status is Approved). Please scan for Campus Exit first.`
-          });
-        }
-        if (returnedPass) {
-          return res.status(400).json({
-            success: false,
-            message: `Student ${returnedPass.name} (${cleanRollNo}) has already returned to campus on ${returnedPass.returnTime || 'N/A'}.`
-          });
-        }
         return res.status(400).json({
           success: false,
-          message: `No active exited gate pass found for Roll No: ${cleanRollNo}.`
+          action: 'invalid_mode',
+          accommodation: 'Day Scholar',
+          requiresReturn: false,
+          message: `Return scan is not applicable for Day Scholars. Student ${latestPass.name || cleanRollNo} (${cleanRollNo}) scans for Campus Exit only.`
         });
       }
-    }
 
-    // =========================================================================
-    // CASE B: Explicit Exit Scan OR Auto Scan when student is currently Approved
-    // =========================================================================
-    if (scanType === 'exit' || (scanType === 'auto' && approvedPass)) {
+      // If already exited, their day pass is complete
+      if (exitedPass && !approvedPass) {
+        return res.status(400).json({
+          success: false,
+          action: 'completed',
+          accommodation: 'Day Scholar',
+          requiresReturn: false,
+          message: `Day Scholar ${exitedPass.name} (${cleanRollNo}) already exited campus on ${exitedPass.exitTime || 'recorded exit time'}. Day Scholar pass lifecycle complete.`
+        });
+      }
+
+      // Execute Exit Scan for Day Scholar
       if (approvedPass) {
         approvedPass.status = 'Exited';
         approvedPass.exitStatus = 'Exited Campus';
-        approvedPass.exitTime = nowIST; // Actual scanned exit date and time in IST
+        approvedPass.exitTime = nowIST;
+        approvedPass.returnStatus = 'Not Applicable (Day Scholar)';
+        approvedPass.returnTime = '-';
         await approvedPass.save();
 
         return res.json({
           success: true,
           action: 'exit',
-          message: `Hostel Campus Exit recorded for ${approvedPass.name} (${cleanRollNo}) at ${nowIST}.`,
+          accommodation: 'Day Scholar',
+          requiresReturn: false,
+          message: `Campus Exit recorded for Day Scholar ${approvedPass.name} (${cleanRollNo}) at ${nowIST}. No return scan required.`,
           pass: approvedPass
-        });
-      }
-
-      // If explicit exit requested but student is already Exited
-      if (scanType === 'exit') {
-        if (exitedPass) {
-          return res.status(400).json({
-            success: false,
-            message: `Student ${exitedPass.name} (${cleanRollNo}) already exited campus on ${exitedPass.exitTime || 'recorded exit time'}. Switch scanner to Return Mode when student arrives back.`
-          });
-        }
-        if (returnedPass) {
-          return res.status(400).json({
-            success: false,
-            message: `Previous gate pass was already completed and returned on ${returnedPass.returnTime || 'N/A'}. No new approved pass found.`
-          });
-        }
-        return res.status(400).json({
-          success: false,
-          message: `No approved gate pass found to exit campus for Roll No: ${cleanRollNo}.`
         });
       }
     }
 
     // =========================================================================
-    // CASE C: Already Returned / Pending / Inactive
+    // CASE 2: HOSTELLERS (Must scan Exit when leaving and Return when coming back)
+    // =========================================================================
+    if (isHosteller) {
+      // Subcase 2A: Return Scan (explicit return or auto when student is Exited)
+      if (scanType === 'return' || scanType === 'entry' || (scanType === 'auto' && exitedPass)) {
+        if (exitedPass) {
+          exitedPass.status = 'Returned';
+          exitedPass.exitStatus = 'Exited Campus';
+          exitedPass.returnStatus = 'Returned to Campus';
+          exitedPass.returnTime = nowIST;
+          await exitedPass.save();
+
+          return res.json({
+            success: true,
+            action: 'return',
+            accommodation: 'Hosteller',
+            requiresReturn: true,
+            message: `Campus Return recorded for Hosteller ${exitedPass.name} (${cleanRollNo}) at ${nowIST}. Safely returned to campus.`,
+            pass: exitedPass
+          });
+        }
+
+        if (scanType === 'return' || scanType === 'entry') {
+          if (approvedPass) {
+            return res.status(400).json({
+              success: false,
+              accommodation: 'Hosteller',
+              message: `Cannot record return: Hosteller ${approvedPass.name} (${cleanRollNo}) has not scanned for Campus Exit yet. Please scan for Exit first.`
+            });
+          }
+          if (returnedPass) {
+            return res.status(400).json({
+              success: false,
+              accommodation: 'Hosteller',
+              message: `Hosteller ${returnedPass.name} (${cleanRollNo}) has already returned to campus on ${returnedPass.returnTime || 'N/A'}.`
+            });
+          }
+          return res.status(400).json({
+            success: false,
+            accommodation: 'Hosteller',
+            message: `No active exited gate pass found for Roll No: ${cleanRollNo}.`
+          });
+        }
+      }
+
+      // Subcase 2B: Exit Scan (explicit exit or auto when student is Approved)
+      if (scanType === 'exit' || (scanType === 'auto' && approvedPass)) {
+        if (approvedPass) {
+          approvedPass.status = 'Exited';
+          approvedPass.exitStatus = 'Exited Campus';
+          approvedPass.exitTime = nowIST;
+          approvedPass.returnStatus = 'Awaiting Return';
+          await approvedPass.save();
+
+          return res.json({
+            success: true,
+            action: 'exit',
+            accommodation: 'Hosteller',
+            requiresReturn: true,
+            message: `Campus Exit recorded for Hosteller ${approvedPass.name} (${cleanRollNo}) at ${nowIST}. Return scan required upon arrival.`,
+            pass: approvedPass
+          });
+        }
+
+        if (scanType === 'exit') {
+          if (exitedPass) {
+            return res.status(400).json({
+              success: false,
+              accommodation: 'Hosteller',
+              message: `Hosteller ${exitedPass.name} (${cleanRollNo}) already exited campus on ${exitedPass.exitTime || 'recorded exit time'}. Switch scanner to Return Mode when student arrives back.`
+            });
+          }
+          if (returnedPass) {
+            return res.status(400).json({
+              success: false,
+              accommodation: 'Hosteller',
+              message: `Previous gate pass was already completed and returned on ${returnedPass.returnTime || 'N/A'}. No new approved pass found.`
+            });
+          }
+          return res.status(400).json({
+            success: false,
+            accommodation: 'Hosteller',
+            message: `No approved gate pass found to exit campus for Roll No: ${cleanRollNo}.`
+          });
+        }
+      }
+    }
+
+    // =========================================================================
+    // CASE 3: Common Inactive / Pending / Expired Checks
     // =========================================================================
     if (returnedPass) {
       return res.status(400).json({
         success: false,
-        message: `Student ${returnedPass.name} (${cleanRollNo}) already marked returned to college on ${returnedPass.returnTime || 'N/A'}.`
+        accommodation,
+        message: `Student ${returnedPass.name} (${cleanRollNo}) pass was already completed on ${returnedPass.returnTime || 'recorded time'}.`
       });
     }
 
@@ -146,12 +194,14 @@ async function scanPass(req, res) {
     if (pendingPass) {
       return res.status(400).json({
         success: false,
+        accommodation,
         message: `Gate pass for ${cleanRollNo} is still pending clearance (${pendingPass.status}). Authority approval required before gate movement scan.`
       });
     }
 
     return res.status(400).json({
       success: false,
+      accommodation,
       message: `No active approved or exited gate pass found for Roll No: ${cleanRollNo}.`
     });
   } catch (err) {

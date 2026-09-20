@@ -3,83 +3,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Campus PassPro • Security Gate Scanner</title>
+    <title>GRT IET • Gate Security Clearance Terminal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace']
+            }
+          }
+        }
+      }
+    </script>
     <style>
       body {
-        background-image: url('/public/campus-bg.jpg'), url('/campus-bg.jpg'), url('/assets/campus-bg.jpg');
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
+        font-family: 'Inter', sans-serif;
+        background-color: #030712;
+      }
+      .font-mono {
+        font-family: 'JetBrains Mono', monospace;
+      }
+      @keyframes laserScan {
+        0%, 100% { top: 6%; opacity: 0.8; }
+        50% { top: 92%; opacity: 1; }
+      }
+      .scan-laser-line {
+        animation: laserScan 2.4s ease-in-out infinite;
       }
     </style>
 </head>
-<body class="bg-slate-950/90 text-slate-100 min-h-screen flex flex-col items-center justify-center p-4 antialiased selection:bg-emerald-500 selection:text-white relative">
-    <div class="fixed inset-0 bg-slate-950/85 backdrop-blur-[3px] pointer-events-none -z-10"></div>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center justify-center p-3 sm:p-5 antialiased selection:bg-emerald-500 selection:text-white">
 
-    <div class="max-w-md w-full bg-slate-900/95 backdrop-blur-xl p-6 sm:p-7 rounded-3xl shadow-2xl border border-slate-800/80 text-center relative z-10">
+    <!-- MAIN TERMINAL WRAPPER -->
+    <div class="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
         
-        <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-2.5 text-left">
-                <div class="w-10 h-10 rounded-xl bg-white p-1 border border-slate-700/60 flex items-center justify-center shadow-xs shrink-0">
-                    <img src="/public/grt-logo.png" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='/grt-logo.png';}else if(this.dataset.retry==='1'){this.dataset.retry=2;this.src='/assets/grt-logo.png';}" alt="GRT Emblem" class="w-full h-full object-contain">
+        <!-- INSTITUTIONAL TOP BAR -->
+        <header class="bg-slate-950 px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-white p-1 border border-slate-700 flex items-center justify-center shadow-xs shrink-0">
+                    <img src="/public/grt-logo.png" onerror="this.onerror=null;this.src='/grt-logo.png';" alt="GRT Emblem" class="w-full h-full object-contain">
                 </div>
                 <div>
-                    <h1 class="text-base font-black text-white tracking-tight">Gate Security Scanner</h1>
-                    <p class="text-[11px] font-medium text-slate-400">Campus PassPro • Standalone Gate Terminal</p>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-bold tracking-widest uppercase text-emerald-400 bg-emerald-950/80 px-1.5 py-0.5 rounded border border-emerald-800">Terminal 01</span>
+                        <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Main Gate</span>
+                    </div>
+                    <h1 class="text-sm font-bold text-white tracking-tight leading-snug">Security Movement Terminal</h1>
                 </div>
             </div>
+
+            <!-- TERMINAL CONTROLS & STATUS -->
             <div class="flex items-center gap-2">
-                <span id="offlineBadge" class="hidden bg-amber-500/20 text-amber-300 text-[10px] px-2.5 py-0.5 rounded-full border border-amber-500/40 font-bold">Offline (0 queued)</span>
-                <span id="scanStatus" class="bg-emerald-500/15 text-emerald-400 text-xs px-3 py-1 rounded-full border border-emerald-500/30 font-semibold font-mono">
-                    Sensor Ready
+                <span id="offlineBadge" class="hidden bg-amber-950 text-amber-300 text-[10px] px-2 py-0.5 rounded border border-amber-700 font-mono font-bold">Offline Queue (0)</span>
+                
+                <span id="scanStatus" class="inline-flex items-center gap-1.5 bg-slate-800/80 text-emerald-400 text-[11px] px-2.5 py-1 rounded-md border border-slate-700 font-mono font-medium">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>Ready</span>
                 </span>
-            </div>
-        </div>
 
-        <!-- HOSTELLER SCANNER RESTRICTION BANNER -->
-        <div class="flex items-center justify-between px-3 py-1.5 bg-amber-500/10 border border-amber-500/25 rounded-xl text-[11px] font-medium text-amber-300 mb-3 text-left">
+                <a href="/index.html" title="Institutional Portal" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-md border border-slate-700 transition" aria-label="Portal Link">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                </a>
+            </div>
+        </header>
+
+        <!-- LIVE METRICS & DATE STRIP -->
+        <div class="px-4 py-2 bg-slate-950/60 border-b border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+            <div class="flex items-center gap-2">
+                <span>GATE TIME:</span>
+                <span id="liveClock" class="text-slate-200 font-bold">--:--:-- IST</span>
+            </div>
             <div class="flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                <span>Hostellers Only</span>
+                <span class="text-slate-400">DATABASE:</span>
+                <span class="text-emerald-400 font-semibold">CONNECTED</span>
             </div>
-            <span class="text-[10px] text-amber-400/80">Day Scholar Restricted</span>
         </div>
 
-        <!-- SCAN MODE SELECTOR: AUTO / EXIT / RETURN -->
-        <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-950/80 rounded-xl border border-slate-800 mb-3.5 text-xs font-bold">
-            <button type="button" id="modeBtnAuto" onclick="setScanMode('auto')" class="py-1.5 px-2 rounded-lg bg-emerald-600 text-white transition shadow-sm flex items-center justify-center gap-1">
-                <span>🔄 Auto</span>
-            </button>
-            <button type="button" id="modeBtnExit" onclick="setScanMode('exit')" class="py-1.5 px-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition flex items-center justify-center gap-1">
-                <span>🚪 Exit</span>
-            </button>
-            <button type="button" id="modeBtnReturn" onclick="setScanMode('return')" class="py-1.5 px-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition flex items-center justify-center gap-1">
-                <span>🏫 Return</span>
-            </button>
+        <div class="p-4 sm:p-5 flex flex-col space-y-4">
+            
+            <!-- ACCOMMODATION PROTOCOL SUMMARY -->
+            <div class="grid grid-cols-2 gap-2 text-[11px] font-medium">
+                <div class="bg-slate-950 border border-slate-800 rounded-lg p-2.5 flex items-start gap-2">
+                    <span class="w-2 h-2 rounded-full bg-blue-400 mt-1 shrink-0"></span>
+                    <div>
+                        <div class="font-bold text-blue-300 uppercase tracking-wide">Hostel Students</div>
+                        <div class="text-[10px] text-slate-400 leading-snug mt-0.5">Exit & Return scans required</div>
+                    </div>
+                </div>
+                <div class="bg-slate-950 border border-slate-800 rounded-lg p-2.5 flex items-start gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 mt-1 shrink-0"></span>
+                    <div>
+                        <div class="font-bold text-emerald-300 uppercase tracking-wide">Day Scholars</div>
+                        <div class="text-[10px] text-slate-400 leading-snug mt-0.5">Exit scan only (No return)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MOVEMENT MODE SELECTOR -->
+            <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Movement Verification Mode</label>
+                <div class="grid grid-cols-3 gap-1 p-1 bg-slate-950 rounded-lg border border-slate-800 text-xs font-semibold">
+                    <button type="button" id="modeBtnAuto" onclick="setScanMode('auto')" class="py-2 px-2 rounded-md bg-emerald-600 text-white font-bold transition flex items-center justify-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        <span>Auto Detect</span>
+                    </button>
+                    <button type="button" id="modeBtnExit" onclick="setScanMode('exit')" class="py-2 px-2 rounded-md bg-slate-800 text-slate-300 hover:text-white transition flex items-center justify-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                        <span>Exit Scan</span>
+                    </button>
+                    <button type="button" id="modeBtnReturn" onclick="setScanMode('return')" class="py-2 px-2 rounded-md bg-slate-800 text-slate-300 hover:text-white transition flex items-center justify-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                        <span>Return Scan</span>
+                    </button>
+                </div>
+                <p id="modeInstruction" class="text-[11px] text-slate-400 mt-1.5 px-1">Auto: Automatically identifies student category and executes valid clearance movement.</p>
+            </div>
+
+            <!-- SCANNER VIEWPORT -->
+            <div class="relative overflow-hidden rounded-xl bg-black border border-slate-800 h-[240px] flex items-center justify-center shadow-inner group">
+                <video id="video" autoplay playsinline muted class="w-full h-full object-cover"></video>
+                
+                <!-- CORNER TARGET RETICLE BRACKETS -->
+                <div class="absolute inset-0 pointer-events-none p-6 flex flex-col justify-between">
+                    <div class="flex justify-between">
+                        <div class="w-6 h-6 border-t-2 border-l-2 border-emerald-400"></div>
+                        <div class="w-6 h-6 border-t-2 border-r-2 border-emerald-400"></div>
+                    </div>
+                    <div class="flex justify-between">
+                        <div class="w-6 h-6 border-b-2 border-l-2 border-emerald-400"></div>
+                        <div class="w-6 h-6 border-b-2 border-r-2 border-emerald-400"></div>
+                    </div>
+                </div>
+
+                <!-- SWEEP SCAN LINE -->
+                <div id="scanLaser" class="scan-laser-line absolute inset-x-6 h-[2px] bg-emerald-400 pointer-events-none shadow-[0_0_12px_rgba(52,211,153,0.9)]"></div>
+
+                <!-- CAMERA SWITCH BUTTON (OVERLAY) -->
+                <button type="button" onclick="switchCamera()" title="Switch Camera" class="absolute top-2.5 right-2.5 p-2 bg-slate-950/80 hover:bg-slate-900 text-slate-300 hover:text-white rounded-lg border border-slate-700/80 transition backdrop-blur-xs">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                </button>
+
+                <!-- BOTTOM RETICLE GUIDANCE -->
+                <div class="absolute bottom-2 inset-x-0 text-center pointer-events-none">
+                    <span class="text-[10px] font-mono uppercase tracking-widest text-emerald-400/90 bg-slate-950/80 px-2.5 py-0.5 rounded border border-slate-800">Align QR / Barcode in Target Area</span>
+                </div>
+            </div>
+
+            <!-- SCAN RESULT CARD -->
+            <div id="scanResult" class="hidden rounded-xl text-xs text-left shadow-lg"></div>
+
+            <!-- MANUAL INPUT SECTION -->
+            <div class="pt-2 border-t border-slate-800">
+                <label for="manualRoll" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Manual Roll Number Verification</label>
+                <form onsubmit="handleManualSubmit(event)" class="flex gap-2">
+                    <input type="text" id="manualRoll" autofocus placeholder="ENTER ROLL NUMBER (E.G. 110324104090)" class="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono tracking-wider uppercase">
+                    <button type="submit" id="verifyBtn" class="bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider text-white transition shadow-sm whitespace-nowrap">
+                        Verify
+                    </button>
+                </form>
+            </div>
+
         </div>
 
-        <p id="modeInstruction" class="text-xs font-medium text-slate-400 mb-3 bg-slate-800/60 py-1.5 px-3 rounded-lg border border-slate-700/50">Smart Auto: Automatically detects Exit or Return</p>
-
-        <div class="relative overflow-hidden rounded-xl bg-black border-2 border-emerald-500/60 mb-4 h-[230px] flex items-center justify-center shadow-inner">
-            <video id="video" autoplay playsinline muted class="w-full h-full object-cover"></video>
-            <div id="scanLaser" class="absolute inset-x-0 top-1/2 -translate-y-1/2 h-0.5 bg-emerald-400 pointer-events-none shadow-[0_0_12px_rgba(52,211,153,0.8)]"></div>
-        </div>
-
-        <div id="scanResult" class="hidden p-4 rounded-xl font-bold text-xs mb-4 text-left shadow-lg"></div>
-
-        <div class="pt-3 border-t border-slate-800">
-            <form onsubmit="handleManualSubmit(event)" class="flex gap-2">
-                <input type="text" id="manualRoll" autofocus placeholder="Enter Hosteller Roll No (e.g. 110324104090)" class="w-full px-3.5 py-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono tracking-wide">
-                <button type="submit" id="verifyBtn" class="bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 rounded-lg text-xs font-bold text-white transition shadow-sm whitespace-nowrap">Verify</button>
-            </form>
-        </div>
+        <!-- TERMINAL FOOTER -->
+        <footer class="bg-slate-950 px-4 py-2.5 border-t border-slate-800 text-[10px] text-slate-400 font-mono flex items-center justify-between">
+            <span>GRT INSTITUTE OF ENGINEERING AND TECHNOLOGY</span>
+            <span class="text-slate-400">ACCESS CONTROL SYSTEM</span>
+        </footer>
     </div>
 
     <audio id="beepSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
-    <!-- Modular Scanner Script -->
+    <!-- Scanner Script -->
     <script src="/js/scanner.js"></script>
 </body>
 </html>
