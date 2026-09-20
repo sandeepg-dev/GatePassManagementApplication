@@ -53,7 +53,7 @@
 
 body {
   font-family: var(--font-sans);
-  background-image: url('https://content.jdmagicbox.com/v2/comp/tiruttani/h6/9999pxx44.xx44.130608171735.f7h6/catalogue/grt-institute-of-engineering-and-technology-tiruttani-ho-tiruttani-engineering-colleges-ga3mika.jpg');
+  background-image: url('/public/campus-bg.jpg'), url('/campus-bg.jpg'), url('/assets/campus-bg.jpg');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;

@@ -39,6 +39,10 @@ app.get('/', (req, res) => res.sendFile(path.join(rootDir, 'index.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(rootDir, 'index.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(rootDir, 'admin.html')));
 app.get('/security', (req, res) => res.sendFile(path.join(rootDir, 'security.html')));
+app.get('/apply', (req, res) => res.sendFile(path.join(rootDir, 'apply.html')));
+
+// Fallback for stripped /api prefix in serverless environments
+app.use('/', apiRoutes);
 
 // Global 404 handler for API routes
 app.use('/api/*', (req, res) => {
