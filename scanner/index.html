@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus PassPro • Security Gate Scanner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
+    <style>
+      body {
+        background-image: url('/public/campus-bg.jpg'), url('/campus-bg.jpg'), url('/assets/campus-bg.jpg');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+      }
+    </style>
+</head>
+<body class="bg-slate-950/90 text-slate-100 min-h-screen flex flex-col items-center justify-center p-4 antialiased selection:bg-emerald-500 selection:text-white relative">
+    <div class="fixed inset-0 bg-slate-950/85 backdrop-blur-[3px] pointer-events-none -z-10"></div>
+
+    <div class="max-w-md w-full bg-slate-900/95 backdrop-blur-xl p-6 sm:p-7 rounded-3xl shadow-2xl border border-slate-800/80 text-center relative z-10">
+        
+        <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2.5 text-left">
+                <div class="w-10 h-10 rounded-xl bg-white p-1 border border-slate-700/60 flex items-center justify-center shadow-xs shrink-0">
+                    <img src="/public/grt-logo.png" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='/grt-logo.png';}else if(this.dataset.retry==='1'){this.dataset.retry=2;this.src='https://content.jdmagicbox.com/v2/comp/tiruttani/h6/9999pxx44.xx44.130608171735.f7h6/catalogue/grt-institute-of-engineering-and-technology-tiruttani-ho-tiruttani-engineering-colleges-ga3mika.jpg';}" alt="GRT Emblem" class="w-full h-full object-contain">
+                </div>
+                <div>
+                    <h1 class="text-base font-black text-white tracking-tight">Gate Security Scanner</h1>
+                    <p class="text-[11px] font-medium text-slate-400">Campus PassPro • Standalone Terminal</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <button type="button" onclick="openServerConfigModal()" title="Configure Backend API URL" class="p-1.5 bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white rounded-lg border border-slate-700/60 transition text-xs">
+                    ⚙️
+                </button>
+                <span id="offlineBadge" class="hidden bg-amber-500/20 text-amber-300 text-[10px] px-2 py-0.5 rounded-full border border-amber-500/40 font-bold">Offline (0)</span>
+                <span id="scanStatus" class="bg-emerald-500/15 text-emerald-400 text-xs px-2.5 py-1 rounded-full border border-emerald-500/30 font-semibold font-mono">
+                    Ready
+                </span>
+            </div>
+        </div>
+
+        <!-- SERVER CONNECTION BADGE -->
+        <div id="serverConnBanner" class="flex items-center justify-between px-3 py-1 bg-slate-800/60 border border-slate-700/50 rounded-lg text-[10px] text-slate-400 mb-2.5">
+            <span class="flex items-center gap-1.5">
+                <span id="serverDot" class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Backend: <span id="serverUrlDisplay" class="font-mono text-slate-300">Default (Direct)</span></span>
+            </span>
+            <button type="button" onclick="openServerConfigModal()" class="text-emerald-400 hover:underline">Change</button>
+        </div>
+
+        <!-- HOSTELLER SCANNER RESTRICTION BANNER -->
+        <div class="flex items-center justify-between px-3 py-1.5 bg-amber-500/10 border border-amber-500/25 rounded-xl text-[11px] font-medium text-amber-300 mb-3 text-left">
+            <div class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                <span>Hostellers Only</span>
+            </div>
+            <span class="text-[10px] text-amber-400/80">Day Scholar Restricted</span>
+        </div>
+
+        <!-- SCAN MODE SELECTOR: AUTO / EXIT / RETURN -->
+        <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-950/80 rounded-xl border border-slate-800 mb-3.5 text-xs font-bold">
+            <button type="button" id="modeBtnAuto" onclick="setScanMode('auto')" class="py-1.5 px-2 rounded-lg bg-emerald-600 text-white transition shadow-sm flex items-center justify-center gap-1">
+                <span>🔄 Auto</span>
+            </button>
+            <button type="button" id="modeBtnExit" onclick="setScanMode('exit')" class="py-1.5 px-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition flex items-center justify-center gap-1">
+                <span>🚪 Exit</span>
+            </button>
+            <button type="button" id="modeBtnReturn" onclick="setScanMode('return')" class="py-1.5 px-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition flex items-center justify-center gap-1">
+                <span>🏫 Return</span>
+            </button>
+        </div>
+
+        <p id="modeInstruction" class="text-xs font-medium text-slate-400 mb-3 bg-slate-800/60 py-1.5 px-3 rounded-lg border border-slate-700/50">Smart Auto: Automatically detects Exit or Return</p>
+
+        <div class="relative overflow-hidden rounded-xl bg-black border-2 border-emerald-500/60 mb-4 h-[230px] flex items-center justify-center shadow-inner">
+            <video id="video" autoplay playsinline muted class="w-full h-full object-cover"></video>
+            <div id="scanLaser" class="absolute inset-x-0 top-1/2 -translate-y-1/2 h-0.5 bg-emerald-400 pointer-events-none shadow-[0_0_12px_rgba(52,211,153,0.8)]"></div>
+        </div>
+
+        <div id="scanResult" class="hidden p-4 rounded-xl font-bold text-xs mb-4 text-left shadow-lg"></div>
+
+        <div class="pt-3 border-t border-slate-800">
+            <form onsubmit="handleManualSubmit(event)" class="flex gap-2">
+                <input type="text" id="manualRoll" autofocus placeholder="Enter Hosteller Roll No (e.g. 110324104090)" class="w-full px-3.5 py-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono tracking-wide">
+                <button type="submit" id="verifyBtn" class="bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 rounded-lg text-xs font-bold text-white transition shadow-sm whitespace-nowrap">Verify</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- SERVER CONFIGURATION MODAL -->
+    <div id="serverConfigModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="max-w-sm w-full bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl space-y-4 text-left">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                    <span>⚙️ Backend API Configuration</span>
+                </h3>
+                <button type="button" onclick="closeServerConfigModal()" class="text-slate-400 hover:text-white text-xs">✕</button>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed">
+                If the Security Scanner is deployed on a separate domain (e.g., <span class="font-mono text-emerald-400">scanner.vercel.app</span>), enter your main website URL below (e.g., <span class="font-mono text-emerald-400">https://your-main-app.vercel.app</span>):
+            </p>
+            <div>
+                <label class="block text-[11px] font-bold text-slate-300 mb-1">Main App Backend URL</label>
+                <input type="text" id="backendUrlInput" placeholder="https://your-main-app.vercel.app" class="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+            <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+                <button type="button" onclick="resetServerConfig()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">Reset to Default</button>
+                <button type="button" onclick="saveServerConfig()" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-sm">Save & Connect</button>
+            </div>
+        </div>
+    </div>
+
+    <audio id="beepSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+
+    <!-- Scanner Script -->
+    <script src="/js/scanner.js"></script>
+</body>
+</html>

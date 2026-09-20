@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/public/(.*)",
+      "destination": "/$1"
+    }
+  ]
+}
