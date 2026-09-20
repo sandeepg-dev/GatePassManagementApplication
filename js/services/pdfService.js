@@ -2,6 +2,20 @@
  * jsPDF Report Generation Service - Enterprise Institutional Formats
  */
 
+function safeFormatClassSection(dept, rawSec, academicYear) {
+  if (typeof window !== 'undefined' && typeof window.formatClassSection === 'function') {
+    return window.formatClassSection(dept, rawSec, academicYear);
+  }
+  if (typeof formatClassSection === 'function') {
+    return formatClassSection(dept, rawSec, academicYear);
+  }
+  const yearStr = academicYear || 'III Year';
+  if (!rawSec) return `${yearStr} • ${dept || 'CSE'} - Section A`;
+  const match = String(rawSec).trim().toUpperCase().match(/\b([A-D])\b/);
+  const letter = match ? match[1] : 'A';
+  return `${yearStr} • ${dept || 'CSE'} - Sec ${letter}`;
+}
+
 /**
  * Resolves pass records from window.masterPassList, window.cachedAllRecords, or live API query
  */
@@ -135,14 +149,11 @@ async function downloadMasterPDF() {
     const logo = logoBase64 || cachedCollegeLogoBase64;
 
     if (banner) {
-      // Clean white header background for official college banner
+      // Full-width institutional college banner across the entire section header
       doc.setFillColor(255, 255, 255);
       doc.rect(9.5, 9.5, 278, 27, 'F');
       try {
-        const bH = 25;
-        const bW = bH * 2.914; // ~72.85mm
-        const bX = 9.5 + (278 - bW) / 2;
-        doc.addImage(banner, 'PNG', bX, 10.5, bW, bH);
+        doc.addImage(banner, 'PNG', 9.5, 9.5, 278, 27);
       } catch (e) {
         console.warn('Could not add banner image to Master Audit PDF:', e);
       }
@@ -239,7 +250,7 @@ async function downloadMasterPDF() {
   const gatePassTableData = (passes || []).map((p, idx) => {
     const isHosteller = (/hoste?l|^h$/i.test(p.accommodation || '') && !/day/i.test(p.accommodation || ''));
     const accomLabel = isHosteller ? 'Hosteller' : 'Day Scholar';
-    const standing = `${formatClassSection(p.dept, p.yearSec, p.academicYear)} [${accomLabel}]`;
+    const standing = `${safeFormatClassSection(p.dept, p.yearSec, p.academicYear)} [${accomLabel}]`;
 
     let movement = '-';
     if (isHosteller) {
@@ -477,9 +488,10 @@ async function downloadMasterPDF() {
  * @param {string|null} [watermarkBase64]
  */
 function renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64, bannerBase64) {
-  const banner = bannerBase64 || cachedCollegeBannerBase64;
   const logo = logoBase64 || cachedCollegeLogoBase64;
   const watermark = watermarkBase64 || cachedCollegeLogoWatermarkBase64;
+
+  const deptUpper = String(pass.dept || 'ENGINEERING').toUpperCase();
 
   // 1. Elegant Double Institutional Border
   doc.setDrawColor(203, 213, 225);
@@ -493,64 +505,58 @@ function renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64
   // Render Subtle Institutional College Logo Watermark
   renderPageWatermark(doc, watermark, 95);
 
-  // 2. Official College Letterhead & Banner / Logo
-  if (banner) {
+  // 2. Official College Letterhead - GRT Logo on left with centered institutional typography
+  if (logo) {
     try {
-      const bH = 26.5;
-      const bW = bH * 2.914; // ~77.2mm
-      const bX = (210 - bW) / 2;
-      doc.addImage(banner, 'PNG', bX, 13.5, bW, bH);
+      doc.addImage(logo, 'PNG', 15, 14.5, 22, 22);
     } catch (e) {
-      console.warn('Could not render banner in Gate Pass Letter PDF:', e);
+      console.warn('Could not render logo in PDF:', e);
     }
-  } else {
-    if (logo) {
-      try {
-        doc.addImage(logo, 'PNG', 15, 15, 22, 22);
-      } catch (e) {
-        console.warn('Could not render logo in PDF:', e);
-      }
-    }
-
-    // College Letterhead Typography
-    doc.setFont('times', 'bold');
-    doc.setFontSize(14);
-    doc.setTextColor(15, 23, 42); // Deep Navy
-    doc.text('GRT INSTITUTE OF ENGINEERING AND TECHNOLOGY', 114, 19.5, { align: 'center' });
-
-    doc.setFont('times', 'normal');
-    doc.setFontSize(8.2);
-    doc.setTextColor(71, 85, 105);
-    doc.text('(Approved by AICTE, New Delhi | Affiliated to Anna University, Chennai)', 114, 24.5, { align: 'center' });
-
-    doc.setFont('times', 'bold');
-    doc.setFontSize(8.2);
-    doc.setTextColor(185, 28, 28); // Official Maroon Accent
-    doc.text('(An Autonomous Institution | Accredited by NAAC with \'A++\' Grade)', 114, 29, { align: 'center' });
-
-    doc.setFont('times', 'normal');
-    doc.setFontSize(7.8);
-    doc.setTextColor(100, 116, 139);
-    doc.text('GRT Mahalaksmi Nagar, Chennai-Tirupati Highway, Tiruttani - 631 209.', 114, 33.5, { align: 'center' });
-
-    const deptUpper = String(pass.dept || 'ENGINEERING').toUpperCase();
-    doc.setFont('times', 'bold');
-    doc.setFontSize(9.5);
-    doc.setTextColor(15, 23, 42);
-    doc.text(`DEPARTMENT OF ${deptUpper}`, 114, 38, { align: 'center' });
   }
+
+  // College Letterhead Typography (Centered)
+  doc.setFont('times', 'bold');
+  doc.setFontSize(13.8);
+  doc.setTextColor(15, 23, 42); // Deep Navy
+  doc.text('GRT INSTITUTE OF ENGINEERING AND TECHNOLOGY', 114, 18.5, { align: 'center' });
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(8.2);
+  doc.setTextColor(71, 85, 105);
+  doc.text('(Approved by AICTE, New Delhi | Affiliated to Anna University, Chennai)', 114, 23.2, { align: 'center' });
+
+  doc.setFont('times', 'bold');
+  doc.setFontSize(8.2);
+  doc.setTextColor(185, 28, 28); // Official Maroon Accent
+  doc.text('(An Autonomous Institution | Accredited by NAAC with \'A++\' Grade)', 114, 27.6, { align: 'center' });
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(7.8);
+  doc.setTextColor(100, 116, 139);
+  doc.text('GRT Mahalakshmi Nagar, Chennai-Tirupati Highway, Tiruttani - 631 209.', 114, 31.8, { align: 'center' });
+
+  doc.setFont('times', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(15, 23, 42);
+  doc.text(`DEPARTMENT OF ${deptUpper}`, 114, 36.2, { align: 'center' });
+
+  // Clearly mention GATE PASS LETTER
+  doc.setFont('times', 'bold');
+  doc.setFontSize(10.5);
+  doc.setTextColor(15, 23, 42);
+  doc.text('GATE PASS LETTER', 114, 41.5, { align: 'center' });
 
   // Letterhead Horizontal Divider Line (Deep Navy + Gold Accent)
   doc.setDrawColor(15, 23, 42);
   doc.setLineWidth(0.6);
-  doc.line(14, 41, 196, 41);
+  doc.line(14, 45, 196, 45);
 
   doc.setDrawColor(217, 119, 6);
   doc.setLineWidth(0.3);
-  doc.line(14, 42, 196, 42);
+  doc.line(14, 46, 196, 46);
 
   // 3. Date & Reference Number
-  let curY = 48.5;
+  let curY = 52.5;
   const appliedDate = formatLetterDate(pass.appliedTime);
   const refNum = `GRTIET/${deptUpper}/GP/2026/${pass.rollNo}`;
 
@@ -564,8 +570,8 @@ function renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64
   doc.setTextColor(15, 23, 42);
   doc.text(`Date: ${appliedDate}`, 194, curY, { align: 'right' });
 
-  // 4. From Section
-  curY = 55.5;
+  // 4. From Section - Formal student letter (NO parent details included for Gate Pass Letter)
+  curY = 57.5;
   doc.setFont('times', 'bold');
   doc.setFontSize(10);
   doc.setTextColor(15, 23, 42);
@@ -582,7 +588,7 @@ function renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64
   curY += 4.5;
   doc.text(`${pass.academicYear || '3 Year'}, Department of ${pass.dept || 'Engineering'} (Section '${pass.yearSec || 'A'}'),`, 20, curY);
   curY += 4.5;
-  doc.text(`Accommodation: ${accommodationStr} | Father: ${pass.fatherName || pass.parentName || '-'} | Parent: ${pass.parentContact || '-'},`, 20, curY);
+  doc.text(`Accommodation: ${accommodationStr},`, 20, curY);
   curY += 4.5;
   doc.text('GRT Institute of Engineering and Technology, Tiruttani - 631 209.', 20, curY);
 
@@ -593,7 +599,7 @@ function renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64
   doc.setTextColor(71, 85, 105);
   doc.text('(Through: Respective Class Counselor, Class Advisor, and Head of Department)', 20, curY);
 
-  // 6. To Section
+  // 6. To Section - Strictly The Principal (NO Institutional Directorate)
   curY += 5.5;
   doc.setFont('times', 'bold');
   doc.setFontSize(10);
@@ -604,7 +610,7 @@ function renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64
   doc.setFont('times', 'normal');
   doc.setFontSize(9.5);
   doc.setTextColor(30, 41, 59);
-  doc.text('The Principal / Institutional Directorate,', 20, curY);
+  doc.text('The Principal,', 20, curY);
   curY += 4.5;
   doc.text('GRT Institute of Engineering and Technology,', 20, curY);
   curY += 4.5;
@@ -627,8 +633,9 @@ function renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64
   doc.setTextColor(30, 41, 59);
 
   const body1 = 'I am writing to request permission for a Gate Pass to leave the college campus due to the following reason:';
-  doc.text(body1, 16, curY);
-  curY += 9;
+  const body1Lines = doc.splitTextToSize(body1, 178);
+  doc.text(body1Lines, 16, curY, { lineHeightFactor: 1.3 });
+  curY += body1Lines.length * 4.6 + 4.4;
 
   // Gate Pass Reason clearly highlighted in the middle
   const gatePassReason = String(pass.reason || '-').trim();
@@ -638,26 +645,28 @@ function renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64
   doc.setTextColor(15, 23, 42);
   const reasonLines = doc.splitTextToSize(reasonText, 150);
   doc.text(reasonLines, 105, curY, { align: 'center', lineHeightFactor: 1.3 });
-  curY += reasonLines.length * 6 + 4;
+  curY += reasonLines.length * 5.2 + 3.8;
 
   if (isHosteller) {
     doc.setFont('times', 'bold');
     doc.setFontSize(9.5);
     doc.setTextColor(30, 41, 59);
     const appDateStr = `Application Date: ${appliedDate}   |   Department: ${pass.dept || 'Engineering'} (${pass.academicYear || '3 Year'} - Sec ${pass.yearSec || 'A'})`;
-    doc.text(appDateStr, 105, curY, { align: 'center' });
-    curY += 5;
+    const appLines = doc.splitTextToSize(appDateStr, 172);
+    doc.text(appLines, 105, curY, { align: 'center', lineHeightFactor: 1.25 });
+    curY += appLines.length * 4.6 + 1.2;
     const depStr = `Departure: ${pass.departureDate || '-'}${pass.departureTime ? ' at ' + pass.departureTime : ''}`;
     const retStr = `Return: ${pass.expectedReturnDate ? pass.expectedReturnDate + (pass.expectedReturnTime ? ' at ' + pass.expectedReturnTime : '') : (pass.expectedReturnDateTime || '-')}`;
-    doc.text(`${depStr}   |   ${retStr}`, 105, curY, { align: 'center' });
-    curY += 6;
+    const depRetLines = doc.splitTextToSize(`${depStr}   |   ${retStr}`, 172);
+    doc.text(depRetLines, 105, curY, { align: 'center', lineHeightFactor: 1.25 });
+    curY += depRetLines.length * 4.6 + 2;
   } else {
     doc.setFont('times', 'bold');
     doc.setFontSize(9.5);
     doc.setTextColor(30, 41, 59);
     const leaveTimeStr = pass.leaveDate ? `${pass.leaveDate}${pass.leaveTime ? ' at ' + pass.leaveTime : ''}` : (pass.departureDate ? `${pass.departureDate}${pass.departureTime ? ' at ' + pass.departureTime : ''}` : (pass.approvalTime || pass.appliedTime || appliedDate));
     doc.text(`Leave Date & Time: ${leaveTimeStr}`, 105, curY, { align: 'center' });
-    curY += 5;
+    curY += 4.8;
     doc.text(`Department: ${pass.dept || 'Engineering'}   |   Year & Section: ${pass.academicYear || '3 Year'} (Section '${pass.yearSec || 'A'}')`, 105, curY, { align: 'center' });
     curY += 6;
   }
@@ -681,7 +690,7 @@ function renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64
   doc.setFontSize(9.5);
   doc.setTextColor(30, 41, 59);
   doc.text('Yours faithfully,', 148, curY);
-  curY += 8.5;
+  curY += 7.5;
   doc.setFont('times', 'bold');
   doc.text(`(${pass.name || 'Student'})`, 148, curY);
   curY += 4.2;
@@ -690,7 +699,7 @@ function renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64
   doc.text(`Roll No: ${pass.rollNo}`, 148, curY);
 
   // 12. Signature & Multi-Tier Institutional Clearance Section
-  curY = Math.max(curY + 6, 206);
+  curY = Math.max(curY + 5, 202);
 
   doc.setDrawColor(203, 213, 225);
   doc.setLineWidth(0.4);
@@ -727,23 +736,24 @@ function renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64
   const pDate = pass.principalApproval?.time || pass.approvalTime ? formatLetterDate(pass.principalApproval?.time || pass.approvalTime) : '-';
   const wDate = pass.wardenApproval?.time ? formatLetterDate(pass.wardenApproval.time) : '-';
 
-  const sigY = curY + 18;
-  const colWidth = 33;
+  const sigY = curY + 16;
+  const colWidth = 33.2;
+  const colGap = 3.0;
 
   const cols = isHosteller
     ? [
         { title: 'Student Signature', name: pass.name || 'Student', status: 'Submitted', isApproved: true, date: appliedDate, x: 16 },
-        { title: 'Class Counselor', name: counselorName, status: counselorStatus, isApproved: cApp, date: cDate, x: 16 + colWidth + 2 },
-        { title: 'Class Advisor', name: advisorName, status: advisorStatus, isApproved: aApp, date: aDate, x: 16 + (colWidth + 2) * 2 },
-        { title: 'Head of Dept', name: hodName, status: hodStatus, isApproved: hApp, date: hDate, x: 16 + (colWidth + 2) * 3 },
-        { title: 'Principal / Warden', name: (wApp ? wardenName : principalName), status: (wApp ? wardenStatus : principalStatus), isApproved: (wApp || pApp), date: (wApp ? wDate : pDate), x: 16 + (colWidth + 2) * 4 }
+        { title: 'Class Counselor', name: counselorName, status: counselorStatus, isApproved: cApp, date: cDate, x: 16 + (colWidth + colGap) },
+        { title: 'Class Advisor', name: advisorName, status: advisorStatus, isApproved: aApp, date: aDate, x: 16 + (colWidth + colGap) * 2 },
+        { title: 'Head of Dept', name: hodName, status: hodStatus, isApproved: hApp, date: hDate, x: 16 + (colWidth + colGap) * 3 },
+        { title: 'Principal / Warden', name: (wApp ? wardenName : principalName), status: (wApp ? wardenStatus : principalStatus), isApproved: (wApp || pApp), date: (wApp ? wDate : pDate), x: 16 + (colWidth + colGap) * 4 }
       ]
     : [
         { title: 'Student Signature', name: pass.name || 'Student', status: 'Submitted', isApproved: true, date: appliedDate, x: 16 },
-        { title: 'Class Counselor', name: counselorName, status: counselorStatus, isApproved: cApp, date: cDate, x: 16 + colWidth + 2 },
-        { title: 'Class Advisor', name: advisorName, status: advisorStatus, isApproved: aApp, date: aDate, x: 16 + (colWidth + 2) * 2 },
-        { title: 'Head of Dept', name: hodName, status: hodStatus, isApproved: hApp, date: hDate, x: 16 + (colWidth + 2) * 3 },
-        { title: 'Principal Directorate', name: principalName, status: principalStatus, isApproved: pApp, date: pDate, x: 16 + (colWidth + 2) * 4 }
+        { title: 'Class Counselor', name: counselorName, status: counselorStatus, isApproved: cApp, date: cDate, x: 16 + (colWidth + colGap) },
+        { title: 'Class Advisor', name: advisorName, status: advisorStatus, isApproved: aApp, date: aDate, x: 16 + (colWidth + colGap) * 2 },
+        { title: 'Head of Dept', name: hodName, status: hodStatus, isApproved: hApp, date: hDate, x: 16 + (colWidth + colGap) * 3 },
+        { title: 'Principal Directorate', name: principalName, status: principalStatus, isApproved: pApp, date: pDate, x: 16 + (colWidth + colGap) * 4 }
       ];
 
   cols.forEach(col => {
@@ -770,7 +780,7 @@ function renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64
   });
 
   // Institutional Clearance Endorsement Box
-  const endY = sigY + 18;
+  const endY = sigY + 17;
   if (pass.status === 'Rejected') {
     doc.setDrawColor(244, 63, 94);
     doc.setFillColor(255, 241, 242);
@@ -778,12 +788,9 @@ function renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64
     doc.setFont('times', 'bold');
     doc.setFontSize(8);
     doc.setTextColor(159, 18, 57);
-    doc.text(
-      `Rejection Endorsement: Requisition declined by ${pass.rejection?.roleTitle || pass.rejectedBy || 'Authority'}. Reason: "${pass.rejection?.reason || pass.rejectionReason || 'Not approved'}"`,
-      19,
-      endY + 6.8,
-      { maxWidth: 172 }
-    );
+    const rejMsg = `Rejection Endorsement: Requisition declined by ${pass.rejection?.roleTitle || pass.rejectedBy || 'Authority'}. Reason: "${pass.rejection?.reason || pass.rejectionReason || 'Not approved'}"`;
+    const rejLines = doc.splitTextToSize(rejMsg, 172);
+    doc.text(rejLines, 19, endY + 4.8);
   } else if (pApp || pass.status === 'Approved' || pass.status === 'Completed' || pass.exitStatus === 'Exited Campus' || pass.exitStatus === 'Returned to College') {
     doc.setDrawColor(34, 197, 94);
     doc.setFillColor(240, 253, 244);
@@ -791,12 +798,9 @@ function renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64
     doc.setFont('times', 'bold');
     doc.setFontSize(8);
     doc.setTextColor(22, 101, 52);
-    doc.text(
-      'Official Endorsement: Gate Pass authorized under GRT Institutional Clearance Regulations. Campus security is instructed to permit egress/ingress per recorded departure and expected return schedule.',
-      19,
-      endY + 5.2,
-      { maxWidth: 172 }
-    );
+    const appMsg = 'Official Endorsement: Gate Pass authorized under GRT Institutional Clearance Regulations. Campus security is instructed to permit egress/ingress per recorded departure and expected return schedule.';
+    const appLines = doc.splitTextToSize(appMsg, 172);
+    doc.text(appLines, 19, endY + 4.5);
     if (pass.exitTime) {
       doc.setFont('times', 'normal');
       doc.setFontSize(7.5);
@@ -809,14 +813,14 @@ function renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64
     }
   }
 
-  // 13. Institutional Footer
+  // 13. Institutional Footer (Clean 4mm breathing room above inner border at 285)
   doc.setFont('times', 'italic');
   doc.setFontSize(7.5);
   doc.setTextColor(148, 163, 184);
   doc.text(
     'GRT Institute of Engineering and Technology • Official Campus Gate Pass Letter • Campus PassPro',
     105,
-    284,
+    281,
     { align: 'center' }
   );
 }
@@ -841,7 +845,8 @@ async function downloadAllCompleteLettersPDF() {
     renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64, bannerBase64);
   });
 
-  doc.save(`GRTIET_All_Gate_Pass_Letters_${loggedUser?.role || 'dossier'}_${Date.now()}.pdf`);
+  const uRole = window.loggedUser?.role || 'dossier';
+  doc.save(`GRTIET_All_Gate_Pass_Letters_${uRole}_${Date.now()}.pdf`);
   showToast('All formal gate pass letters exported to PDF dossier!', 'success');
 }
 
@@ -879,21 +884,22 @@ function renderProfessionalGatePassCardPage(doc, pass, logoBase64, watermarkBase
   doc.setLineWidth(0.3);
   doc.roundedRect(cardX + 1.5, cardY + 1.5, cardWidth - 3, cardHeight - 3, 2.5, 2.5, 'D');
 
-  // 2. Official Header Banner
+  // 2. Official Header Banner - Full Width (stretches left-to-right to fill entire space)
   if (banner) {
     try {
+      const bX = cardX + 2;
+      const bY = cardY + 2;
+      const bW = cardWidth - 4; // 182mm - full width across the card
+      const bH = 34; // fills header area with high clarity
       doc.setFillColor(255, 255, 255);
-      doc.roundedRect(cardX + 2, cardY + 2, cardWidth - 4, 29.5, 2, 2, 'F');
-      const bH = 26;
-      const bW = bH * 2.914; // ~75.8mm
-      const bX = cardX + 2 + ((cardWidth - 4) - bW) / 2;
-      doc.addImage(banner, 'PNG', bX, cardY + 3.8, bW, bH);
+      doc.roundedRect(bX, bY, bW, bH, 2, 2, 'F');
+      doc.addImage(banner, 'PNG', bX, bY, bW, bH);
     } catch (e) {
       console.warn('Could not add banner to Gate Pass card:', e);
     }
   } else {
     doc.setFillColor(15, 23, 42); // Navy Banner
-    doc.roundedRect(cardX + 2, cardY + 2, cardWidth - 4, 30, 2.5, 2.5, 'F');
+    doc.roundedRect(cardX + 2, cardY + 2, cardWidth - 4, 34, 2.5, 2.5, 'F');
 
     // College Logo in White Badge
     if (logo) {
@@ -930,10 +936,10 @@ function renderProfessionalGatePassCardPage(doc, pass, logoBase64, watermarkBase
 
   // Maroon/Gold Accent Bar
   doc.setFillColor(185, 28, 28); // Maroon
-  doc.rect(cardX + 2, cardY + 31.5, cardWidth - 4, 1.8, 'F');
+  doc.rect(cardX + 2, cardY + 36.2, cardWidth - 4, 1.8, 'F');
 
   // 3. Pass Card Title Bar & Security Token
-  let curY = cardY + 37;
+  let curY = cardY + 41.5;
   doc.setFillColor(240, 253, 244);
   doc.setDrawColor(34, 197, 94);
   doc.setLineWidth(0.4);
@@ -1222,8 +1228,14 @@ function renderProfessionalGatePassCardPage(doc, pass, logoBase64, watermarkBase
 
   doc.setFont('times', 'normal');
   doc.setFontSize(7.8);
+  if (pass.exitTime && pass.exitTime !== '-') {
+    doc.setTextColor(15, 23, 42);
+    doc.text(`Actual Departure: ${pass.exitTime}`, cardX + 8, curY + 14.5);
+  } else {
+    doc.setTextColor(148, 163, 184);
+    doc.text('Actual Departure: ___________________________', cardX + 8, curY + 14.5);
+  }
   doc.setTextColor(148, 163, 184);
-  doc.text('Actual Departure: ___________________________', cardX + 8, curY + 14.5);
   doc.text('Security Officer Signature: __________________', cardX + 8, curY + 23);
 
   doc.roundedRect(cardX + 4 + secBoxW + 4, curY, secBoxW, 30, 1.5, 1.5, 'FD');
@@ -1235,8 +1247,14 @@ function renderProfessionalGatePassCardPage(doc, pass, logoBase64, watermarkBase
 
   doc.setFont('times', 'normal');
   doc.setFontSize(7.8);
+  if (pass.returnTime && pass.returnTime !== '-') {
+    doc.setTextColor(15, 23, 42);
+    doc.text(`Actual Return: ${pass.returnTime}`, cardX + 8 + secBoxW + 4, curY + 14.5);
+  } else {
+    doc.setTextColor(148, 163, 184);
+    doc.text('Actual Return: ______________________________', cardX + 8 + secBoxW + 4, curY + 14.5);
+  }
   doc.setTextColor(148, 163, 184);
-  doc.text('Actual Return: ______________________________', cardX + 8 + secBoxW + 4, curY + 14.5);
   doc.text('Security Officer Signature: __________________', cardX + 8 + secBoxW + 4, curY + 23);
 
   // Subtle Institutional College Logo Watermark across the pass card
@@ -1258,7 +1276,17 @@ function renderProfessionalGatePassCardPage(doc, pass, logoBase64, watermarkBase
 async function downloadGatePassCardPDF(pass) {
   if (!pass) return showToast('No pass record provided for Gate Pass download.', 'warning');
 
-  if (loggedUser?.role === 'student' && typeof isPassFullyApproved === 'function' && !isPassFullyApproved(pass)) {
+  // If passed an ID or roll number string, resolve the pass object
+  if (typeof pass === 'string') {
+    if (window.cachedAllRecords && Array.isArray(window.cachedAllRecords)) {
+      const found = window.cachedAllRecords.find(p => p._id === pass || p.id === pass || p.rollNo === pass);
+      if (found) pass = found;
+    }
+  }
+
+  const u = window.loggedUser;
+  const isApprovedChecker = window.isPassFullyApproved || (typeof isPassFullyApproved === 'function' ? isPassFullyApproved : null);
+  if (u?.role === 'student' && isApprovedChecker && !isApprovedChecker(pass)) {
     return showToast('Gate Pass is hidden until all required institutional approvals are completed.', 'warning');
   }
 
@@ -1283,8 +1311,12 @@ async function downloadGatePassCardPDF(pass) {
 async function downloadOfficialLetterOnlyPDF(pass) {
   if (!pass) return showToast('No pass record provided for PDF download.', 'warning');
 
-  if (loggedUser?.role === 'student' && typeof isPassFullyApproved === 'function' && !isPassFullyApproved(pass)) {
-    return showToast('Gate Pass is hidden until all required institutional approvals are completed.', 'warning');
+  // If passed an ID or roll number string, resolve the pass object
+  if (typeof pass === 'string') {
+    if (window.cachedAllRecords && Array.isArray(window.cachedAllRecords)) {
+      const found = window.cachedAllRecords.find(p => p._id === pass || p.id === pass || p.rollNo === pass);
+      if (found) pass = found;
+    }
   }
 
   const { jsPDF } = window.jspdf;
@@ -1295,8 +1327,8 @@ async function downloadOfficialLetterOnlyPDF(pass) {
 
   renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64, bannerBase64);
 
-  doc.save(`GRTIET_Gate_Pass_Letter_${pass.rollNo}.pdf`);
-  showToast(`Official Gate Pass letter PDF downloaded for Roll No: ${pass.rollNo}`, 'success');
+  doc.save(`GRTIET_Gate_Pass_Letter_${pass.rollNo || 'Letter'}.pdf`);
+  showToast(`Official Gate Pass letter PDF downloaded for Roll No: ${pass.rollNo || ''}`, 'success');
 }
 
 /**
@@ -1447,11 +1479,11 @@ async function downloadOnDutyLetterPDF(od) {
 
   const logoBase64 = await getCollegeLogoBase64();
   const watermarkBase64 = await getCollegeLogoWatermarkBase64();
-  const bannerBase64 = await getCollegeBannerBase64();
 
-  const banner = bannerBase64 || cachedCollegeBannerBase64;
   const logo = logoBase64 || cachedCollegeLogoBase64;
   const watermark = watermarkBase64 || cachedCollegeLogoWatermarkBase64;
+
+  const deptUpper = String(od.dept || 'ENGINEERING').toUpperCase();
 
   // 1. Outer Border / Elegant Institutional Frame
   doc.setDrawColor(203, 213, 225);
@@ -1465,64 +1497,59 @@ async function downloadOnDutyLetterPDF(od) {
   // Render Subtle Institutional College Logo Watermark
   renderPageWatermark(doc, watermark, 95);
 
-  // 2. Official College Letterhead & Banner / Logo
-  if (banner) {
+  // 2. Official College Letterhead - GRT Logo on left with centered institutional typography
+  if (logo) {
     try {
-      const bH = 26.5;
-      const bW = bH * 2.914; // ~77.2mm
-      const bX = (210 - bW) / 2;
-      doc.addImage(banner, 'PNG', bX, 13.5, bW, bH);
+      doc.addImage(logo, 'PNG', 15, 14.5, 22, 22);
     } catch (e) {
-      console.warn('Could not render banner in On-Duty Letter PDF:', e);
+      console.warn('Could not render logo in PDF:', e);
     }
-  } else {
-    if (logo) {
-      try {
-        doc.addImage(logo, 'PNG', 15, 15, 22, 22);
-      } catch (e) {
-        console.warn('Could not render logo in PDF:', e);
-      }
-    }
-
-    // College Letterhead Text
-    doc.setFont('times', 'bold');
-    doc.setFontSize(14);
-    doc.setTextColor(15, 23, 42); // Deep Navy
-    doc.text('GRT INSTITUTE OF ENGINEERING AND TECHNOLOGY', 114, 19.5, { align: 'center' });
-
-    doc.setFont('times', 'normal');
-    doc.setFontSize(8.2);
-    doc.setTextColor(71, 85, 105);
-    doc.text('(Approved by AICTE, New Delhi | Affiliated to Anna University, Chennai)', 114, 24.5, { align: 'center' });
-
-    doc.setFont('times', 'bold');
-    doc.setFontSize(8.2);
-    doc.setTextColor(185, 28, 28); // Official Maroon Accent
-    doc.text('(An Autonomous Institution | Accredited by NAAC with \'A++\' Grade)', 114, 29, { align: 'center' });
-
-    doc.setFont('times', 'normal');
-    doc.setFontSize(7.8);
-    doc.setTextColor(100, 116, 139);
-    doc.text('GRT Mahalaksmi Nagar, Chennai-Tirupati Highway, Tiruttani - 631 209.', 114, 33.5, { align: 'center' });
-
-    const deptUpper = String(od.dept || 'ENGINEERING').toUpperCase();
-    doc.setFont('times', 'bold');
-    doc.setFontSize(9.5);
-    doc.setTextColor(15, 23, 42);
-    doc.text(`DEPARTMENT OF ${deptUpper}`, 114, 38, { align: 'center' });
   }
 
-  // Letterhead Horizontal Divider Line
+  // College Letterhead Typography (Centered in institutional space)
+  const headerCenterX = 114;
+  doc.setFont('times', 'bold');
+  doc.setFontSize(13.8);
+  doc.setTextColor(15, 23, 42); // Deep Navy
+  doc.text('GRT INSTITUTE OF ENGINEERING AND TECHNOLOGY', headerCenterX, 18.5, { align: 'center' });
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(8.2);
+  doc.setTextColor(71, 85, 105);
+  doc.text('(Approved by AICTE, New Delhi | Affiliated to Anna University, Chennai)', headerCenterX, 23.2, { align: 'center' });
+
+  doc.setFont('times', 'bold');
+  doc.setFontSize(8.2);
+  doc.setTextColor(185, 28, 28); // Official Maroon Accent
+  doc.text('(An Autonomous Institution | Accredited by NAAC with \'A++\' Grade)', headerCenterX, 27.6, { align: 'center' });
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(7.8);
+  doc.setTextColor(100, 116, 139);
+  doc.text('GRT Mahalakshmi Nagar, Chennai-Tirupati Highway, Tiruttani - 631 209.', headerCenterX, 31.8, { align: 'center' });
+
+  doc.setFont('times', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(15, 23, 42);
+  doc.text(`DEPARTMENT OF ${deptUpper}`, headerCenterX, 36.2, { align: 'center' });
+
+  // Clearly mention OD LETTER
+  doc.setFont('times', 'bold');
+  doc.setFontSize(10.5);
+  doc.setTextColor(15, 23, 42);
+  doc.text('OD LETTER', headerCenterX, 41.5, { align: 'center' });
+
+  // Letterhead Horizontal Divider Line (Deep Navy + Gold Accent)
   doc.setDrawColor(15, 23, 42);
   doc.setLineWidth(0.6);
-  doc.line(14, 41, 196, 41);
+  doc.line(14, 45, 196, 45);
 
   doc.setDrawColor(217, 119, 6); // Subtle Gold Accent
   doc.setLineWidth(0.3);
-  doc.line(14, 42, 196, 42);
+  doc.line(14, 46, 196, 46);
 
   // 3. Date & Reference Number
-  let curY = 48.5;
+  let curY = 52.5;
   const appliedDate = formatLetterDate(od.appliedTime);
   const refNum = `GRTIET/${deptUpper}/OD/2026/${od.rollNo}`;
 
@@ -1536,12 +1563,14 @@ async function downloadOnDutyLetterPDF(od) {
   doc.setTextColor(15, 23, 42);
   doc.text(`Date: ${appliedDate}`, 194, curY, { align: 'right' });
 
-  // 4. From Section
-  curY = 55.5;
+  // 4. From Section (OD Letter: Parent Mobile Number may be included; do NOT show Parent Name)
+  curY = 57.5;
   doc.setFont('times', 'bold');
   doc.setFontSize(10);
   doc.setTextColor(15, 23, 42);
   doc.text('From:', 16, curY);
+
+  const parentPhone = od.parentContact || od.parentPhone || od.mobile || '-';
 
   curY += 4.5;
   doc.setFont('times', 'normal');
@@ -1551,12 +1580,19 @@ async function downloadOnDutyLetterPDF(od) {
   curY += 4.5;
   doc.text(`${od.academicYear || '3 Year'}, Department of ${od.dept || 'Engineering'} (Section '${od.yearSec || 'A'}'),`, 20, curY);
   curY += 4.5;
-  doc.text('GRT Institute of Engineering and Technology,', 20, curY);
+  doc.text(`Parent Contact: ${parentPhone},`, 20, curY);
   curY += 4.5;
-  doc.text('Tiruttani - 631 209.', 20, curY);
+  doc.text('GRT Institute of Engineering and Technology, Tiruttani - 631 209.', 20, curY);
 
-  // 5. To Section
-  curY += 6;
+  // 5. Through Section
+  curY += 5.5;
+  doc.setFont('times', 'bolditalic');
+  doc.setFontSize(9);
+  doc.setTextColor(71, 85, 105);
+  doc.text('(Through: Respective Class Counselor, Class Advisor, and Head of Department)', 20, curY);
+
+  // 6. To Section - Strictly The Principal (NO Institutional Directorate / Directory)
+  curY += 5.5;
   doc.setFont('times', 'bold');
   doc.setFontSize(10);
   doc.setTextColor(15, 23, 42);
@@ -1566,104 +1602,91 @@ async function downloadOnDutyLetterPDF(od) {
   doc.setFont('times', 'normal');
   doc.setFontSize(9.5);
   doc.setTextColor(30, 41, 59);
-  doc.text('The Head of the Department,', 20, curY);
-  curY += 4.5;
-  doc.text(`Department of ${od.dept || 'Engineering'},`, 20, curY);
+  doc.text('The Principal,', 20, curY);
   curY += 4.5;
   doc.text('GRT Institute of Engineering and Technology,', 20, curY);
   curY += 4.5;
   doc.text('Tiruttani - 631 209.', 20, curY);
 
-  // 6. Through Section
-  curY += 5.5;
-  doc.setFont('times', 'bolditalic');
-  doc.setFontSize(9);
-  doc.setTextColor(71, 85, 105);
-  doc.text('(Through: Respective Class Counselor and Class Advisor)', 20, curY);
-
   // 7. Salutation & Subject
-  curY += 7;
+  curY += 6.5;
   doc.setFont('times', 'bold');
   doc.setFontSize(10);
   doc.setTextColor(15, 23, 42);
   doc.text('Respected Sir / Madam,', 16, curY);
 
-  curY += 6;
-  doc.text('Subject: Requisition for Academic On-Duty (OD) Permission - Regarding.', 20, curY);
+  curY += 5.8;
+  doc.text('Subject: Requisition for Academic On-Duty (OD) Leave Permission - Regarding.', 20, curY);
 
-  // 8. Body Paragraph 1
-  curY += 6;
+  // 8. Formal Letter Body (Cleanly wrapped inside 178mm width)
+  curY += 6.5;
   doc.setFont('times', 'normal');
-  doc.setFontSize(9.5);
+  doc.setFontSize(10);
   doc.setTextColor(30, 41, 59);
-  const body1 = 'I am writing to formally request On-Duty (OD) permission for myself to participate in / attend the specified academic engagement. The particulars of the proposed On-Duty engagement are detailed below:';
+  const body1 = 'I am writing to request permission for Academic On-Duty (OD) leave from the college campus due to the following reason / academic engagement:';
   const body1Lines = doc.splitTextToSize(body1, 178);
-  doc.text(body1Lines, 16, curY, { lineHeightFactor: 1.35 });
-  curY += body1Lines.length * 4.6 + 2;
+  doc.text(body1Lines, 16, curY, { lineHeightFactor: 1.3 });
+  curY += body1Lines.length * 4.6 + 3.5;
 
-  // 9. OD Particulars (Clean, formal institutional letter specification table)
+  // Highlighted Reason in quotes (Centered, wrapped)
+  const odReason = String(od.reason || od.placeEvent || od.event || 'Academic Engagement').trim();
+  const reasonText = `"${odReason}"`;
+  doc.setFont('times', 'bold');
+  doc.setFontSize(11);
+  doc.setTextColor(15, 23, 42);
+  const reasonLines = doc.splitTextToSize(reasonText, 160);
+  doc.text(reasonLines, 105, curY, { align: 'center', lineHeightFactor: 1.3 });
+  curY += reasonLines.length * 5.0 + 3.5;
+
+  // Schedule & Particulars (Centered, safe widths)
   const scheduleText = od.mode === 'time'
-    ? `${od.specificDate || od.fromDate || '-'} (from ${od.fromTime || '-'} to ${od.toTime || '-'})`
+    ? `${od.specificDate || od.fromDate || '-'} (${od.fromTime || '-'} to ${od.toTime || '-'})`
     : `From ${od.fromDate || '-'} to ${od.toDate || '-'}`;
-
   const placeEvent = String(od.placeEvent || od.event || '-').trim();
-  const odReason = String(od.reason || '-').trim();
   const expectedReturn = String(od.expectedReturnTime || '-').trim();
 
-  doc.autoTable({
-    startY: curY,
-    margin: { left: 16, right: 16 },
-    body: [
-      [
-        { content: 'Place / Event', styles: { fontStyle: 'bold', textColor: [15, 23, 42] } },
-        { content: placeEvent }
-      ],
-      [
-        { content: 'OD Date & Time', styles: { fontStyle: 'bold', textColor: [15, 23, 42] } },
-        { content: scheduleText }
-      ],
-      [
-        { content: 'OD Reason / Purpose', styles: { fontStyle: 'bold', textColor: [15, 23, 42] } },
-        { content: odReason }
-      ],
-      [
-        { content: 'Expected Return Time', styles: { fontStyle: 'bold', textColor: [15, 23, 42] } },
-        { content: expectedReturn }
-      ]
-    ],
-    theme: 'grid',
-    tableLineColor: [203, 213, 225],
-    tableLineWidth: 0.2,
-    styles: { font: 'times', fontSize: 9.2, cellPadding: 2.8, textColor: [30, 41, 59] },
-    columnStyles: {
-      0: { width: 44, fillColor: [248, 250, 252], fontStyle: 'bold' },
-      1: { width: 134 }
-    }
-  });
-
-  curY = doc.lastAutoTable.finalY + 5;
-
-  // 10. Body Paragraph 2
-  doc.setFont('times', 'normal');
+  doc.setFont('times', 'bold');
   doc.setFontSize(9.5);
   doc.setTextColor(30, 41, 59);
-  const body2 = 'I kindly request you to consider this requisition favorably, grant me On-Duty permission for the duration stated above, and award academic attendance for the same. I assure you that I will observe all institutional rules and proactively complete all lectures, assignments, and laboratory coursework missed during my absence.';
-  const body2Lines = doc.splitTextToSize(body2, 178);
-  doc.text(body2Lines, 16, curY, { lineHeightFactor: 1.35 });
-  curY += body2Lines.length * 4.6 + 4;
 
-  // 11. Thank You & Yours Faithfully
+  const scheduleLine = `OD Schedule: ${scheduleText}   |   Department: ${od.dept || 'Engineering'} (${od.academicYear || '3 Year'} - Sec '${od.yearSec || 'A'}')`;
+  const scheduleLines = doc.splitTextToSize(scheduleLine, 172);
+  doc.text(scheduleLines, 105, curY, { align: 'center', lineHeightFactor: 1.25 });
+  curY += scheduleLines.length * 4.6 + 1.2;
+
+  if (placeEvent && placeEvent !== '-') {
+    const venueLine = `Event / Venue: ${placeEvent}`;
+    const venueLines = doc.splitTextToSize(venueLine, 172);
+    doc.text(venueLines, 105, curY, { align: 'center', lineHeightFactor: 1.25 });
+    curY += venueLines.length * 4.6 + 1.2;
+  }
+
+  if (expectedReturn && expectedReturn !== '-') {
+    doc.text(`Expected Return to Campus: ${expectedReturn}`, 105, curY, { align: 'center' });
+    curY += 4.8;
+  }
+  curY += 2;
+
+  // Assurance declaration
+  doc.setFont('times', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(30, 41, 59);
+  const body2 = 'I assure you that I will abide by all institutional rules and proactively complete all lectures, assignments, and coursework missed during my absence. Kindly grant me OD permission and attendance.';
+  const body2Lines = doc.splitTextToSize(body2, 178);
+  doc.text(body2Lines, 16, curY, { lineHeightFactor: 1.32 });
+  curY += body2Lines.length * 4.6 + 4.5;
+
+  // 9. Thank You & Yours Faithfully
   doc.setFont('times', 'bold');
   doc.setFontSize(9.5);
   doc.setTextColor(15, 23, 42);
   doc.text('Thanking You,', 16, curY);
 
-  // Student Subscription (Right Side)
   doc.setFont('times', 'normal');
   doc.setFontSize(9.5);
   doc.setTextColor(30, 41, 59);
   doc.text('Yours faithfully,', 148, curY);
-  curY += 9;
+  curY += 7.5;
   doc.setFont('times', 'bold');
   doc.text(`(${od.name || 'Student'})`, 148, curY);
   curY += 4.2;
@@ -1671,8 +1694,8 @@ async function downloadOnDutyLetterPDF(od) {
   doc.setFontSize(9);
   doc.text(`Roll No: ${od.rollNo}`, 148, curY);
 
-  // 12. Proper Signature & Academic Endorsement Section
-  curY = Math.max(curY + 7, 204);
+  // 10. Clearance & Endorsement Section (Student, Counselor, Advisor, HOD, Principal)
+  curY = Math.max(curY + 5, 202);
 
   doc.setDrawColor(203, 213, 225);
   doc.setLineWidth(0.4);
@@ -1682,135 +1705,95 @@ async function downloadOnDutyLetterPDF(od) {
   doc.setFont('times', 'bold');
   doc.setFontSize(8.8);
   doc.setTextColor(71, 85, 105);
-  doc.text('OFFICIAL VERIFICATION & ACADEMIC ENDORSEMENT', 16, curY);
+  doc.text('OFFICIAL MULTI-TIER CLEARANCE & ACADEMIC ENDORSEMENT', 16, curY);
 
   const cApp = od.counselorApproval?.approved;
   const aApp = od.advisorApproval?.approved;
   const hApp = od.hodApproval?.approved;
+  const pApp = od.principalApproval?.approved || od.status === 'Approved' || !!od.approvalTime;
 
-  const counselorName = od.counselorApproval?.counselorName || od.counselorName || 'Assigned Counselor';
+  const counselorName = od.counselorApproval?.counselorName || od.counselorName || 'Class Counselor';
   const advisorName = od.advisorApproval?.advisorName || 'Class Advisor';
   const hodName = od.hodApproval?.hodName || 'Head of Department';
+  const principalName = od.principalApproval?.principalName || 'Principal';
 
-  const counselorStatus = cApp
-    ? 'Recommended'
-    : (od.status === 'Rejected' && /counselor/i.test(od.rejection?.role || '') ? 'REJECTED' : 'Pending');
-  const advisorStatus = aApp
-    ? 'Recommended'
-    : (od.status === 'Rejected' && /advisor/i.test(od.rejection?.role || '') ? 'REJECTED' : (cApp ? 'Pending' : 'Queued'));
-  const hodStatus = hApp
-    ? 'Sanctioned & Approved'
-    : (od.status === 'Rejected' && /hod/i.test(od.rejection?.role || '') ? 'REJECTED' : (aApp ? 'Pending' : 'Queued'));
+  const counselorStatus = cApp ? 'Recommended' : (od.status === 'Rejected' && /counselor/i.test(od.rejection?.role || '') ? 'REJECTED' : 'Pending');
+  const advisorStatus = aApp ? 'Recommended' : (od.status === 'Rejected' && /advisor/i.test(od.rejection?.role || '') ? 'REJECTED' : (cApp ? 'Pending' : 'Queued'));
+  const hodStatus = hApp ? 'Authorized' : (od.status === 'Rejected' && /hod/i.test(od.rejection?.role || '') ? 'REJECTED' : (aApp ? 'Pending' : 'Queued'));
+  const principalStatus = (pApp || hApp) ? 'Sanctioned & Approved' : (od.status === 'Rejected' && /principal/i.test(od.rejection?.role || '') ? 'REJECTED' : (hApp ? 'Pending' : 'Queued'));
 
   const cDate = od.counselorApproval?.time ? formatLetterDate(od.counselorApproval.time) : '-';
   const aDate = od.advisorApproval?.time ? formatLetterDate(od.advisorApproval.time) : '-';
   const hDate = od.hodApproval?.time ? formatLetterDate(od.hodApproval.time) : '-';
+  const pDate = od.principalApproval?.time || od.approvalTime ? formatLetterDate(od.principalApproval?.time || od.approvalTime) : (hApp && hDate !== '-' ? hDate : '-');
 
-  const sigY = curY + 20;
+  const sigY = curY + 16;
+  const colWidth = 33.2;
+  const colGap = 3.0;
 
-  // Column 1: Student
-  doc.setDrawColor(148, 163, 184);
-  doc.setLineWidth(0.3);
-  doc.line(16, sigY, 52, sigY);
-  doc.setFont('times', 'bold');
-  doc.setFontSize(8.5);
-  doc.setTextColor(15, 23, 42);
-  doc.text('Signature of Student', 16, sigY + 4);
-  doc.setFont('times', 'normal');
-  doc.setFontSize(7.8);
-  doc.setTextColor(71, 85, 105);
-  doc.text(od.name || 'Student', 16, sigY + 7.8);
-  doc.text(`Date: ${appliedDate}`, 16, sigY + 11.4);
+  const cols = [
+    { title: 'Student Signature', name: od.name || 'Student', status: 'Submitted', isApproved: true, date: appliedDate, x: 16 },
+    { title: 'Class Counselor', name: counselorName, status: counselorStatus, isApproved: cApp, date: cDate, x: 16 + (colWidth + colGap) },
+    { title: 'Class Advisor', name: advisorName, status: advisorStatus, isApproved: aApp, date: aDate, x: 16 + (colWidth + colGap) * 2 },
+    { title: 'Head of Dept', name: hodName, status: hodStatus, isApproved: hApp, date: hDate, x: 16 + (colWidth + colGap) * 3 },
+    { title: 'Principal Approval', name: principalName, status: principalStatus, isApproved: (pApp || hApp), date: pDate, x: 16 + (colWidth + colGap) * 4 }
+  ];
 
-  // Column 2: Counselor
-  doc.line(62, sigY, 98, sigY);
-  doc.setFont('times', 'bold');
-  doc.setFontSize(8.5);
-  doc.setTextColor(15, 23, 42);
-  doc.text('Class Counselor', 62, sigY + 4);
-  doc.setFont('times', 'bold');
-  doc.setFontSize(7.8);
-  if (cApp) doc.setTextColor(22, 101, 52);
-  else if (counselorStatus === 'REJECTED') doc.setTextColor(190, 18, 60);
-  else doc.setTextColor(100, 116, 139);
-  doc.text(counselorStatus, 62, sigY + 7.8);
-  doc.setFont('times', 'normal');
-  doc.setTextColor(71, 85, 105);
-  doc.text(counselorName, 62, sigY + 11.4, { maxWidth: 36 });
-  if (cApp && cDate !== '-') doc.text(`Date: ${cDate}`, 62, sigY + 15);
+  cols.forEach(col => {
+    doc.setDrawColor(148, 163, 184);
+    doc.setLineWidth(0.3);
+    doc.line(col.x, sigY, col.x + colWidth, sigY);
+    doc.setFont('times', 'bold');
+    doc.setFontSize(8.2);
+    doc.setTextColor(15, 23, 42);
+    doc.text(col.title, col.x, sigY + 3.8);
 
-  // Column 3: Advisor
-  doc.line(110, sigY, 146, sigY);
-  doc.setFont('times', 'bold');
-  doc.setFontSize(8.5);
-  doc.setTextColor(15, 23, 42);
-  doc.text('Class Advisor', 110, sigY + 4);
-  doc.setFont('times', 'bold');
-  doc.setFontSize(7.8);
-  if (aApp) doc.setTextColor(22, 101, 52);
-  else if (advisorStatus === 'REJECTED') doc.setTextColor(190, 18, 60);
-  else doc.setTextColor(100, 116, 139);
-  doc.text(advisorStatus, 110, sigY + 7.8);
-  doc.setFont('times', 'normal');
-  doc.setTextColor(71, 85, 105);
-  doc.text(advisorName, 110, sigY + 11.4, { maxWidth: 36 });
-  if (aApp && aDate !== '-') doc.text(`Date: ${aDate}`, 110, sigY + 15);
+    doc.setFont('times', 'bold');
+    doc.setFontSize(7.5);
+    if (col.isApproved) doc.setTextColor(22, 101, 52);
+    else if (col.status === 'REJECTED') doc.setTextColor(190, 18, 60);
+    else doc.setTextColor(100, 116, 139);
+    doc.text(col.status, col.x, sigY + 7.4);
 
-  // Column 4: HOD
-  doc.line(156, sigY, 194, sigY);
-  doc.setFont('times', 'bold');
-  doc.setFontSize(8.5);
-  doc.setTextColor(15, 23, 42);
-  doc.text('Head of Department', 156, sigY + 4);
-  doc.setFont('times', 'bold');
-  doc.setFontSize(7.8);
-  if (hApp) doc.setTextColor(22, 101, 52);
-  else if (hodStatus === 'REJECTED') doc.setTextColor(190, 18, 60);
-  else doc.setTextColor(100, 116, 139);
-  doc.text(hodStatus, 156, sigY + 7.8);
-  doc.setFont('times', 'normal');
-  doc.setTextColor(71, 85, 105);
-  doc.text(hodName, 156, sigY + 11.4, { maxWidth: 38 });
-  if (hApp && hDate !== '-') doc.text(`Date: ${hDate}`, 156, sigY + 15);
+    doc.setFont('times', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(71, 85, 105);
+    doc.text(col.name, col.x, sigY + 10.8, { maxWidth: colWidth });
+    if (col.isApproved && col.date !== '-') doc.text(`Date: ${col.date}`, col.x, sigY + 14.2);
+  });
 
-  // Rejection Banner if rejected
+  // Institutional Clearance Endorsement Box
+  const endY = sigY + 17;
   if (od.status === 'Rejected') {
-    const rejY = sigY + 19;
     doc.setDrawColor(244, 63, 94);
     doc.setFillColor(255, 241, 242);
-    doc.roundedRect(16, rejY, 178, 11, 1.5, 1.5, 'FD');
+    doc.roundedRect(16, endY, 178, 11, 1.5, 1.5, 'FD');
     doc.setFont('times', 'bold');
     doc.setFontSize(8);
     doc.setTextColor(159, 18, 57);
-    doc.text(
-      `Rejection Endorsement: Requisition was declined by ${od.rejection?.roleTitle || 'Authority'} (${od.rejection?.rejectedBy || '-'}). Reason: "${od.rejection?.reason || '-'}" (${od.rejection?.time || '-'})`,
-      19,
-      rejY + 6.8,
-      { maxWidth: 172 }
-    );
-  } else if (hApp) {
-    const appY = sigY + 19;
+    const rejMsg = `Rejection Endorsement: Requisition declined by ${od.rejection?.roleTitle || od.rejectedBy || 'Authority'}. Reason: "${od.rejection?.reason || od.rejectionReason || 'Not approved'}"`;
+    const rejLines = doc.splitTextToSize(rejMsg, 172);
+    doc.text(rejLines, 19, endY + 4.8);
+  } else if (hApp || pApp || od.status === 'Approved') {
     doc.setDrawColor(34, 197, 94);
     doc.setFillColor(240, 253, 244);
-    doc.roundedRect(16, appY, 178, 9, 1.5, 1.5, 'FD');
+    doc.roundedRect(16, endY, 178, 9.5, 1.5, 1.5, 'FD');
     doc.setFont('times', 'bold');
     doc.setFontSize(8);
     doc.setTextColor(22, 101, 52);
-    doc.text(
-      'Official Endorsement: On-Duty (OD) is fully authorized under GRT Autonomous Regulations. Attendance granted for stated duration.',
-      19,
-      appY + 5.8
-    );
+    const appMsg = 'Official Endorsement: On-Duty (OD) authorized under GRT Autonomous Academic Regulations. Official attendance sanctioned for the stated duration.';
+    const appLines = doc.splitTextToSize(appMsg, 172);
+    doc.text(appLines, 19, endY + 4.5);
   }
 
-  // 13. Institutional Footer
+  // 11. Footer (Clean 4mm breathing room above inner border at 285)
   doc.setFont('times', 'italic');
   doc.setFontSize(7.5);
   doc.setTextColor(148, 163, 184);
   doc.text(
     'GRT Institute of Engineering and Technology • Official Academic On-Duty Letter • Campus PassPro',
     105,
-    284,
+    281,
     { align: 'center' }
   );
 
@@ -1877,7 +1860,8 @@ async function downloadAllRecordsCSV() {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.setAttribute('href', url);
-  link.setAttribute('download', `GRTIET_All_Records_${loggedUser?.role || 'export'}_${Date.now()}.csv`);
+  const uRole = window.loggedUser?.role || 'export';
+  link.setAttribute('download', `GRTIET_All_Records_${uRole}_${Date.now()}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

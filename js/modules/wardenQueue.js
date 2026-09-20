@@ -304,13 +304,20 @@ function renderWardenRecords(passes) {
                   <div class="text-xs text-slate-500">By: ${escapeHtml(p.rejectedBy || 'Warden')}</div>
                 </div>`
               : p.status === 'Returned' || p.exitStatus === 'Returned to College'
-              ? `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-sky-100 text-sky-900 border border-sky-300">
-                  RETURNED (${escapeHtml(p.returnTime || '')})
-                </span>`
-              : p.exitStatus === 'Exited Campus'
-              ? `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
-                  EXITED (${escapeHtml(p.exitTime || '')})
-                </span>`
+              ? `<div class="space-y-1">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-sky-100 text-sky-900 border border-sky-300">
+                    RETURNED TO CAMPUS
+                  </span>
+                  <div class="text-[11px] font-mono text-slate-700">Exit: ${escapeHtml(p.exitTime && p.exitTime !== '-' ? p.exitTime : '-')}</div>
+                  <div class="text-[11px] font-mono text-sky-900 font-bold">Return: ${escapeHtml(p.returnTime && p.returnTime !== '-' ? p.returnTime : '-')}</div>
+                </div>`
+              : p.status === 'Exited' || p.exitStatus === 'Exited Campus'
+              ? `<div class="space-y-1">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
+                    EXITED CAMPUS
+                  </span>
+                  <div class="text-[11px] font-mono text-emerald-900 font-bold">Exit: ${escapeHtml(p.exitTime || '-')}</div>
+                </div>`
               : `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
                   APPROVED
                 </span>`

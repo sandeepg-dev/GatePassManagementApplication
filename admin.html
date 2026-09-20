@@ -28,12 +28,8 @@
       <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
       <div class="text-center space-y-2 relative z-10">
-        <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-red-600 via-rose-500 to-amber-500 p-0.5 shadow-lg flex items-center justify-center">
-          <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-red-500">
-            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-          </div>
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-white p-2 shadow-lg border border-slate-700/60 flex items-center justify-center">
+          <img src="/public/grt-logo.png" alt="GRT College Logo" class="w-12 h-12 object-contain">
         </div>
         <h1 class="text-2xl font-black text-white tracking-tight uppercase">Admin Directorate</h1>
         <p class="text-xs text-slate-400 font-medium">
@@ -46,7 +42,7 @@
       <form id="adminLoginForm" autocomplete="off" onsubmit="event.preventDefault(); handleAdminLogin();" class="space-y-4 relative z-10">
         <div>
           <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-            Admin User ID / Username
+            Login ID
           </label>
           <div class="relative">
             <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
@@ -58,7 +54,7 @@
               type="text"
               id="adminUserId"
               required
-              placeholder="Enter Admin ID"
+              placeholder="Enter Login ID"
               autocomplete="off"
               value=""
               class="w-full pl-10 pr-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-xs sm:text-sm text-white font-mono focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition"
@@ -68,7 +64,7 @@
 
         <div>
           <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-            Admin Password
+            Password
           </label>
           <div class="relative">
             <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
@@ -80,7 +76,7 @@
               type="password"
               id="adminPassword"
               required
-              placeholder="Enter Admin Password"
+              placeholder="Enter Password"
               autocomplete="new-password"
               value=""
               class="w-full pl-10 pr-11 py-3 bg-slate-950 border border-slate-700 rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition"
@@ -105,7 +101,7 @@
           id="adminLoginBtn"
           class="w-full py-3.5 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white font-bold rounded-xl text-xs sm:text-sm shadow-lg transition active:scale-[0.99] flex items-center justify-center gap-2 mt-2"
         >
-          <span>Unlock Admin Portal</span>
+          <span>Login</span>
         </button>
       </form>
 
@@ -123,12 +119,8 @@
     <!-- Top Executive Header -->
     <header class="bg-slate-900/95 border border-slate-800 rounded-3xl p-5 sm:p-6 backdrop-blur-xl shadow-2xl flex flex-wrap items-center justify-between gap-4">
       <div class="flex items-center gap-3.5">
-        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-red-600 via-rose-500 to-amber-500 p-0.5 shadow-lg flex items-center justify-center">
-          <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-red-500">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-          </div>
+        <div class="w-12 h-12 rounded-2xl bg-white p-1.5 shadow-md border border-slate-700/50 flex items-center justify-center shrink-0">
+          <img src="/public/grt-logo.png" alt="GRT College Logo" class="w-9 h-9 object-contain">
         </div>
         <div>
           <div class="flex items-center gap-2">

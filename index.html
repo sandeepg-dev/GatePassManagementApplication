@@ -96,10 +96,8 @@
 
       <!-- Header / Portal Identity -->
       <div class="text-center space-y-2 relative z-10">
-        <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-red-700 via-rose-700 to-amber-600 p-0.5 shadow-md flex items-center justify-center">
-          <div class="w-full h-full bg-white rounded-[14px] flex items-center justify-center text-red-800">
-            <svg class="w-7 h-7 fill-current" viewBox="0 0 24 24"><path d="M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3zm0 2.84L18 11.24V18h-2v-6H8v6H6v-6.76L12 5.84z"/></svg>
-          </div>
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-white p-2 shadow-lg border border-slate-200/80 flex items-center justify-center">
+          <img src="/public/grt-logo.png" alt="GRT College Logo" class="w-12 h-12 object-contain">
         </div>
         <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Institutional Login</h2>
         <p class="text-sm text-slate-600 font-medium">
@@ -212,14 +210,6 @@
       </div>
 
       <div class="flex items-center flex-wrap gap-2.5">
-        <button id="topBulkPdfBtn" onclick="downloadMasterPDF()"
-          class="hidden px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs md:text-sm font-bold shadow-xs transition-all flex items-center gap-2 active:scale-95">
-          <span>Master Audit (PDF)</span>
-        </button>
-        <button id="topBulkLettersBtn" onclick="downloadAllCompleteLettersPDF()"
-          class="hidden px-4 py-2.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded-xl text-xs md:text-sm font-bold shadow-xs transition-all flex items-center gap-2 active:scale-95">
-          <span>Download All Letters (PDF)</span>
-        </button>
         <button id="clearAllDataBtn" onclick="confirmAndClearAllData()"
           class="hidden px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/80 rounded-xl text-xs md:text-sm font-bold shadow-2xs transition-all flex items-center gap-2 active:scale-95"
           title="Clear all leave applications and gate passes from database">
@@ -258,7 +248,7 @@
               <th>Standing & Reason</th>
               <th>Institutional Clearances</th>
               <th>Gate Pass Validity</th>
-              <th>Campus Exit</th>
+              <th>Campus Movement (Exit & Return)</th>
               <th class="text-right">Official Downloads</th>
             </tr>
           </thead>

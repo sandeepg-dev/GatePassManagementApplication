@@ -359,14 +359,21 @@ function renderAuthorityApprovedSection(passes) {
                   </span>
                   <div class="text-xs text-emerald-700 font-mono font-semibold">${p.hodApproval?.time || p.approvalTime || '-'}</div>
                 </div>`
-              : p.status === 'Exited' || p.exitStatus === 'Exited Campus'
-              ? `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
-                  EXITED (${escapeHtml(p.exitTime || '')})
-                </span>`
               : p.status === 'Returned' || p.exitStatus === 'Returned to College'
-              ? `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-sky-100 text-sky-900 border border-sky-300">
-                  RETURNED (${escapeHtml(p.returnTime || '')})
-                </span>`
+              ? `<div class="space-y-0.5">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-sky-100 text-sky-900 border border-sky-300">
+                    RETURNED
+                  </span>
+                  <div class="text-[11px] font-mono text-slate-700">Exit: ${escapeHtml(p.exitTime && p.exitTime !== '-' ? p.exitTime : '-')}</div>
+                  <div class="text-[11px] font-mono text-sky-900 font-bold">Return: ${escapeHtml(p.returnTime && p.returnTime !== '-' ? p.returnTime : '-')}</div>
+                </div>`
+              : p.status === 'Exited' || p.exitStatus === 'Exited Campus'
+              ? `<div class="space-y-0.5">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
+                    EXITED
+                  </span>
+                  <div class="text-[11px] font-mono text-emerald-900 font-bold">Exit: ${escapeHtml(p.exitTime || '-')}</div>
+                </div>`
               : p.status === 'Rejected'
               ? `<div class="space-y-1">
                   <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-900 border border-rose-300">
@@ -593,13 +600,20 @@ function renderAuthorityAllRecordsSection(passes) {
                   <div class="text-xs text-emerald-700 font-mono font-semibold">${p.hodApproval?.time || p.approvalTime || '-'}</div>
                 </div>`
               : p.status === 'Returned' || p.exitStatus === 'Returned to College'
-              ? `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-sky-100 text-sky-900 border border-sky-300">
-                  RETURNED (${escapeHtml(p.returnTime || '')})
-                </span>`
-              : p.exitStatus === 'Exited Campus'
-              ? `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
-                  EXITED (${escapeHtml(p.exitTime || '')})
-                </span>`
+              ? `<div class="space-y-0.5">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-sky-100 text-sky-900 border border-sky-300">
+                    RETURNED
+                  </span>
+                  <div class="text-[11px] font-mono text-slate-700">Exit: ${escapeHtml(p.exitTime && p.exitTime !== '-' ? p.exitTime : '-')}</div>
+                  <div class="text-[11px] font-mono text-sky-900 font-bold">Return: ${escapeHtml(p.returnTime && p.returnTime !== '-' ? p.returnTime : '-')}</div>
+                </div>`
+              : p.status === 'Exited' || p.exitStatus === 'Exited Campus'
+              ? `<div class="space-y-0.5">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
+                    EXITED
+                  </span>
+                  <div class="text-[11px] font-mono text-emerald-900 font-bold">Exit: ${escapeHtml(p.exitTime || '-')}</div>
+                </div>`
               : `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300">
                   ${escapeHtml(p.status.toUpperCase())}
                 </span>`
@@ -942,12 +956,6 @@ Campus PassPro • Official GRT Institutional Gate Pass Clearance`;
 }
 
 function viewFormalLetter(pass) {
-  if (loggedUser?.role === 'student' && typeof isPassFullyApproved === 'function' && !isPassFullyApproved(pass)) {
-    if (typeof showToast === 'function') {
-      showToast('Gate Pass is hidden until all required institutional approvals are completed.', 'warning');
-    }
-    return;
-  }
   if (pass && (pass.isOD || pass.odLetter)) {
     if (typeof viewOnDutyLetter === 'function') {
       return viewOnDutyLetter(pass);
@@ -960,16 +968,16 @@ function viewFormalLetter(pass) {
   const subtitleEl = document.getElementById('letterModalSubtitle');
 
   if (subtitleEl) {
-    subtitleEl.innerText = 'Tiruttani • Official College Gate Pass';
+    subtitleEl.innerText = 'Tiruttani • Formal Leave Requisition Letter';
   }
 
-  if (contentEl) contentEl.innerText = buildOfficialGatePassText(pass) || pass.formalLetter || '';
+  if (contentEl) contentEl.innerText = pass.formalLetter || buildOfficialGatePassText(pass) || '';
   if (btnEl) {
-    btnEl.className = 'px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs md:text-sm font-bold shadow-xs transition active:scale-95 flex items-center gap-2';
+    btnEl.className = 'px-4 py-2.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded-xl text-xs md:text-sm font-bold shadow-xs transition active:scale-95 flex items-center gap-2';
     btnEl.innerHTML = `
-      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
-      <span>Download Gate Pass (PDF)</span>`;
-    btnEl.onclick = () => downloadGatePassCardPDF(pass);
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      <span>Download Official Letter (PDF)</span>`;
+    btnEl.onclick = () => downloadOfficialLetterOnlyPDF(pass);
   }
   if (modalEl) modalEl.classList.remove('hidden');
 }

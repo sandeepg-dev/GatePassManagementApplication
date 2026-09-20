@@ -67,6 +67,9 @@ async function submitStudentPass(rollNo) {
 
 function isPassFullyApproved(p) {
   if (!p || p.status === 'Rejected') return false;
+  if (p.status === 'Approved' || p.status === 'Completed' || p.status === 'Exited' || p.exitStatus === 'Exited Campus' || p.exitStatus === 'Returned to College') {
+    return true;
+  }
   const isHostel = (/hoste?l|^h$/i.test(p.accommodation || '') && !/day/i.test(p.accommodation || ''));
   if (isHostel) {
     const cOk = p.counselorApproval?.approved === true || !!p.counselorApproval?.time;
@@ -74,13 +77,13 @@ function isPassFullyApproved(p) {
     const hOk = p.hodApproval?.approved === true || !!p.hodApproval?.time;
     const pOk = p.principalApproval?.approved === true || !!p.principalApproval?.time;
     const wOk = p.wardenApproval?.approved === true || !!p.wardenApproval?.time;
-    return (cOk && aOk && hOk && pOk && wOk) || (wOk && (p.status === 'Approved' || p.status === 'Exited' || p.status === 'Returned' || p.status === 'Completed'));
+    return (cOk && aOk && hOk && pOk && wOk);
   } else {
     const cOk = p.counselorApproval?.approved === true || !!p.counselorApproval?.time;
     const aOk = p.advisorApproval?.approved === true || !!p.advisorApproval?.time;
     const hOk = p.hodApproval?.approved === true || !!p.hodApproval?.time;
     const pOk = p.principalApproval?.approved === true || !!p.principalApproval?.time;
-    return (cOk && aOk && hOk && pOk) || (pOk && (p.status === 'Approved' || p.status === 'Exited' || p.status === 'Returned' || p.status === 'Completed'));
+    return (cOk && aOk && hOk && pOk);
   }
 }
 
@@ -180,14 +183,13 @@ async function loadStudentPersonalStatus() {
                  </div>`
               : p.status === 'Returned' || p.exitStatus === 'Returned to College'
               ? `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-sky-100 text-sky-900 border border-sky-300">
-                  RETURNED
+                  PASS COMPLETED
                 </span>`
               : p.status === 'Exited' || p.exitStatus === 'Exited Campus'
               ? `<div class="space-y-1">
                   <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
-                    EXITED
+                    CAMPUS EXITED
                   </span>
-                  <div class="text-xs font-mono font-bold text-emerald-800">${escapeHtml(p.exitTime || '')}</div>
                 </div>`
               : p.status === 'Approved'
               ? `<div class="space-y-1">
@@ -212,23 +214,43 @@ async function loadStudentPersonalStatus() {
                   NOT AUTHORIZED
                  </span>`
               : p.status === 'Returned' || p.exitStatus === 'Returned to College'
-              ? `<div class="space-y-1">
-                  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-sky-100 text-sky-900 border border-sky-300">
-                    RETURNED
-                  </span>
-                  <div class="text-xs font-mono font-bold text-sky-800">${escapeHtml(p.returnTime || '')}</div>
+              ? `<div class="space-y-1.5 p-2.5 bg-sky-50/90 rounded-xl border border-sky-200/80 min-w-[190px]">
+                  <div class="flex items-center gap-1.5">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-black bg-sky-700 text-white shadow-2xs">
+                      RETURNED TO CAMPUS
+                    </span>
+                  </div>
+                  <div class="text-xs font-mono text-slate-700">
+                    <span class="font-bold text-slate-900">Scanned Exit:</span> ${escapeHtml(p.exitTime && p.exitTime !== '-' ? p.exitTime : '-')}
+                  </div>
+                  <div class="text-xs font-mono text-sky-900 font-bold">
+                    <span class="font-bold text-sky-950">Scanned Return:</span> ${escapeHtml(p.returnTime && p.returnTime !== '-' ? p.returnTime : '-')}
+                  </div>
                 </div>`
               : p.status === 'Exited' || p.exitStatus === 'Exited Campus'
-              ? `<div class="space-y-1">
-                  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
-                    EXITED
-                  </span>
-                  <div class="text-xs font-mono font-bold text-emerald-800">${escapeHtml(p.exitTime || '')}</div>
+              ? `<div class="space-y-1.5 p-2.5 bg-emerald-50/90 rounded-xl border border-emerald-200/80 min-w-[190px]">
+                  <div class="flex items-center gap-1.5">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-black bg-emerald-700 text-white shadow-2xs">
+                      EXITED CAMPUS
+                    </span>
+                  </div>
+                  <div class="text-xs font-mono text-emerald-900 font-bold">
+                    <span class="font-bold text-emerald-950">Scanned Exit:</span> ${escapeHtml(p.exitTime || '-')}
+                  </div>
+                  <div class="text-[11px] text-amber-700 font-medium italic flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                    <span>Pending Return Scan at Gate</span>
+                  </div>
                 </div>`
               : p.status === 'Approved'
-              ? `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
-                  LEAVE APPROVED
-                 </span>`
+              ? `<div class="space-y-1 p-2 bg-emerald-50/60 rounded-xl border border-emerald-200/60 min-w-[180px]">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
+                    GATE PASS READY
+                  </span>
+                  <div class="text-[11px] text-slate-600 font-medium">
+                    ${(/hoste?l|^h$/i.test(p.accommodation || '') && !/day/i.test(p.accommodation || '')) ? 'Ready for Hosteller Gate Exit Scan' : 'Approved (Day Scholar)'}
+                  </div>
+                </div>`
               : `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300">
                   PENDING CLEARANCE
                  </span>`
@@ -247,10 +269,16 @@ async function loadStudentPersonalStatus() {
                     <span>Download Letter</span>
                   </button>
                 </div>`
-              : `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-400 rounded-xl text-xs font-semibold border border-slate-200/80 cursor-not-allowed ml-auto" title="Gate pass will be available after all authorities approve">
-                  <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                  <span>Pending Approvals</span>
-                </span>`
+              : `<div class="flex items-center justify-end gap-2">
+                  <button onclick="downloadOfficialLetterOnlyPDF(${escapeAttr(p)})" class="px-3 py-1.5 bg-indigo-700 hover:bg-indigo-800 text-white font-bold rounded-xl shadow-xs transition inline-flex items-center gap-1.5 active:scale-95 text-xs" title="Download Formal College Letter (PDF)">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <span>Download Letter</span>
+                  </button>
+                  <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-400 rounded-xl text-xs font-semibold border border-slate-200/80 cursor-not-allowed" title="Gate pass card will be available after all authorities approve">
+                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    <span>Pass Pending</span>
+                  </span>
+                </div>`
           }
         </td>
       </tr>

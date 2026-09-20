@@ -9,16 +9,16 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center justify-center p-4 antialiased selection:bg-emerald-500 selection:text-white">
 
-    <div class="max-w-md w-full bg-slate-900/90 backdrop-blur-md p-7 rounded-2xl shadow-2xl border border-slate-800 text-center">
+    <div class="max-w-md w-full bg-slate-900/90 backdrop-blur-md p-6 sm:p-7 rounded-2xl shadow-2xl border border-slate-800 text-center">
         
-        <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2.5 text-left">
-                <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+                <div class="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-xs">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
                 </div>
                 <div>
-                    <h1 class="text-base font-bold text-white tracking-tight">Security Gate Scanner</h1>
-                    <p class="text-[11px] font-medium text-slate-400">Campus PassPro Verification Terminal</p>
+                    <h1 class="text-base font-bold text-white tracking-tight">Hosteller Exit & Return Scanner</h1>
+                    <p class="text-[11px] font-medium text-slate-400">Campus PassPro Gate Verification Terminal</p>
                 </div>
             </div>
             <span id="scanStatus" class="bg-emerald-500/15 text-emerald-400 text-xs px-3 py-1 rounded-full border border-emerald-500/30 font-semibold font-mono">
@@ -26,20 +26,41 @@
             </span>
         </div>
 
-        <p class="text-xs font-medium text-slate-400 mb-4 bg-slate-800/60 py-1.5 px-3 rounded-lg border border-slate-700/50">Position barcode along scanline (15–25 cm distance)</p>
+        <!-- HOSTELLER SCANNER RESTRICTION BANNER -->
+        <div class="flex items-center justify-between px-3 py-1.5 bg-amber-500/10 border border-amber-500/25 rounded-xl text-[11px] font-medium text-amber-300 mb-3 text-left">
+            <div class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                <span>Hostellers Only</span>
+            </div>
+            <span class="text-[10px] text-amber-400/80">Day Scholar Restricted</span>
+        </div>
 
-        <div class="relative overflow-hidden rounded-xl bg-black border-2 border-emerald-500/60 mb-5 h-[240px] flex items-center justify-center shadow-inner">
+        <!-- SCAN MODE SELECTOR: AUTO / EXIT / RETURN -->
+        <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-950/80 rounded-xl border border-slate-800 mb-3.5 text-xs font-bold">
+            <button type="button" id="modeBtnAuto" onclick="setScanMode('auto')" class="py-1.5 px-2 rounded-lg bg-emerald-600 text-white transition shadow-sm flex items-center justify-center gap-1">
+                <span>🔄 Auto</span>
+            </button>
+            <button type="button" id="modeBtnExit" onclick="setScanMode('exit')" class="py-1.5 px-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition flex items-center justify-center gap-1">
+                <span>🚪 Exit</span>
+            </button>
+            <button type="button" id="modeBtnReturn" onclick="setScanMode('return')" class="py-1.5 px-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition flex items-center justify-center gap-1">
+                <span>🏫 Return</span>
+            </button>
+        </div>
+
+        <p id="modeInstruction" class="text-xs font-medium text-slate-400 mb-3 bg-slate-800/60 py-1.5 px-3 rounded-lg border border-slate-700/50">Smart Auto: Automatically detects Exit or Return</p>
+
+        <div class="relative overflow-hidden rounded-xl bg-black border-2 border-emerald-500/60 mb-4 h-[230px] flex items-center justify-center shadow-inner">
             <video id="video" autoplay playsinline muted class="w-full h-full object-cover"></video>
-            
-            <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 h-0.5 bg-emerald-400 pointer-events-none shadow-[0_0_12px_rgba(52,211,153,0.8)]"></div>
+            <div id="scanLaser" class="absolute inset-x-0 top-1/2 -translate-y-1/2 h-0.5 bg-emerald-400 pointer-events-none shadow-[0_0_12px_rgba(52,211,153,0.8)]"></div>
         </div>
 
         <div id="scanResult" class="hidden p-4 rounded-xl font-bold text-xs mb-4 text-left shadow-lg"></div>
 
-        <div class="pt-4 border-t border-slate-800">
+        <div class="pt-3 border-t border-slate-800">
             <form onsubmit="handleManualSubmit(event)" class="flex gap-2">
-                <input type="text" id="manualRoll" autofocus placeholder="Enter Student Register / Roll No" class="w-full px-3.5 py-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono tracking-wide">
-                <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 rounded-lg text-xs font-bold text-white transition shadow-sm">Verify</button>
+                <input type="text" id="manualRoll" autofocus placeholder="Enter Hosteller Roll No (e.g. 110324104090)" class="w-full px-3.5 py-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono tracking-wide">
+                <button type="submit" id="verifyBtn" class="bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 rounded-lg text-xs font-bold text-white transition shadow-sm whitespace-nowrap">Verify</button>
             </form>
         </div>
     </div>

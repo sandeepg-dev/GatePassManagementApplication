@@ -330,15 +330,6 @@ function getAuthorityDashboardHTML(user, config) {
             </div>
             <div class="flex items-center flex-wrap gap-2">
               <input type="text" id="authAllRecordsSearch" oninput="filterAuthorityAllRecords()" placeholder="Search name, roll no, reason..." class="px-4 py-2 bg-white border border-slate-300 rounded-xl text-xs md:text-sm font-semibold w-56 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 shadow-2xs">
-              <button onclick="downloadMasterPDF()" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs md:text-sm rounded-xl shadow-xs transition-all flex items-center gap-1.5 active:scale-95">
-                <span>Export PDF</span>
-              </button>
-              <button onclick="downloadAllRecordsCSV()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs md:text-sm rounded-xl shadow-xs transition-all flex items-center gap-1.5 active:scale-95">
-                <span>Export CSV</span>
-              </button>
-              <button onclick="downloadAllCompleteLettersPDF()" class="px-3.5 py-2 bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-xs md:text-sm rounded-xl shadow-xs transition-all flex items-center gap-1.5 active:scale-95">
-                <span>All Letters</span>
-              </button>
               <button onclick="refreshAllAuthorityViews(); showToast('Dashboard records refreshed.', 'info', 2000);" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs md:text-sm rounded-xl border border-slate-200 shadow-2xs transition-all flex items-center gap-1.5 active:scale-95">
                 <span>Refresh</span>
               </button>
@@ -474,9 +465,6 @@ function getAuthorityDashboardHTML(user, config) {
             </div>
             <div class="flex items-center flex-wrap gap-2">
               <input type="text" id="authAllRecordsSearch" oninput="filterAuthorityAllRecords()" placeholder="Search name, roll no, reason..." class="px-4 py-2 bg-white border border-slate-300 rounded-xl text-xs md:text-sm font-semibold w-56 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 shadow-2xs">
-              <button onclick="downloadMasterPDF()" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs md:text-sm rounded-xl shadow-xs transition-all flex items-center gap-1.5 active:scale-95"><span>Export PDF</span></button>
-              <button onclick="downloadAllRecordsCSV()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs md:text-sm rounded-xl shadow-xs transition-all flex items-center gap-1.5 active:scale-95"><span>Export CSV</span></button>
-              <button onclick="downloadAllCompleteLettersPDF()" class="px-3.5 py-2 bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-xs md:text-sm rounded-xl shadow-xs transition-all flex items-center gap-1.5 active:scale-95"><span>All Letters</span></button>
               <button onclick="refreshAllAuthorityViews(); showToast('Dashboard records refreshed.', 'info', 2000);" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs md:text-sm rounded-xl border border-slate-200 shadow-2xs transition-all flex items-center gap-1.5 active:scale-95"><span>Refresh</span></button>
             </div>
           </div>
@@ -509,8 +497,6 @@ function openDashboard(user) {
   const roleSubtitle = document.getElementById('dashRoleSubtitle');
   if (roleSubtitle) roleSubtitle.innerText = subtitles[user.role] || '';
 
-  const topPdfBtn = document.getElementById('topBulkPdfBtn');
-  const topBulkLettersBtn = document.getElementById('topBulkLettersBtn');
   const clearDataBtn = document.getElementById('clearAllDataBtn');
   const studentView = document.getElementById('studentPersonalView');
   const content = document.getElementById('roleDashboardContent');
@@ -519,8 +505,6 @@ function openDashboard(user) {
   currentAuthorityTab = 'requests';
 
   if (user.role === 'student') {
-    if (topPdfBtn) topPdfBtn.classList.add('hidden');
-    if (topBulkLettersBtn) topBulkLettersBtn.classList.add('hidden');
     if (clearDataBtn) clearDataBtn.classList.add('hidden');
     if (studentView) studentView.classList.remove('hidden');
 
@@ -596,8 +580,6 @@ function openDashboard(user) {
     else loadStudentPersonalStatus();
   } else {
     if (studentView) studentView.classList.add('hidden');
-    if (topPdfBtn) topPdfBtn.classList.remove('hidden');
-    if (topBulkLettersBtn) topBulkLettersBtn.classList.remove('hidden');
     if (clearDataBtn) clearDataBtn.classList.remove('hidden');
 
     if (user.role === 'counselor') {

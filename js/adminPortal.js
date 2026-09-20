@@ -13,19 +13,9 @@ window.addEventListener('DOMContentLoaded', () => {
   if (userIdInput) userIdInput.value = '';
   if (passInput) passInput.value = '';
 
-  try {
-    const savedAdmin = sessionStorage.getItem('campusAdminUser') || localStorage.getItem('campusAdminUser');
-    if (savedAdmin) {
-      const admin = JSON.parse(savedAdmin);
-      if (admin && admin.role === 'admin') {
-        activeAdmin = admin;
-        showAdminDashboard();
-        return;
-      }
-    }
-  } catch (e) {
-    console.warn('Admin session restore skipped:', e);
-  }
+  // Ensure Administrator Control Portal always presents the separate login page on entry
+  document.getElementById('adminLoginScreen')?.classList.remove('hidden');
+  document.getElementById('adminDashboardScreen')?.classList.add('hidden');
 });
 
 window.addEventListener('pageshow', () => {
@@ -51,7 +41,7 @@ async function handleAdminLogin() {
 
   if (!userId || !password) {
     if (errorBox) {
-      errorBox.innerText = 'Please provide both Admin ID and Password.';
+      errorBox.innerText = 'Please provide both Login ID and Password.';
       errorBox.classList.remove('hidden');
     }
     return;
@@ -94,7 +84,7 @@ async function handleAdminLogin() {
   } finally {
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.innerHTML = `<span>Unlock Admin Portal</span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>`;
+      submitBtn.innerHTML = `<span>Login</span>`;
     }
   }
 }
@@ -323,11 +313,6 @@ async function loadAdminStaff() {
               <div class="inline-flex items-center gap-1.5 font-bold text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/20">
                 <span>${escapeHtml(c.startRoll || 'Start')} – ${escapeHtml(c.endRoll || 'End')}</span>
               </div>
-              ${c.extraRolls && Array.isArray(c.extraRolls) && c.extraRolls.length > 0 ? `
-                <div class="flex flex-wrap gap-1 mt-1.5">
-                  ${c.extraRolls.map(r => `<span class="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">+ ${escapeHtml(r)}</span>`).join('')}
-                </div>
-              ` : ''}
             </td>
             <td class="px-4 py-3 text-slate-300">${escapeHtml(c.dept || 'CSE')}</td>
             <td class="px-4 py-3 text-right">
@@ -1210,37 +1195,22 @@ function openAssignCounselorModal() {
       </div>
 
       <div class="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl space-y-3">
-        <div class="flex items-center justify-between">
-          <label class="block font-bold text-emerald-300 uppercase tracking-wider text-[11px]">
-            Student Roll Number Range Assignment
-          </label>
-          <button type="button" onclick="addExtraRollField()" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold flex items-center gap-1 transition active:scale-95 shadow-sm shadow-emerald-900/30 cursor-pointer" title="Add Extra Individual Roll Number">
-            <span class="text-sm font-bold leading-none">+</span>
-            <span>Add Extra Roll Number</span>
-          </button>
-        </div>
+        <label class="block font-bold text-emerald-300 uppercase tracking-wider text-[11px]">
+          Student Roll Number Range Assignment
+        </label>
 
-        <div class="flex items-end gap-2">
-          <div class="flex-1">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
             <label class="block text-[10px] font-bold text-slate-400 mb-1">Starting Roll Number *</label>
             <input type="text" id="cnsStartRoll" required placeholder="Enter Starting Roll No" autocomplete="off" value="" class="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white font-mono text-xs focus:border-emerald-500 focus:outline-none transition">
           </div>
-          <div class="flex-1">
+          <div>
             <label class="block text-[10px] font-bold text-slate-400 mb-1">Ending Roll Number *</label>
             <input type="text" id="cnsEndRoll" required placeholder="Enter Ending Roll No" autocomplete="off" value="" class="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white font-mono text-xs focus:border-emerald-500 focus:outline-none transition">
           </div>
-          <div>
-            <button type="button" onclick="addExtraRollField()" class="h-[38px] w-[38px] sm:w-auto sm:px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-95 shadow-md shadow-emerald-900/30 cursor-pointer shrink-0" title="Click + to add an extra individual student Roll Number">
-              <span class="text-base font-bold leading-none">+</span>
-              <span class="hidden sm:inline text-[11px]">Extra</span>
-            </button>
-          </div>
         </div>
 
-        <!-- Dynamic Extra Roll Numbers Container -->
-        <div id="cnsExtraRollsContainer" class="space-y-2.5 empty:hidden"></div>
-
-        <p class="text-[10px] text-slate-400">All students in this range and any extra Roll Numbers added below will be assigned to this Counsellor.</p>
+        <p class="text-[10px] text-slate-400">All students within this roll number range will be assigned to this Counselor.</p>
       </div>
 
       <div>
@@ -1262,40 +1232,13 @@ function openAssignCounselorModal() {
   }, 50);
 }
 
-function addExtraRollField(initialValue = '') {
-  const container = document.getElementById('cnsExtraRollsContainer');
-  if (!container) return;
-  const uniqueId = 'extra_roll_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
-  const row = document.createElement('div');
-  row.id = uniqueId;
-  row.className = 'flex items-center gap-2 p-2.5 bg-slate-950/80 border border-emerald-500/30 rounded-xl';
-  row.innerHTML = `
-    <div class="flex-1">
-      <label class="block text-[10px] font-bold text-emerald-400 mb-1">+ Add Extra Roll Number</label>
-      <input type="text" class="cns-extra-roll-input w-full p-2 bg-slate-900 border border-slate-700 rounded-lg text-white font-mono text-xs focus:border-emerald-500 focus:outline-none transition" placeholder="Enter Extra Student Roll Number (e.g. 1085)" value="${escapeAttr(initialValue)}" autocomplete="off">
-    </div>
-    <button type="button" onclick="document.getElementById('${uniqueId}')?.remove()" class="mt-4 w-7 h-7 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 flex items-center justify-center text-xs transition active:scale-95 shrink-0 cursor-pointer" title="Remove Roll Number" aria-label="Remove roll number">
-      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-    </button>
-  `;
-  container.appendChild(row);
-  const input = row.querySelector('input');
-  if (input) input.focus();
-}
-
 async function submitAssignCounselor() {
-  const extraInputs = document.querySelectorAll('.cns-extra-roll-input');
-  const extraRolls = Array.from(extraInputs)
-    .map(el => el.value.trim().toUpperCase())
-    .filter(Boolean);
-
   const body = {
     name: document.getElementById('cnsName')?.value?.trim(),
     userId: document.getElementById('cnsUserId')?.value?.trim(),
     dept: document.getElementById('cnsDept')?.value,
     startRoll: document.getElementById('cnsStartRoll')?.value?.trim(),
     endRoll: document.getElementById('cnsEndRoll')?.value?.trim(),
-    extraRolls,
     password: document.getElementById('cnsPass')?.value
   };
 
@@ -1793,7 +1736,6 @@ window.handleImportFileChange = handleImportFileChange;
 window.submitImportExcel = submitImportExcel;
 window.openAssignCounselorModal = openAssignCounselorModal;
 window.submitAssignCounselor = submitAssignCounselor;
-window.addExtraRollField = addExtraRollField;
 window.openAssignAdvisorModal = openAssignAdvisorModal;
 window.submitAssignAdvisor = submitAssignAdvisor;
 window.openAssignHodModal = openAssignHodModal;
