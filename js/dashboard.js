@@ -241,11 +241,41 @@ function getAuthorityDashboardHTML(user, config) {
             </button>
           </div>
 
+          <!-- Live Search & Filter Bar on Pending Requests -->
+          <div class="flex flex-wrap items-center justify-between gap-3 p-3 bg-slate-50/90 rounded-2xl border border-slate-200 shadow-2xs">
+            <div class="relative flex-1 min-w-[220px]">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/></svg>
+              </span>
+              <input type="text" id="pendingQueueSearch" oninput="filterPendingQueueLive()" placeholder="Live filter roll no, student name, reason..." class="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition shadow-2xs">
+            </div>
+            <div class="flex items-center gap-1.5 text-xs font-bold">
+              <button onclick="setQueueFilterChip('all')" id="chip_all" class="px-3 py-1.5 rounded-lg bg-red-700 text-white shadow-2xs transition">All</button>
+              <button onclick="setQueueFilterChip('hosteller')" id="chip_hosteller" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 shadow-2xs transition">Hosteller</button>
+              <button onclick="setQueueFilterChip('dayscholar')" id="chip_dayscholar" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 shadow-2xs transition">Day Scholar</button>
+            </div>
+          </div>
+
           <div id="authPassQueueContainer" class="overflow-x-auto rounded-2xl border border-slate-200 shadow-2xs">
             <div id="${config.queueContainerId}"></div>
           </div>
           <div id="authOnDutyQueueContainer" class="hidden overflow-x-auto rounded-2xl border border-slate-200 shadow-2xs">
             <div id="${config.onDutyQueueContainerId || 'authODQueue'}"></div>
+          </div>
+
+          <!-- Floating Batch Multi-Select Action Bar -->
+          <div id="batchActionBar" class="hidden sticky bottom-4 z-40 max-w-md mx-auto bg-slate-900/95 text-white p-3.5 rounded-2xl shadow-2xl border border-slate-700 backdrop-blur flex items-center justify-between gap-3 animate-fade-in">
+            <div class="text-xs font-semibold flex items-center gap-2">
+              <span id="selectedCountBadge" class="px-2 py-0.5 rounded-full bg-red-600 font-bold text-white text-xs">0</span>
+              <span>pass(es) selected</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="clearBatchSelection()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">Cancel</button>
+              <button id="batchApproveBtn" onclick="executeBatchApproval()" class="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-sm flex items-center gap-1.5 active:scale-95">
+                <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                <span>Approve Selected</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -295,9 +325,6 @@ function getAuthorityDashboardHTML(user, config) {
             </div>
             <div class="flex items-center flex-wrap gap-2">
               <input type="text" id="gpAllSearch" oninput="filterExtGPAll()" placeholder="Search roll, name, status..." class="px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold w-48 focus:outline-none focus:border-red-600 shadow-2xs">
-              <button onclick="downloadAllCompleteLettersPDF()" class="px-3.5 py-2 bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 active:scale-95">
-                <span>All Letters PDF</span>
-              </button>
             </div>
           </div>
           <div class="overflow-x-auto rounded-2xl border border-slate-200 shadow-2xs" id="extGPAllContainer"></div>
@@ -497,6 +524,8 @@ function openDashboard(user) {
   const roleSubtitle = document.getElementById('dashRoleSubtitle');
   if (roleSubtitle) roleSubtitle.innerText = subtitles[user.role] || '';
 
+  const topPdfBtn = document.getElementById('topBulkPdfBtn');
+  const topBulkLettersBtn = document.getElementById('topBulkLettersBtn');
   const clearDataBtn = document.getElementById('clearAllDataBtn');
   const studentView = document.getElementById('studentPersonalView');
   const content = document.getElementById('roleDashboardContent');
@@ -505,6 +534,8 @@ function openDashboard(user) {
   currentAuthorityTab = 'requests';
 
   if (user.role === 'student') {
+    if (topPdfBtn) topPdfBtn.classList.add('hidden');
+    if (topBulkLettersBtn) topBulkLettersBtn.classList.add('hidden');
     if (clearDataBtn) clearDataBtn.classList.add('hidden');
     if (studentView) studentView.classList.remove('hidden');
 
@@ -569,7 +600,6 @@ function openDashboard(user) {
             <div><label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Select On-Duty Duration Format</label><div class="flex gap-2 p-1 bg-slate-100 rounded-xl border border-slate-200"><button type="button" id="odModeBtn_dates" onclick="setODTimingMode('dates')" class="flex-1 py-2 px-3 text-xs md:text-sm font-bold rounded-lg bg-indigo-600 text-white shadow-xs transition">Date Range (From - To Date)</button><button type="button" id="odModeBtn_time" onclick="setODTimingMode('time')" class="flex-1 py-2 px-3 text-xs md:text-sm font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition">Specific Time Duration</button></div></div>
             <div id="odDateRangeFields" class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">From Date <span class="text-red-500">*</span></label><input type="date" id="odFromDate" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono text-slate-800 focus:outline-none focus:border-indigo-600 focus:bg-white" /></div><div><label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">To Date <span class="text-red-500">*</span></label><input type="date" id="odToDate" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono text-slate-800 focus:outline-none focus:border-indigo-600 focus:bg-white" /></div></div>
             <div id="odTimeFields" class="hidden space-y-3"><div><label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Date of On-Duty <span class="text-red-500">*</span></label><input type="date" id="odSpecificDate" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono text-slate-800 focus:outline-none focus:border-indigo-600 focus:bg-white" /></div><div class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">From Time <span class="text-red-500">*</span></label><input type="time" id="odFromTime" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono text-slate-800 focus:outline-none focus:border-indigo-600 focus:bg-white" /></div><div><label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">To Time <span class="text-red-500">*</span></label><input type="time" id="odToTime" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono text-slate-800 focus:outline-none focus:border-indigo-600 focus:bg-white" /></div></div></div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3"><div><label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Place / Event Name <span class="text-red-500">*</span></label><input type="text" id="odPlaceEvent" placeholder="e.g. Anna University, Chennai" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:border-indigo-600 focus:bg-white transition" /></div><div><label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Expected Return Date & Time <span class="text-red-500">*</span></label><input type="text" id="odExpectedReturn" placeholder="e.g. 2026-09-22 at 5:00 PM" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:border-indigo-600 focus:bg-white transition" /></div></div>
             <div><label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Reason for On-Duty <span class="text-red-500">*</span></label><textarea id="odReason" rows="3" placeholder="Enter academic/institutional purpose..." class="w-full p-3.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-indigo-600 focus:bg-white transition text-slate-800"></textarea></div>
             <button onclick="submitStudentOnDuty('${user.userId}')" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm shadow-sm transition active:scale-98 flex items-center justify-center gap-2"><span>Submit On-Duty Request</span></button>
           </div>
@@ -580,6 +610,8 @@ function openDashboard(user) {
     else loadStudentPersonalStatus();
   } else {
     if (studentView) studentView.classList.add('hidden');
+    if (topPdfBtn) topPdfBtn.classList.remove('hidden');
+    if (topBulkLettersBtn) topBulkLettersBtn.classList.remove('hidden');
     if (clearDataBtn) clearDataBtn.classList.remove('hidden');
 
     if (user.role === 'counselor') {
@@ -667,3 +699,160 @@ function logout() {
 window.openDashboard = openDashboard;
 window.refreshAllAuthorityViews = refreshAllAuthorityViews;
 window.logout = logout;
+
+// Live Queue Filtering & Search
+let currentQueueChipFilter = 'all';
+
+function setQueueFilterChip(chipType) {
+  currentQueueChipFilter = chipType;
+  const chips = ['all', 'hosteller', 'dayscholar'];
+  chips.forEach(c => {
+    const el = document.getElementById(`chip_${c}`);
+    if (el) {
+      if (c === chipType) {
+        el.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-slate-900 text-white shadow-2xs';
+      } else {
+        el.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-slate-100 text-slate-600 hover:bg-slate-200';
+      }
+    }
+  });
+  filterPendingQueueLive();
+}
+
+function filterPendingQueueLive() {
+  const query = (document.getElementById('pendingQueueSearch')?.value || '').toLowerCase().trim();
+  const rows = document.querySelectorAll('.pending-queue-row');
+
+  rows.forEach(row => {
+    const accom = (row.getAttribute('data-accommodation') || '').toLowerCase();
+    const text = (row.getAttribute('data-search') || row.innerText || '').toLowerCase();
+
+    let matchesChip = true;
+    if (currentQueueChipFilter === 'hosteller') {
+      matchesChip = accom.includes('hostel') || accom.includes('hosteller');
+    } else if (currentQueueChipFilter === 'dayscholar') {
+      matchesChip = accom.includes('day');
+    }
+
+    let matchesQuery = true;
+    if (query) {
+      matchesQuery = text.includes(query);
+    }
+
+    if (matchesChip && matchesQuery) {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+  });
+
+  updateBatchActionBar();
+}
+
+function toggleSelectAllBatch(masterCb) {
+  const isChecked = !!masterCb?.checked;
+  const visibleRows = Array.from(document.querySelectorAll('.pending-queue-row')).filter(r => r.style.display !== 'none');
+  visibleRows.forEach(row => {
+    const cb = row.querySelector('.batch-select-cb');
+    if (cb) cb.checked = isChecked;
+  });
+  updateBatchActionBar();
+}
+
+function updateBatchActionBar() {
+  const selectedCbs = document.querySelectorAll('.batch-select-cb:checked');
+  const count = selectedCbs.length;
+  const bar = document.getElementById('batchActionBar');
+  const countEl = document.getElementById('batchSelectedCount');
+  if (!bar) return;
+
+  if (count > 0) {
+    bar.classList.remove('hidden');
+    if (countEl) countEl.innerText = `${count} selected`;
+  } else {
+    bar.classList.add('hidden');
+    const masterCbs = document.querySelectorAll('#selectAllBatch');
+    masterCbs.forEach(cb => cb.checked = false);
+  }
+}
+
+function clearBatchSelection() {
+  document.querySelectorAll('.batch-select-cb').forEach(cb => cb.checked = false);
+  const masterCbs = document.querySelectorAll('#selectAllBatch');
+  masterCbs.forEach(cb => cb.checked = false);
+  updateBatchActionBar();
+}
+
+async function executeBatchApproval() {
+  const selectedCbs = Array.from(document.querySelectorAll('.batch-select-cb:checked'));
+  const ids = selectedCbs.map(cb => cb.value).filter(Boolean);
+  if (ids.length === 0) {
+    showToast('No requisitions selected.', 'info', 2500);
+    return;
+  }
+
+  const confirmMsg = `Are you sure you want to approve ${ids.length} selected request(s)?`;
+  if (!confirm(confirmMsg)) return;
+
+  const btn = document.getElementById('batchApproveBtn');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span>Processing...</span>`;
+  }
+
+  try {
+    const res = await Api.post('/api/approvals/bulk', {
+      passIds: ids,
+      role: loggedUser?.role,
+      authorityName: loggedUser?.name,
+      parentCalled: true
+    });
+
+    if (res && res.success) {
+      showToast(res.message || `Successfully approved ${ids.length} items!`, 'success', 3500);
+      clearBatchSelection();
+      refreshAllAuthorityViews();
+    } else {
+      showToast(res?.message || 'Bulk approval failed.', 'error', 3500);
+    }
+  } catch (err) {
+    console.error('Batch approval error:', err);
+    showToast('Failed to perform batch approval.', 'error', 3500);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span>Approve Selected</span>`;
+    }
+  }
+}
+
+// Global Keyboard Navigation & Accessibility Shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const rejectModal = document.getElementById('rejectModal');
+    if (rejectModal && !rejectModal.classList.contains('hidden')) {
+      if (typeof closeRejectModal === 'function') closeRejectModal();
+    }
+    const detailsModal = document.getElementById('detailsModal');
+    if (detailsModal && !detailsModal.classList.contains('hidden')) {
+      if (typeof closeDetailsModal === 'function') closeDetailsModal();
+    }
+    const formalModal = document.getElementById('formalLetterModal');
+    if (formalModal && !formalModal.classList.contains('hidden')) {
+      formalModal.classList.add('hidden');
+    }
+  }
+  if ((e.key === 'a' || e.key === 'A') && !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
+    const bar = document.getElementById('batchActionBar');
+    if (bar && !bar.classList.contains('hidden')) {
+      executeBatchApproval();
+    }
+  }
+});
+
+window.setQueueFilterChip = setQueueFilterChip;
+window.filterPendingQueueLive = filterPendingQueueLive;
+window.toggleSelectAllBatch = toggleSelectAllBatch;
+window.updateBatchActionBar = updateBatchActionBar;
+window.clearBatchSelection = clearBatchSelection;
+window.executeBatchApproval = executeBatchApproval;

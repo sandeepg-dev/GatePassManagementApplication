@@ -218,7 +218,19 @@ const PassSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
     index: true
-  }
+  },
+  clearedByAuthorities: [{
+    type: String,
+    index: true
+  }]
 });
+
+// Targeted Compound Indexes for sub-millisecond authority query response
+PassSchema.index({ counselorName: 1, status: 1, createdAt: -1 });
+PassSchema.index({ dept: 1, yearSec: 1, status: 1 });
+PassSchema.index({ dept: 1, status: 1 });
+PassSchema.index({ accommodation: 1, gender: 1, status: 1 });
+PassSchema.index({ rollNo: 1, createdAt: -1 });
+PassSchema.index({ isOD: 1, status: 1 });
 
 module.exports = mongoose.model('Pass', PassSchema);

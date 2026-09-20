@@ -15,5 +15,6 @@ router.post('/girls-warden', approvalController.approveGirlsWarden);
 router.post('/warden-exit', approvalController.markWardenExit);
 router.post('/warden-return', approvalController.markWardenReturn);
 router.post('/reject', approvalController.rejectPass);
+router.post('/bulk', approvalController.bulkApprovePasses);
 
 module.exports = router;

@@ -21,11 +21,11 @@ function safeFormatClassSection(dept, rawSec, academicYear) {
  */
 async function getEffectivePassList() {
   if (window.masterPassList && Array.isArray(window.masterPassList) && window.masterPassList.length > 0) {
-    const nonOD = window.masterPassList.filter(p => !p.isOD);
+    const nonOD = window.masterPassList.filter(p => !p.isOD && !p.odLetter);
     if (nonOD.length > 0) return nonOD;
   }
   if (window.cachedAllRecords && Array.isArray(window.cachedAllRecords) && window.cachedAllRecords.length > 0) {
-    const nonOD = window.cachedAllRecords.filter(p => !p.isOD);
+    const nonOD = window.cachedAllRecords.filter(p => !p.isOD && !p.odLetter);
     if (nonOD.length > 0) {
       window.masterPassList = nonOD;
       return nonOD;
@@ -38,6 +38,7 @@ async function getEffectivePassList() {
     if (u) {
       const params = new URLSearchParams();
       params.append('role', u.role);
+      if (u.userId) params.append('authorityUserId', u.userId);
       if (u.role === 'counselor') {
         if (u.name) params.append('counselorName', u.name);
         if (u.startRoll) params.append('startRoll', u.startRoll);
@@ -58,7 +59,7 @@ async function getEffectivePassList() {
     const res = await fetch(url);
     const data = await res.json();
     const list = Array.isArray(data) ? data : (data.passes || []);
-    const nonOD = list.filter(p => !p.isOD);
+    const nonOD = list.filter(p => !p.isOD && !p.odLetter);
     window.masterPassList = nonOD;
     return nonOD;
   } catch (err) {
@@ -68,16 +69,16 @@ async function getEffectivePassList() {
 }
 
 /**
- * Resolves OD (On-Duty) records for Counselor, Advisor, and HOD
+ * Resolves OD (On-Duty) records for all authorities (Counselor, Advisor, HOD, Principal, Warden)
  */
 async function getEffectiveODList() {
   const u = window.loggedUser;
-  if (!u || !['counselor', 'advisor', 'hod'].includes(u.role)) {
+  if (!u || u.role === 'student') {
     return [];
   }
 
   if (window.cachedAllRecords && Array.isArray(window.cachedAllRecords) && window.cachedAllRecords.length > 0) {
-    const odRecords = window.cachedAllRecords.filter(p => p.isOD === true);
+    const odRecords = window.cachedAllRecords.filter(p => p.isOD === true || !!p.odLetter);
     if (odRecords.length > 0) return odRecords;
   }
 
@@ -85,6 +86,7 @@ async function getEffectiveODList() {
     let url = '/api/onduty';
     const params = new URLSearchParams();
     params.append('role', u.role);
+    if (u.userId) params.append('authorityUserId', u.userId);
     if (u.role === 'counselor') {
       if (u.name) params.append('counselorName', u.name);
       if (u.startRoll) params.append('startRoll', u.startRoll);
@@ -109,16 +111,14 @@ async function getEffectiveODList() {
 
 /**
  * Downloads an official landscape master audit dossier PDF.
- * Contains both Gate Pass Audit and OD Audit for Counselor, Advisor, and HOD.
- * Contains Gate Pass Audit only for Principal and Warden.
+ * One PDF containing separate Gate Pass List and OD List sections.
  * Incorporates GRT Institute of Engineering and Technology branding and official college logo.
  */
 async function downloadMasterPDF() {
   const u = window.loggedUser;
-  const includeOD = ['counselor', 'advisor', 'hod'].includes(u?.role);
 
   const passes = await getEffectivePassList();
-  const odList = includeOD ? await getEffectiveODList() : [];
+  const odList = await getEffectiveODList();
 
   if ((!passes || passes.length === 0) && (!odList || odList.length === 0)) {
     return showToast('No audit records found to export.', 'warning');
@@ -145,55 +145,74 @@ async function downloadMasterPDF() {
    * Internal helper to draw the official college header banner on a section start page
    */
   function drawMasterHeader(sectionNum, sectionTitle, summaryText, accentRgb) {
-    const banner = bannerBase64 || cachedCollegeBannerBase64;
     const logo = logoBase64 || cachedCollegeLogoBase64;
+    const watermark = watermarkBase64 || cachedCollegeLogoWatermarkBase64;
 
-    if (banner) {
-      // Full-width institutional college banner across the entire section header
-      doc.setFillColor(255, 255, 255);
-      doc.rect(9.5, 9.5, 278, 27, 'F');
-      try {
-        doc.addImage(banner, 'PNG', 9.5, 9.5, 278, 27);
-      } catch (e) {
-        console.warn('Could not add banner image to Master Audit PDF:', e);
-      }
-    } else {
-      // Top banner background (Deep Navy)
-      doc.setFillColor(15, 23, 42);
-      doc.rect(9.5, 9.5, 278, 27, 'F');
-
-      // Official College Logo Badge
-      if (logo) {
-        try {
-          doc.setFillColor(255, 255, 255);
-          doc.roundedRect(12, 11, 24, 24, 2, 2, 'F');
-          doc.addImage(logo, 'PNG', 13, 12, 22, 22);
-        } catch (e) {
-          console.warn('Could not add logo to Master Audit PDF:', e);
-        }
-      }
-
-      // College Header Typography
-      const centerX = 154;
-      doc.setFont('times', 'bold');
-      doc.setFontSize(13.5);
-      doc.setTextColor(255, 255, 255);
-      doc.text('GRT INSTITUTE OF ENGINEERING AND TECHNOLOGY', centerX, 16.5, { align: 'center' });
-
-      doc.setFont('times', 'normal');
-      doc.setFontSize(8);
-      doc.setTextColor(226, 232, 240);
-      doc.text('(An Autonomous Institution | Accredited by NAAC with \'A++\' Grade | Approved by AICTE, New Delhi)', centerX, 21.5, { align: 'center' });
-
-      doc.setFontSize(7.5);
-      doc.setTextColor(203, 213, 225);
-      doc.text('Affiliated to Anna University, Chennai • Chennai-Tirupati Highway, Tiruttani - 631 209', centerX, 26, { align: 'center' });
-
-      doc.setFont('times', 'bold');
-      doc.setFontSize(8.8);
-      doc.setTextColor(253, 224, 71); // Gold accent
-      doc.text(`MASTER REPOSITORY AUDIT • JURISDICTION: ${jurisdictionStr}`, centerX, 31.5, { align: 'center' });
+    // Render subtle official watermark centered in landscape page
+    if (watermark) {
+      renderPageWatermark(doc, watermark, 105);
     }
+
+    // Top banner background (Deep Institutional Navy)
+    doc.setFillColor(15, 23, 42);
+    doc.rect(9.5, 9.5, 278, 27, 'F');
+
+    // Official College Logo Badge specifications (vertically centered in 27mm header with 1.7mm breathing room)
+    const badgeW = 23.6;
+    const badgeH = 23.6;
+    const badgeY = 11.2;
+    const badgeR = 2.5;
+    const logoSize = 21.0;
+
+    if (logo) {
+      try {
+        // Left Badge & Official Logo (proportional 1:1, 1.3mm padding all around inside badge)
+        const leftBadgeX = 14.0;
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(leftBadgeX, badgeY, badgeW, badgeH, badgeR, badgeR, 'F');
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.3);
+        doc.roundedRect(leftBadgeX, badgeY, badgeW, badgeH, badgeR, badgeR, 'D');
+
+        const leftLogoX = leftBadgeX + (badgeW - logoSize) / 2;
+        const logoY = badgeY + (badgeH - logoSize) / 2;
+        doc.addImage(logo, 'PNG', leftLogoX, logoY, logoSize, logoSize);
+
+        // Symmetrical Right Badge & Official Logo (balanced bilateral crest alignment across 278mm landscape)
+        const rightBadgeX = 287.5 - 4.5 - badgeW;
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(rightBadgeX, badgeY, badgeW, badgeH, badgeR, badgeR, 'F');
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.3);
+        doc.roundedRect(rightBadgeX, badgeY, badgeW, badgeH, badgeR, badgeR, 'D');
+
+        const rightLogoX = rightBadgeX + (badgeW - logoSize) / 2;
+        doc.addImage(logo, 'PNG', rightLogoX, logoY, logoSize, logoSize);
+      } catch (e) {
+        console.warn('Could not add logo to Master Audit PDF:', e);
+      }
+    }
+
+    // College Header Typography - Mathematically centered in landscape page (X = 148.5mm)
+    const centerX = 148.5;
+    doc.setFont('times', 'bold');
+    doc.setFontSize(13.8);
+    doc.setTextColor(255, 255, 255);
+    doc.text('GRT INSTITUTE OF ENGINEERING AND TECHNOLOGY', centerX, 16.8, { align: 'center' });
+
+    doc.setFont('times', 'normal');
+    doc.setFontSize(8.2);
+    doc.setTextColor(226, 232, 240);
+    doc.text('(An Autonomous Institution | Accredited by NAAC with \'A++\' Grade | Approved by AICTE, New Delhi)', centerX, 21.8, { align: 'center' });
+
+    doc.setFontSize(7.6);
+    doc.setTextColor(203, 213, 225);
+    doc.text('Affiliated to Anna University, Chennai • Chennai-Tirupati Highway, Tiruttani - 631 209', centerX, 26.2, { align: 'center' });
+
+    doc.setFont('times', 'bold');
+    doc.setFontSize(8.8);
+    doc.setTextColor(253, 224, 71); // Official Gold accent
+    doc.text(`MASTER AUDITING DOSSIER • JURISDICTION: ${jurisdictionStr}`, centerX, 31.8, { align: 'center' });
 
     // Maroon accent bar
     doc.setFillColor(185, 28, 28);
@@ -294,63 +313,72 @@ async function downloadMasterPDF() {
     ];
   });
 
-  doc.autoTable({
-    startY: 58,
-    margin: { left: 9.5, right: 9.5, bottom: 15 },
-    head: [
-      [
-        '#',
-        'Roll No',
-        'Student Name',
-        'Standing & Accom',
-        'Movement Schedule',
-        '1. Applied',
-        '2. Counselor',
-        '3. Advisor',
-        '4. HOD',
-        '5. Principal',
-        '6. Warden',
-        'Status'
-      ]
-    ],
-    body: gatePassTableData,
-    theme: 'grid',
-    headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7 },
-    styles: { fontSize: 6.6, cellPadding: 1.8, textColor: [30, 41, 59], valign: 'middle', overflow: 'linebreak' },
-    alternateRowStyles: { fillColor: [248, 250, 252] },
-    columnStyles: {
-      0: { cellWidth: 8, halign: 'center' },
-      1: { cellWidth: 22, fontStyle: 'bold' },
-      2: { cellWidth: 28 },
-      3: { cellWidth: 34 },
-      4: { cellWidth: 38 },
-      5: { cellWidth: 22, fontSize: 6.1 },
-      6: { cellWidth: 20, fontSize: 6.1 },
-      7: { cellWidth: 20, fontSize: 6.1 },
-      8: { cellWidth: 20, fontSize: 6.1 },
-      9: { cellWidth: 20, fontSize: 6.1 },
-      10: { cellWidth: 20, fontSize: 6.1 },
-      11: { fontStyle: 'bold', halign: 'center' }
-    }
-  });
+  if (!passes || passes.length === 0) {
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(203, 213, 225);
+    doc.roundedRect(9.5, 60, 278, 22, 2, 2, 'FD');
+    doc.setFont('times', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(100, 116, 139);
+    doc.text(`No Gate Pass requisitions registered under active jurisdiction (${jurisdictionStr}).`, 148, 72, { align: 'center' });
+  } else {
+    doc.autoTable({
+      startY: 58,
+      margin: { left: 9.5, right: 9.5, bottom: 15 },
+      head: [
+        [
+          '#',
+          'Roll No',
+          'Student Name',
+          'Standing & Accom',
+          'Movement Schedule',
+          '1. Applied',
+          '2. Counselor',
+          '3. Advisor',
+          '4. HOD',
+          '5. Principal',
+          '6. Warden',
+          'Status'
+        ]
+      ],
+      body: gatePassTableData,
+      theme: 'grid',
+      headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7 },
+      styles: { fontSize: 6.6, cellPadding: 1.8, textColor: [30, 41, 59], valign: 'middle', overflow: 'linebreak' },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      columnStyles: {
+        0: { cellWidth: 8, halign: 'center' },
+        1: { cellWidth: 22, fontStyle: 'bold' },
+        2: { cellWidth: 28 },
+        3: { cellWidth: 34 },
+        4: { cellWidth: 38 },
+        5: { cellWidth: 22, fontSize: 6.1 },
+        6: { cellWidth: 20, fontSize: 6.1 },
+        7: { cellWidth: 20, fontSize: 6.1 },
+        8: { cellWidth: 20, fontSize: 6.1 },
+        9: { cellWidth: 20, fontSize: 6.1 },
+        10: { cellWidth: 20, fontSize: 6.1 },
+        11: { fontStyle: 'bold', halign: 'center' }
+      }
+    });
+  }
 
   // ==========================================
-  // SECTION 2: ON-DUTY (OD) AUDIT (COUNSELOR, ADVISOR, HOD ONLY)
+  // SECTION 2: ON-DUTY (OD) AUDIT LIST
   // ==========================================
-  if (includeOD) {
-    doc.addPage();
+  doc.addPage();
 
-    const odApproved = odList.filter(o => o.status === 'Completed').length;
-    const odRejected = odList.filter(o => o.status === 'Rejected').length;
-    const odPending = odList.length - odApproved - odRejected;
-    const odSummaryStr = `Total OD: ${odList.length} | Completed: ${odApproved} | Rejected: ${odRejected} | In Review: ${odPending}`;
+  const odApproved = odList.filter(o => o.status === 'Completed').length;
+  const odRejected = odList.filter(o => o.status === 'Rejected').length;
+  const odPending = odList.length - odApproved - odRejected;
+  const odSummaryStr = `Total OD: ${odList.length} | Completed: ${odApproved} | Rejected: ${odRejected} | In Review: ${odPending}`;
 
-    drawMasterHeader(
-      2,
-      'SECTION 2: ACADEMIC ON-DUTY (OD) MASTER AUDIT & CLEARANCE REQUISITIONS',
-      odSummaryStr,
-      [238, 242, 255, 99, 102, 241, 67, 56, 202] // light indigo fill, indigo border, dark indigo text
-    );
+  drawMasterHeader(
+    2,
+    'SECTION 2: ACADEMIC ON-DUTY (OD) MASTER AUDIT & CLEARANCE REQUISITIONS',
+    odSummaryStr,
+    [238, 242, 255, 99, 102, 241, 67, 56, 202] // light indigo fill, indigo border, dark indigo text
+  );
 
     if (!odList || odList.length === 0) {
       doc.setFillColor(248, 250, 252);
@@ -435,7 +463,6 @@ async function downloadMasterPDF() {
         }
       });
     }
-  }
 
   // ==========================================
   // RUNNING INSTITUTIONAL FOOTER & OUTER FRAMES ON ALL PAGES
@@ -826,11 +853,15 @@ function renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64
 }
 
 /**
- * Downloads a dossier of all official requisition letters in current jurisdiction
+ * Downloads a unified dossier of all official requisition letters in current jurisdiction
+ * (One single PDF containing both Gate Pass Letters and OD Letters)
  */
 async function downloadAllCompleteLettersPDF() {
   const passes = await getEffectivePassList();
-  if (!passes || passes.length === 0) {
+  const odList = await getEffectiveODList();
+
+  const totalLetters = (passes?.length || 0) + (odList?.length || 0);
+  if (totalLetters === 0) {
     return showToast('No requisition letters found to export.', 'warning');
   }
 
@@ -840,14 +871,25 @@ async function downloadAllCompleteLettersPDF() {
   const watermarkBase64 = await getCollegeLogoWatermarkBase64();
   const bannerBase64 = await getCollegeBannerBase64();
 
-  passes.forEach((pass, index) => {
-    if (index > 0) doc.addPage();
+  let pageIndex = 0;
+
+  // 1. Render all Gate Pass Letters
+  (passes || []).forEach(pass => {
+    if (pageIndex > 0) doc.addPage();
     renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64, bannerBase64);
+    pageIndex++;
+  });
+
+  // 2. Render all On-Duty (OD) Letters
+  (odList || []).forEach(od => {
+    if (pageIndex > 0) doc.addPage();
+    renderOfficialODLetterPage(doc, od, logoBase64, watermarkBase64, bannerBase64);
+    pageIndex++;
   });
 
   const uRole = window.loggedUser?.role || 'dossier';
-  doc.save(`GRTIET_All_Gate_Pass_Letters_${uRole}_${Date.now()}.pdf`);
-  showToast('All formal gate pass letters exported to PDF dossier!', 'success');
+  doc.save(`GRTIET_All_Letters_${uRole}_${Date.now()}.pdf`);
+  showToast(`All letters exported (${passes?.length || 0} Gate Passes, ${odList?.length || 0} OD Letters)!`, 'success');
 }
 
 /**
@@ -1468,17 +1510,15 @@ function formatLetterDate(dateStr) {
 }
 
 /**
- * Downloads official institutional On-Duty (OD) formal letter PDF
+ * Renders an official institutional On-Duty (OD) formal letter page on a jsPDF document
+ * @param {jsPDF} doc
  * @param {object} od On-Duty record
+ * @param {string} [logoBase64]
+ * @param {string} [watermarkBase64]
+ * @param {string} [bannerBase64]
  */
-async function downloadOnDutyLetterPDF(od) {
-  if (!od) return showToast('No On-Duty record selected.', 'warning');
-
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-
-  const logoBase64 = await getCollegeLogoBase64();
-  const watermarkBase64 = await getCollegeLogoWatermarkBase64();
+function renderOfficialODLetterPage(doc, od, logoBase64, watermarkBase64, bannerBase64) {
+  if (!od) return;
 
   const logo = logoBase64 || cachedCollegeLogoBase64;
   const watermark = watermarkBase64 || cachedCollegeLogoWatermarkBase64;
@@ -1796,9 +1836,27 @@ async function downloadOnDutyLetterPDF(od) {
     281,
     { align: 'center' }
   );
+}
 
-  doc.save(`GRTIET_OD_Letter_${od.rollNo}_${Date.now()}.pdf`);
-  showToast(`Official OD letter PDF downloaded for Roll No: ${od.rollNo}`, 'success');
+/**
+ * Downloads official institutional On-Duty (OD) formal letter PDF
+ * @param {object} od On-Duty record
+ */
+async function downloadOnDutyLetterPDF(od) {
+  if (!od) return showToast('No On-Duty record selected.', 'warning');
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+  const logoBase64 = await getCollegeLogoBase64();
+  const watermarkBase64 = await getCollegeLogoWatermarkBase64();
+  const bannerBase64 = await getCollegeBannerBase64();
+
+  renderOfficialODLetterPage(doc, od, logoBase64, watermarkBase64, bannerBase64);
+
+  const cleanRoll = od.rollNo || 'Student';
+  doc.save(`GRTIET_OD_Letter_${cleanRoll}_${Date.now()}.pdf`);
+  showToast(`Official OD letter PDF downloaded for Roll No: ${cleanRoll}`, 'success');
 }
 
 /**
@@ -1876,6 +1934,7 @@ window.downloadGatePassCardPDF = downloadGatePassCardPDF;
 window.downloadGatePassPDF = downloadGatePassCardPDF;
 window.renderProfessionalGatePassCardPage = renderProfessionalGatePassCardPage;
 window.renderOfficialGatePassLetterPage = renderOfficialGatePassLetterPage;
+window.renderOfficialODLetterPage = renderOfficialODLetterPage;
 window.downloadSinglePassPDF = downloadSinglePassPDF;
 window.downloadOnDutyLetterPDF = downloadOnDutyLetterPDF;
 window.downloadAllRecordsCSV = downloadAllRecordsCSV;

@@ -129,9 +129,19 @@ async function verifyPass(rollNumber) {
       }
     }
   } catch (err) {
+    const queue = getOfflineQueue();
+    queue.push({ rollNo: cleanRoll, scanType: currentScanType, time: new Date().toISOString() });
+    saveOfflineQueue(queue);
+
     if (resultBox) {
-      resultBox.className = 'p-4 rounded-xl font-bold text-xs mb-4 bg-rose-900/95 text-white shadow-xl border border-rose-500/40 text-left';
-      resultBox.innerHTML = `<div class="text-rose-200 uppercase tracking-wide text-xs mb-1 font-extrabold">Connection Error</div><span class="text-[11px] font-normal text-rose-100">Unable to reach pass verification service.</span>`;
+      resultBox.className = 'p-4 rounded-xl font-bold text-xs mb-4 bg-amber-900/95 text-white shadow-xl border border-amber-500/40 text-left';
+      resultBox.innerHTML = `
+        <div class="text-amber-200 uppercase tracking-wide text-xs mb-1 font-black flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+          <span>Offline Queue Active</span>
+        </div>
+        <p class="text-[11px] font-medium text-amber-100 mt-1">Network offline. Roll <span class="font-mono font-bold">${cleanRoll}</span> queued locally (${queue.length} pending). Will sync automatically when connection restores.</p>
+      `;
     }
   }
 
@@ -220,7 +230,90 @@ function sendParentWhatsApp(name, rollNo, dept, parentMobile, exitTime) {
   window.open(`https://wa.me/${targetNumber}?text=${message}`, '_blank');
 }
 
-window.onload = startInstantScanner;
+// Offline Queue & Resilience
+function getOfflineQueue() {
+  try {
+    return JSON.parse(localStorage.getItem('offlineScanQueue') || '[]');
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveOfflineQueue(queue) {
+  try {
+    localStorage.setItem('offlineScanQueue', JSON.stringify(queue));
+  } catch (e) {}
+  updateOfflineUI();
+}
+
+function updateOfflineUI() {
+  const badge = document.getElementById('offlineBadge');
+  const queue = getOfflineQueue();
+  if (!badge) return;
+  if (!navigator.onLine || queue.length > 0) {
+    badge.classList.remove('hidden');
+    badge.innerText = !navigator.onLine ? `Offline (${queue.length} queued)` : `Syncing (${queue.length} queued)`;
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
+async function syncOfflineQueue() {
+  const queue = getOfflineQueue();
+  if (queue.length === 0) {
+    updateOfflineUI();
+    return;
+  }
+
+  const remaining = [];
+  let syncedCount = 0;
+
+  for (const item of queue) {
+    try {
+      const res = await fetch('/api/scan-pass', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rollNo: item.rollNo, scanType: item.scanType })
+      });
+      if (res.ok) {
+        syncedCount++;
+      } else {
+        remaining.push(item);
+      }
+    } catch (e) {
+      remaining.push(item);
+    }
+  }
+
+  saveOfflineQueue(remaining);
+  if (syncedCount > 0) {
+    const resultBox = document.getElementById('scanResult');
+    if (resultBox) {
+      resultBox.classList.remove('hidden');
+      resultBox.className = 'p-3 rounded-xl font-bold text-xs mb-4 bg-emerald-900/90 text-white shadow-lg border border-emerald-500/40 text-left';
+      resultBox.innerHTML = `<div>Auto-Synced ${syncedCount} offline scan(s) to server successfully!</div>`;
+      setTimeout(() => {
+        resultBox.classList.add('hidden');
+      }, 4000);
+    }
+  }
+}
+
+window.addEventListener('online', () => {
+  updateOfflineUI();
+  syncOfflineQueue();
+});
+window.addEventListener('offline', updateOfflineUI);
+
+function initScannerPage() {
+  startInstantScanner();
+  updateOfflineUI();
+  if (navigator.onLine && getOfflineQueue().length > 0) {
+    syncOfflineQueue();
+  }
+}
+
+window.onload = initScannerPage;
 window.verifyPass = verifyPass;
 window.handleManualSubmit = handleManualSubmit;
 window.sendParentWhatsApp = sendParentWhatsApp;

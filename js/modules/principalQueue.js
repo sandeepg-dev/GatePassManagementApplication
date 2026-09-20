@@ -7,7 +7,8 @@ async function fetchPrincipalQueue() {
   if (!el) return;
 
   try {
-    const passes = await Api.get('/api/passes?status=Pending%20Principal&role=principal');
+    const uid = encodeURIComponent(window.loggedUser?.userId || '');
+    const passes = await Api.get(`/api/passes?authorityUserId=${uid}&status=Pending%20Principal&role=principal`);
 
     const countBadge = document.getElementById('authBadge_requests');
     if (countBadge) {
@@ -37,6 +38,7 @@ async function fetchPrincipalQueue() {
       <table class="enterprise-table min-w-[900px]">
         <thead>
           <tr>
+            <th class="w-10 text-center"><input type="checkbox" id="selectAllBatch" onchange="toggleSelectAllBatch(this)" class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" title="Select All"></th>
             <th>Student & Roll No</th>
             <th>Class & Accommodation</th>
             <th>Multi-Tier Audit Chain (IST)</th>
@@ -49,7 +51,10 @@ async function fetchPrincipalQueue() {
           ${passes
             .map(
               p => `
-            <tr>
+            <tr class="pending-queue-row" data-accommodation="${escapeAttr((p.accommodation || '').toLowerCase())}" data-search="${escapeAttr(((p.name || '') + ' ' + (p.rollNo || '') + ' ' + (p.dept || '') + ' ' + (p.reason || '')).toLowerCase())}">
+              <td class="text-center">
+                <input type="checkbox" class="batch-select-cb w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" value="${p._id || p.id}" onchange="updateBatchActionBar()">
+              </td>
               <td>
                 <div class="font-bold text-slate-900 text-sm">${escapeHtml(p.name)}</div>
                 <div class="font-mono text-xs font-bold text-red-700 bg-red-50/80 border border-red-200/60 inline-block px-2 py-0.5 rounded-md mt-0.5">${p.rollNo}</div>

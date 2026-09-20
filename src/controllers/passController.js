@@ -1,7 +1,6 @@
-/**
- * Gate Pass Requisition & Query Controller
- */
+const mongoose = require('mongoose');
 const Pass = require('../models/Pass');
+const OnDuty = require('../models/OnDuty');
 const Student = require('../models/Student');
 const User = require('../models/User');
 const { getISTTimeString, extractSection, extractRollNumber } = require('../utils/formatters');
@@ -12,8 +11,16 @@ const { generateFormalLetter } = require('../utils/letterGenerator');
  */
 async function getPasses(req, res) {
   try {
-    const { status, dept, rollNo, counselorName, yearSec, role, startRoll, endRoll } = req.query;
+    const { status, dept, rollNo, counselorName, yearSec, role, startRoll, endRoll, authorityUserId, userId } = req.query;
     let filter = {};
+
+    const cleanRole = role ? role.toLowerCase().trim() : '';
+    const cleanAuthUid = (authorityUserId || userId || '').toLowerCase().trim();
+    const authorityKey = (cleanRole && cleanAuthUid) ? `${cleanRole}:${cleanAuthUid}` : '';
+
+    if (authorityKey) {
+      filter.clearedByAuthorities = { $ne: authorityKey };
+    }
 
     if (status) {
       if (status.includes(',')) {
@@ -101,6 +108,10 @@ async function getPasses(req, res) {
         return passObj;
       })
       .filter(p => {
+        if (authorityKey && p.clearedByAuthorities && p.clearedByAuthorities.includes(authorityKey)) {
+          return false;
+        }
+
         // Sequential clearance visibility hierarchy:
         // Counsellor (Tier 1) → Class Advisor (Tier 2) → HOD (Tier 3) → Principal (Tier 4) → Warden (Tier 5)
         // Rule 1: A leave application must only be displayed to the current authority once forwarded.
@@ -271,14 +282,184 @@ async function applyPass(req, res) {
 }
 
 /**
- * Clear all gate passes / leave applications from database
+ * Clear all gate passes and OD requisitions from current authority dashboard
+ * Ensures independence across Counselor, Class Advisor, HOD, Principal, and Warden
  */
 async function clearAllPasses(req, res) {
   try {
+    const {
+      role,
+      userId,
+      authorityUserId,
+      dept,
+      yearSec,
+      startRoll,
+      endRoll,
+      counselorName,
+      currentlyLoadedPassIds = [],
+      currentlyLoadedODIds = []
+    } = req.body || {};
+
+    const cleanRole = (role || '').toLowerCase().trim();
+    const cleanUid = (authorityUserId || userId || '').toLowerCase().trim();
+
+    if (cleanRole && cleanUid) {
+      const authorityKey = `${cleanRole}:${cleanUid}`;
+
+      // Retrieve authoritative user record directly from database
+      const authorityUser = await User.findOne({ userId: cleanUid }).lean();
+
+      const authDept = (dept || authorityUser?.dept || '').toUpperCase().trim();
+      const authYearSec = yearSec || authorityUser?.yearSec || '';
+      const authStartRoll = (startRoll || authorityUser?.startRoll || '').toUpperCase().trim();
+      const authEndRoll = (endRoll || authorityUser?.endRoll || '').toUpperCase().trim();
+      const authExtraRolls = Array.isArray(authorityUser?.extraRolls) ? authorityUser.extraRolls : [];
+      const authName = (counselorName || authorityUser?.name || '').trim();
+
+      // Normalize currently loaded Pass and OD ObjectIds
+      const passIdList = (Array.isArray(currentlyLoadedPassIds) ? currentlyLoadedPassIds : [])
+        .filter(Boolean)
+        .map(id => (mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : id));
+
+      const odIdList = (Array.isArray(currentlyLoadedODIds) ? currentlyLoadedODIds : [])
+        .filter(Boolean)
+        .map(id => (mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : id));
+
+      // 1. Build Pass filter
+      const passConditions = [];
+
+      // Include all IDs currently displayed on the authority's screen
+      if (passIdList.length > 0) {
+        passConditions.push({ _id: { $in: passIdList } });
+      }
+
+      if (cleanRole === 'principal') {
+        // Principal has institution-wide jurisdiction
+        passConditions.push({});
+      } else if (cleanRole === 'hod') {
+        if (authDept) {
+          passConditions.push({ dept: new RegExp(`^${authDept}$`, 'i') });
+        }
+      } else if (cleanRole === 'advisor') {
+        const advCond = {};
+        if (authDept) advCond.dept = new RegExp(`^${authDept}$`, 'i');
+        if (authYearSec) {
+          const sec = extractSection(authYearSec);
+          advCond.yearSec = { $in: [authYearSec, sec, new RegExp(`^${sec}$`, 'i')] };
+        }
+        if (Object.keys(advCond).length > 0) {
+          passConditions.push(advCond);
+        }
+      } else if (cleanRole === 'counselor') {
+        if (authName) {
+          passConditions.push({ counselorName: new RegExp(`^${authName}$`, 'i') });
+        }
+        if (authStartRoll && authEndRoll) {
+          passConditions.push({
+            rollNo: { $gte: authStartRoll, $lte: authEndRoll }
+          });
+        }
+        if (authExtraRolls.length > 0) {
+          passConditions.push({ rollNo: { $in: authExtraRolls } });
+        }
+      } else if (cleanRole === 'boys_warden') {
+        passConditions.push({
+          accommodation: { $regex: /hoste?l|^h$/i, $not: /day\s*scholar/i },
+          $and: [
+            { $or: [{ gender: { $regex: /^male$/i } }, { status: 'Pending Boys Warden' }] },
+            { gender: { $not: { $regex: /^female$/i } } },
+            { status: { $ne: 'Pending Girls Warden' } }
+          ]
+        });
+      } else if (cleanRole === 'girls_warden') {
+        passConditions.push({
+          accommodation: { $regex: /hoste?l|^h$/i, $not: /day\s*scholar/i },
+          $and: [
+            { $or: [{ gender: { $regex: /^female$/i } }, { status: 'Pending Girls Warden' }] },
+            { gender: { $not: { $regex: /^male$/i } } },
+            { status: { $ne: 'Pending Boys Warden' } }
+          ]
+        });
+      }
+
+      let passFilter = {};
+      if (cleanRole === 'principal') {
+        passFilter = {};
+      } else if (passConditions.length > 0) {
+        passFilter = { $or: passConditions };
+      } else {
+        passFilter = { _id: null };
+      }
+
+      // 2. Build OD filter
+      const odConditions = [];
+
+      // Include all OD IDs currently displayed on the authority's screen
+      if (odIdList.length > 0) {
+        odConditions.push({ _id: { $in: odIdList } });
+      }
+
+      if (cleanRole === 'principal') {
+        odConditions.push({});
+      } else if (cleanRole === 'hod') {
+        if (authDept) {
+          odConditions.push({ dept: new RegExp(`^${authDept}$`, 'i') });
+        }
+      } else if (cleanRole === 'advisor') {
+        const advODCond = {};
+        if (authDept) advODCond.dept = new RegExp(`^${authDept}$`, 'i');
+        if (authYearSec) {
+          const sec = extractSection(authYearSec);
+          advODCond.yearSec = { $in: [authYearSec, sec, new RegExp(`^${sec}$`, 'i')] };
+        }
+        if (Object.keys(advODCond).length > 0) {
+          odConditions.push(advODCond);
+        }
+      } else if (cleanRole === 'counselor') {
+        if (authName) {
+          odConditions.push({ counselorName: new RegExp(`^${authName}$`, 'i') });
+        }
+        if (authStartRoll && authEndRoll) {
+          odConditions.push({
+            rollNo: { $gte: authStartRoll, $lte: authEndRoll }
+          });
+        }
+        if (authExtraRolls.length > 0) {
+          odConditions.push({ rollNo: { $in: authExtraRolls } });
+        }
+      }
+
+      let odFilter = {};
+      if (cleanRole === 'principal') {
+        odFilter = {};
+      } else if (odConditions.length > 0) {
+        odFilter = { $or: odConditions };
+      } else {
+        // Roles like warden do not clear OD records unless specific loaded OD IDs were present
+        odFilter = { _id: null };
+      }
+
+      const [passResult, odResult] = await Promise.all([
+        Pass.updateMany(passFilter, { $addToSet: { clearedByAuthorities: authorityKey } }),
+        OnDuty.updateMany(odFilter, { $addToSet: { clearedByAuthorities: authorityKey } })
+      ]);
+
+      const totalCleared = (passResult.modifiedCount || 0) + (odResult.modifiedCount || 0);
+
+      return res.json({
+        success: true,
+        message: `Successfully cleared ${totalCleared} requests (${passResult.modifiedCount || 0} Gate Passes, ${odResult.modifiedCount || 0} On-Duty requests) from your dashboard. Other authorities' dashboards remain unaffected.`,
+        deletedCount: totalCleared,
+        gatePassesCleared: passResult.modifiedCount || 0,
+        onDutyCleared: odResult.modifiedCount || 0
+      });
+    }
+
+    // Fallback if no specific authority specified
     const result = await Pass.deleteMany({});
     res.json({
       success: true,
-      message: `Successfully cleared all leave applications (${result.deletedCount} records deleted). All queues, logs, and trackers are now empty.`,
+      message: `Successfully cleared all leave applications (${result.deletedCount} records deleted).`,
       deletedCount: result.deletedCount
     });
   } catch (err) {

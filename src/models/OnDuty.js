@@ -157,7 +157,17 @@ const OnDutySchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
     index: true
-  }
+  },
+  clearedByAuthorities: [{
+    type: String,
+    index: true
+  }]
 });
+
+// Targeted Compound Indexes for sub-millisecond authority query response
+OnDutySchema.index({ counselorName: 1, status: 1, createdAt: -1 });
+OnDutySchema.index({ dept: 1, yearSec: 1, status: 1 });
+OnDutySchema.index({ dept: 1, status: 1 });
+OnDutySchema.index({ rollNo: 1, createdAt: -1 });
 
 module.exports = mongoose.model('OnDuty', OnDutySchema);

@@ -47,8 +47,8 @@ async function loadUniversalLogs() {
   if (!loggedUser) return;
 
   try {
-    let logUrl = '/api/passes?';
-    let odUrl = '/api/onduty?';
+    let logUrl = `/api/passes?authorityUserId=${encodeURIComponent(loggedUser.userId || '')}&`;
+    let odUrl = `/api/onduty?authorityUserId=${encodeURIComponent(loggedUser.userId || '')}&`;
 
     if (loggedUser.role === 'principal') {
       logUrl += 'role=principal';
@@ -339,7 +339,7 @@ function renderAuthorityApprovedSection(passes) {
         </td>
         <td class="max-w-xs">
           ${!isOD && typeof renderPassScheduleInfo === 'function' ? renderPassScheduleInfo(p) : ''}
-          ${isOD ? `<div class="font-semibold text-indigo-950 text-xs mb-0.5"><span class="text-indigo-600 font-bold">Venue:</span> ${escapeHtml(p.placeEvent || p.event || 'College Assignment')}</div>` : ''}
+          ${isOD && p.placeEvent && p.placeEvent !== '-' ? `<div class="font-semibold text-indigo-950 text-xs mb-0.5"><span class="text-indigo-600 font-bold">Venue:</span> ${escapeHtml(p.placeEvent)}</div>` : ''}
           <div class="font-medium text-slate-800 text-xs md:text-sm leading-relaxed mb-1.5 line-clamp-2">"${escapeHtml(p.reason)}"</div>
           <button onclick="${isOD ? `viewOnDutyLetter(${escapeAttr(p)})` : `viewFormalLetter(${escapeAttr(p)})`}" class="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition active:scale-95">
             View Letter
@@ -469,7 +469,7 @@ function renderAuthorityRejectedSection(passes) {
         </td>
         <td class="max-w-xs">
           ${!isOD && typeof renderPassScheduleInfo === 'function' ? renderPassScheduleInfo(p) : ''}
-          ${isOD ? `<div class="font-semibold text-indigo-950 text-xs mb-0.5"><span class="text-indigo-600 font-bold">Venue:</span> ${escapeHtml(p.placeEvent || p.event || 'College Assignment')}</div>` : ''}
+          ${isOD && p.placeEvent && p.placeEvent !== '-' ? `<div class="font-semibold text-indigo-950 text-xs mb-0.5"><span class="text-indigo-600 font-bold">Venue:</span> ${escapeHtml(p.placeEvent)}</div>` : ''}
           <div class="font-medium text-slate-800 text-xs md:text-sm leading-relaxed mb-1.5 line-clamp-2">"${escapeHtml(p.reason)}"</div>
           <button onclick="${isOD ? `viewOnDutyLetter(${escapeAttr(p)})` : `viewFormalLetter(${escapeAttr(p)})`}" class="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition active:scale-95">
             View Letter
@@ -524,6 +524,14 @@ function renderAuthorityAllRecordsSection(passes) {
     return;
   }
 
+  // Client-Side Pagination for High-Performance Rendering
+  const totalCount = passes.length;
+  const pState = paginationState.all;
+  const totalPages = Math.ceil(totalCount / pState.pageSize) || 1;
+  if (pState.page > totalPages) pState.page = totalPages;
+  const startIdx = (pState.page - 1) * pState.pageSize;
+  const paginatedPasses = passes.slice(startIdx, startIdx + pState.pageSize);
+
   let html = `
     <table class="enterprise-table min-w-[950px]">
       <thead>
@@ -540,7 +548,7 @@ function renderAuthorityAllRecordsSection(passes) {
       <tbody>
   `;
 
-  passes.forEach(p => {
+  paginatedPasses.forEach(p => {
     const isOD = p.isOD || !!p.odLetter;
     const rejReason = p.rejection?.reason || p.rejectionReason || 'No reason specified';
     const rejBy = p.rejection?.roleTitle || p.rejection?.rejectedBy || p.rejectedBy || 'Authority';
@@ -564,7 +572,7 @@ function renderAuthorityAllRecordsSection(passes) {
         </td>
         <td class="max-w-xs">
           ${!isOD && typeof renderPassScheduleInfo === 'function' ? renderPassScheduleInfo(p) : ''}
-          ${isOD ? `<div class="font-semibold text-indigo-950 text-xs mb-0.5"><span class="text-indigo-600 font-bold">Venue:</span> ${escapeHtml(p.placeEvent || p.event || 'College Assignment')}</div>` : ''}
+          ${isOD && p.placeEvent && p.placeEvent !== '-' ? `<div class="font-semibold text-indigo-950 text-xs mb-0.5"><span class="text-indigo-600 font-bold">Venue:</span> ${escapeHtml(p.placeEvent)}</div>` : ''}
           <div class="font-medium text-slate-800 text-xs md:text-sm leading-relaxed mb-1.5 line-clamp-2">"${escapeHtml(p.reason)}"</div>
           <button onclick="${isOD ? `viewOnDutyLetter(${escapeAttr(p)})` : `viewFormalLetter(${escapeAttr(p)})`}" class="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition active:scale-95">
             View Letter
@@ -638,8 +646,60 @@ function renderAuthorityAllRecordsSection(passes) {
   });
 
   html += `</tbody></table>`;
+  html += renderPaginationBar('all', totalCount, pState.page, pState.pageSize, 'handleTablePageChange');
   container.innerHTML = html;
 }
+
+const paginationState = {
+  all: { page: 1, pageSize: 25 },
+  gpAll: { page: 1, pageSize: 25 },
+  odAll: { page: 1, pageSize: 25 }
+};
+
+function renderPaginationBar(sectionKey, totalCount, currentPage, pageSize, changeCallbackName) {
+  if (totalCount <= pageSize) {
+    return `
+      <div class="px-4 py-2.5 bg-slate-50/80 border-t border-slate-200 text-xs text-slate-500 flex items-center justify-between">
+        <span>Showing all ${totalCount} record${totalCount === 1 ? '' : 's'}</span>
+        <span class="text-[11px] text-slate-400">Page 1 of 1</span>
+      </div>`;
+  }
+
+  const totalPages = Math.ceil(totalCount / pageSize);
+  const start = (currentPage - 1) * pageSize + 1;
+  const end = Math.min(currentPage * pageSize, totalCount);
+
+  return `
+    <div class="px-4 py-3 bg-slate-50/90 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600 rounded-b-2xl">
+      <div class="font-medium">
+        Showing <span class="font-bold text-slate-900">${start}</span> to <span class="font-bold text-slate-900">${end}</span> of <span class="font-bold text-slate-900">${totalCount}</span> records
+      </div>
+      <div class="flex items-center gap-1.5">
+        <button onclick="${changeCallbackName}('${sectionKey}', ${currentPage - 1})" ${currentPage <= 1 ? 'disabled class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-400 cursor-not-allowed text-xs font-semibold"' : 'class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-semibold shadow-2xs active:scale-95"'}>
+          Previous
+        </button>
+        <span class="px-3 py-1 rounded-lg bg-white border border-slate-200 text-slate-800 font-bold text-xs shadow-2xs">
+          Page ${currentPage} of ${totalPages}
+        </span>
+        <button onclick="${changeCallbackName}('${sectionKey}', ${currentPage + 1})" ${currentPage >= totalPages ? 'disabled class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-400 cursor-not-allowed text-xs font-semibold"' : 'class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-semibold shadow-2xs active:scale-95"'}>
+          Next
+        </button>
+      </div>
+    </div>`;
+}
+
+function handleTablePageChange(sectionKey, newPage) {
+  if (!paginationState[sectionKey]) return;
+  paginationState[sectionKey].page = Math.max(1, newPage);
+  if (sectionKey === 'all') {
+    renderAuthorityAllRecordsSection(window.cachedAllRecords || []);
+  } else if (sectionKey === 'gpAll') {
+    renderExtGPAllSection(window.cachedGPAllRecords || []);
+  } else if (sectionKey === 'odAll') {
+    renderExtODAllSection(window.cachedODAllRecords || []);
+  }
+}
+window.handleTablePageChange = handleTablePageChange;
 
 /**
  * Live search filter on Section 7 (Overall Records)
@@ -698,11 +758,11 @@ function buildODRowHTML(od) {
       <td>
         <div class="text-xs bg-indigo-50/70 border border-indigo-100 p-2.5 rounded-xl space-y-1">
           ${timingDisplay}
-          <div class="text-[10px] text-slate-600 font-medium">Return: ${escapeHtml(od.expectedReturnTime || od.expectedReturnDateTime || '-')}</div>
+          ${(od.expectedReturnTime || od.expectedReturnDateTime) && (od.expectedReturnTime !== '-' && od.expectedReturnDateTime !== '-') ? `<div class="text-[10px] text-slate-600 font-medium">Return: ${escapeHtml(od.expectedReturnTime || od.expectedReturnDateTime)}</div>` : ''}
         </div>
       </td>
       <td class="max-w-xs">
-        <div class="font-semibold text-indigo-950 text-xs mb-0.5"><span class="text-indigo-600 font-bold">Venue:</span> ${escapeHtml(od.placeEvent || od.event || 'College Assignment')}</div>
+        ${od.placeEvent && od.placeEvent !== '-' ? `<div class="font-semibold text-indigo-950 text-xs mb-0.5"><span class="text-indigo-600 font-bold">Venue:</span> ${escapeHtml(od.placeEvent)}</div>` : ''}
         <div class="font-medium text-slate-800 text-xs leading-relaxed line-clamp-2">"${escapeHtml(od.reason)}"</div>
       </td>
       <td>${statusBadge}</td>
@@ -812,6 +872,13 @@ function renderExtGPAllSection(passes) {
     return;
   }
 
+  const totalCount = passes.length;
+  const pState = paginationState.gpAll;
+  const totalPages = Math.ceil(totalCount / pState.pageSize) || 1;
+  if (pState.page > totalPages) pState.page = totalPages;
+  const startIdx = (pState.page - 1) * pState.pageSize;
+  const paginatedPasses = passes.slice(startIdx, startIdx + pState.pageSize);
+
   const statusBadge = (p) => {
     if (p.status === 'Rejected') return `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">REJECTED</span>`;
     if (p.status === 'Approved' || p.status === 'Completed') return `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">APPROVED</span>`;
@@ -820,7 +887,7 @@ function renderExtGPAllSection(passes) {
     return `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">${escapeHtml(p.status || 'Pending').toUpperCase()}</span>`;
   };
 
-  const rows = passes.map(p => `
+  const rows = paginatedPasses.map(p => `
     <tr>
       <td>
         <div class="font-bold text-slate-900 text-sm">${escapeHtml(p.name)}</div>
@@ -867,7 +934,7 @@ function renderExtGPAllSection(passes) {
         <th class="text-right">Documents</th>
       </tr></thead>
       <tbody>${rows}</tbody>
-    </table>`;
+    </table>` + renderPaginationBar('gpAll', totalCount, pState.page, pState.pageSize, 'handleTablePageChange');
   container.innerHTML = html;
 }
 
@@ -885,7 +952,15 @@ function renderExtODAllSection(passes) {
     );
     return;
   }
-  container.innerHTML = buildODTableHTML(passes.map(buildODRowHTML).join(''));
+
+  const totalCount = passes.length;
+  const pState = paginationState.odAll;
+  const totalPages = Math.ceil(totalCount / pState.pageSize) || 1;
+  if (pState.page > totalPages) pState.page = totalPages;
+  const startIdx = (pState.page - 1) * pState.pageSize;
+  const paginatedPasses = passes.slice(startIdx, startIdx + pState.pageSize);
+
+  container.innerHTML = buildODTableHTML(paginatedPasses.map(buildODRowHTML).join('')) + renderPaginationBar('odAll', totalCount, pState.page, pState.pageSize, 'handleTablePageChange');
 }
 
 function buildOfficialGatePassText(p) {
@@ -987,6 +1062,17 @@ function closeLetterModal() {
   if (modalEl) modalEl.classList.add('hidden');
 }
 
+function resetAuditCaches() {
+  cachedAllRecords = [];
+  cachedApprovedRecords = [];
+  cachedRejectedRecords = [];
+  window.cachedAllRecords = [];
+  window.masterPassList = [];
+  window.cachedApprovedRecords = [];
+  window.cachedRejectedRecords = [];
+}
+
+window.resetAuditCaches = resetAuditCaches;
 window.buildOfficialGatePassText = buildOfficialGatePassText;
 
 // Window global bindings
@@ -997,6 +1083,9 @@ window.viewFormalLetter = viewFormalLetter;
 window.closeLetterModal = closeLetterModal;
 
 // Extended section bindings
+window.renderAuthorityApprovedSection = renderAuthorityApprovedSection;
+window.renderAuthorityRejectedSection = renderAuthorityRejectedSection;
+window.renderAuthorityAllRecordsSection = renderAuthorityAllRecordsSection;
 window.renderExtODPendingSection = renderExtODPendingSection;
 window.renderExtODApprovedSection = renderExtODApprovedSection;
 window.renderExtODRejectedSection = renderExtODRejectedSection;

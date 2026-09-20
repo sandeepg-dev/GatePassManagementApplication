@@ -64,7 +64,8 @@ async function fetchWardenLeaveRequests(role) {
 
   try {
     const statusParam = role === 'girls_warden' ? 'Pending%20Girls%20Warden' : 'Pending%20Boys%20Warden';
-    let passes = await Api.get(`/api/passes?status=${statusParam}&role=${role}`);
+    const uid = encodeURIComponent(loggedUser?.userId || '');
+    let passes = await Api.get(`/api/passes?authorityUserId=${uid}&status=${statusParam}&role=${role}`);
     passes = (passes || []).filter(p => {
       const isHostel = (/hoste?l|^h$/i.test(p.accommodation || '') && !/day\s*scholar/i.test(p.accommodation || ''));
       const genderMatch = role === 'girls_warden'
@@ -101,6 +102,7 @@ async function fetchWardenLeaveRequests(role) {
       <table class="enterprise-table min-w-[850px]">
         <thead>
           <tr>
+            <th class="w-10 text-center"><input type="checkbox" id="selectAllBatch" onchange="toggleSelectAllBatch(this)" class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" title="Select All"></th>
             <th>Student & Roll No</th>
             <th>Class, Hostel & Contact</th>
             <th>Approval Hierarchy Trail</th>
@@ -114,7 +116,10 @@ async function fetchWardenLeaveRequests(role) {
     passes.forEach(p => {
       const isFemale = role === 'girls_warden';
       html += `
-        <tr>
+        <tr class="pending-queue-row" data-accommodation="${escapeAttr((p.accommodation || '').toLowerCase())}" data-search="${escapeAttr(((p.name || '') + ' ' + (p.rollNo || '') + ' ' + (p.dept || '') + ' ' + (p.reason || '')).toLowerCase())}">
+          <td class="text-center">
+            <input type="checkbox" class="batch-select-cb w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" value="${p._id || p.id}" onchange="updateBatchActionBar()">
+          </td>
           <td>
             <div class="font-bold text-slate-900 text-sm">${escapeHtml(p.name)}</div>
             <div class="font-mono text-xs font-bold text-red-700 bg-red-50/80 border border-red-200/60 inline-block px-2 py-0.5 rounded-md mt-0.5">${p.rollNo}</div>
@@ -180,7 +185,8 @@ async function fetchWardenRecords(role) {
   if (!el) return;
 
   try {
-    let passes = await Api.get(`/api/passes?role=${role}`);
+    const uid = encodeURIComponent(loggedUser?.userId || '');
+    let passes = await Api.get(`/api/passes?authorityUserId=${uid}&role=${role}`);
     passes = (passes || []).filter(p => {
       const isHostel = (/hoste?l|^h$/i.test(p.accommodation || '') && !/day\s*scholar/i.test(p.accommodation || ''));
       const genderMatch = role === 'girls_warden'
@@ -378,3 +384,18 @@ async function approveGirlsWardenPass(passId) {
     showToast('Girls warden approval failed.', 'error');
   }
 }
+
+function resetWardenCaches() {
+  wardenCachedRecords = [];
+  window.wardenCachedRecords = [];
+}
+
+window.resetWardenCaches = resetWardenCaches;
+window.renderWardenRecords = renderWardenRecords;
+window.fetchWardenLeaveRequests = fetchWardenLeaveRequests;
+window.fetchWardenRecords = fetchWardenRecords;
+window.refreshWardenDashboard = refreshWardenDashboard;
+window.switchWardenSection = switchWardenSection;
+window.filterWardenRecords = filterWardenRecords;
+window.approveBoysWardenPass = approveBoysWardenPass;
+window.approveGirlsWardenPass = approveGirlsWardenPass;

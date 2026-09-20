@@ -102,24 +102,139 @@ async function submitRejectPass() {
 }
 
 async function confirmAndClearAllData() {
+  const u = window.loggedUser || {};
+  const roleName = String(u.role || 'Authority').toUpperCase();
+
   showConfirmModal({
-    title: 'Purge All Leave Applications & Gate Passes?',
-    message: 'This action will clear all active queues, gate passes, and audit log records from the database across the entire institution. User accounts and student profiles will remain safe.',
-    confirmText: 'Purge All Passes',
+    title: `Clear All Requests (${roleName} Dashboard)?`,
+    message: 'This will clear all Gate Pass and On-Duty (OD) requests and records from your dashboard only. Other authorities\' dashboards, records, and queues will remain completely unaffected.',
+    confirmText: 'Clear My Dashboard',
     confirmColor: 'rose',
     onConfirm: async () => {
       try {
-        const data = await Api.post('/api/passes/clear-all', {});
+        // Collect all currently loaded records from in-memory arrays
+        const allLoaded = [
+          ...(Array.isArray(window.cachedAllRecords) ? window.cachedAllRecords : []),
+          ...(Array.isArray(window.masterPassList) ? window.masterPassList : []),
+          ...(Array.isArray(window.cachedApprovedRecords) ? window.cachedApprovedRecords : []),
+          ...(Array.isArray(window.cachedRejectedRecords) ? window.cachedRejectedRecords : []),
+          ...(Array.isArray(window.wardenCachedRecords) ? window.wardenCachedRecords : [])
+        ];
+
+        const currentlyLoadedPassIds = [];
+        const currentlyLoadedODIds = [];
+        const seenIds = new Set();
+
+        allLoaded.forEach(item => {
+          const id = item._id || item.id;
+          if (id && !seenIds.has(String(id))) {
+            seenIds.add(String(id));
+            if (item.isOD || !!item.odLetter) {
+              currentlyLoadedODIds.push(String(id));
+            } else {
+              currentlyLoadedPassIds.push(String(id));
+            }
+          }
+        });
+
+        const payload = {
+          role: u.role,
+          userId: u.userId,
+          authorityUserId: u.userId,
+          name: u.name,
+          dept: u.dept,
+          yearSec: u.yearSec,
+          startRoll: u.startRoll,
+          endRoll: u.endRoll,
+          counselorName: u.name,
+          currentlyLoadedPassIds,
+          currentlyLoadedODIds
+        };
+
+        const data = await Api.post('/api/passes/clear-all', payload);
         if (data && data.success) {
-          showToast(data.message || 'All leave applications and gate passes cleared successfully.', 'success', 3500);
+          // 1. Immediately reset in-memory caches
+          if (typeof resetAuditCaches === 'function') resetAuditCaches();
+          if (typeof resetWardenCaches === 'function') resetWardenCaches();
+          window.cachedAllRecords = [];
+          window.masterPassList = [];
+          window.cachedApprovedRecords = [];
+          window.cachedRejectedRecords = [];
+          window.wardenCachedRecords = [];
+
+          // 2. Immediately zero out all badge and KPI counters
+          const zeroIds = [
+            'kpi_pending', 'kpi_approved', 'kpi_rejected', 'kpi_total',
+            'kpi_gp_pending', 'kpi_gp_approved', 'kpi_gp_rejected', 'kpi_gp_all',
+            'kpi_od_pending', 'kpi_od_approved', 'kpi_od_rejected', 'kpi_od_all',
+            'kpi_sub_gp_pending', 'kpi_sub_od_pending',
+            'kpi_sub_gp_approved', 'kpi_sub_od_approved',
+            'kpi_sub_gp_rejected', 'kpi_sub_od_rejected',
+            'extBadge_requests', 'extBadge_approved', 'extBadge_rejected',
+            'extBadge_gp_all', 'extBadge_od_all', 'extBadge_all',
+            'authBadge_requests', 'authBadge_approved', 'authBadge_rejected', 'authBadge_all',
+            'subBadge_passes', 'subBadge_onduty',
+            'wardenBadge_requests', 'wardenBadge_records'
+          ];
+          zeroIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+              el.innerText = '0';
+              if (el.classList.contains('animate-pulse')) el.classList.remove('animate-pulse');
+            }
+          });
+
+          // 3. Immediately render empty states across all views
+          const queueEmptyHTML = (msg, sub) => `
+            <div class="p-12 text-center bg-white space-y-3">
+              <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center mx-auto shadow-2xs">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div class="text-base font-bold text-slate-800">${msg}</div>
+              <p class="text-xs md:text-sm text-slate-500 max-w-sm mx-auto">${sub}</p>
+            </div>`;
+
+          const queues = [
+            { id: 'counselorQueue', msg: 'No Pending Leave Requests', sub: 'All requests have been cleared from your dashboard.' },
+            { id: 'counselorODQueue', msg: 'No Pending On-Duty Requests', sub: 'All On-Duty requests have been cleared from your dashboard.' },
+            { id: 'advisorQueue', msg: 'No Pending Leave Requests', sub: 'All requests have been cleared from your dashboard.' },
+            { id: 'advisorODQueue', msg: 'No Pending On-Duty Requests', sub: 'All On-Duty requests have been cleared from your dashboard.' },
+            { id: 'hodQueue', msg: 'No Pending Leave Requests', sub: 'All requests have been cleared from your dashboard.' },
+            { id: 'hodODQueue', msg: 'No Pending On-Duty Requests', sub: 'All On-Duty requests have been cleared from your dashboard.' },
+            { id: 'principalQueue', msg: 'No Pending Leave Requests', sub: 'All requests have been cleared from your dashboard.' },
+            { id: 'wardenRequestsTableContainer', msg: 'No Pending Leave Requests', sub: 'All requests have been cleared from your dashboard.' }
+          ];
+          queues.forEach(q => {
+            const el = document.getElementById(q.id);
+            if (el) el.innerHTML = queueEmptyHTML(q.msg, q.sub);
+          });
+
+          if (typeof renderAuthorityApprovedSection === 'function') renderAuthorityApprovedSection([]);
+          if (typeof renderAuthorityRejectedSection === 'function') renderAuthorityRejectedSection([]);
+          if (typeof renderAuthorityAllRecordsSection === 'function') renderAuthorityAllRecordsSection([]);
+          if (typeof renderExtGPAllSection === 'function') renderExtGPAllSection([]);
+          if (typeof renderExtODAllSection === 'function') renderExtODAllSection([]);
+          if (typeof renderExtODPendingSection === 'function') renderExtODPendingSection([]);
+          if (typeof renderExtODApprovedSection === 'function') renderExtODApprovedSection([]);
+          if (typeof renderExtODRejectedSection === 'function') renderExtODRejectedSection([]);
+          if (typeof renderWardenRecords === 'function') renderWardenRecords([]);
+
+          showToast(data.message || 'Dashboard requests cleared successfully.', 'success', 3500);
+
+          // 4. Synchronize with server
           if (typeof refreshAllAuthorityViews === 'function') {
             refreshAllAuthorityViews();
+          }
+          if (typeof refreshWardenDashboard === 'function') {
+            refreshWardenDashboard();
           }
           if (typeof loadStudentPersonalStatus === 'function') {
             loadStudentPersonalStatus();
           }
         } else {
-          showToast(data?.message || 'Failed to clear data from database.', 'error', 3500);
+          showToast(data?.message || 'Failed to clear dashboard data.', 'error', 3500);
         }
       } catch (err) {
         showToast('Error connecting to server to clear passes: ' + (err.message || 'Unknown error'), 'error', 3500);

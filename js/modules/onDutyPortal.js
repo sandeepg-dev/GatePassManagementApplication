@@ -81,18 +81,12 @@ function setODTimingMode(mode) {
  */
 async function submitStudentOnDuty(rollNo) {
   const reason = document.getElementById('odReason')?.value?.trim();
-  const placeEvent = document.getElementById('odPlaceEvent')?.value?.trim();
-  const expectedReturnTime = document.getElementById('odExpectedReturn')?.value?.trim();
 
-  if (!placeEvent) return showToast('Please enter the Place / Event name.', 'warning');
-  if (!expectedReturnTime) return showToast('Please enter your Expected Return Date & Time.', 'warning');
   if (!reason) return showToast('Please state your reason for On-Duty.', 'warning');
 
   let body = {
     rollNo,
     mode: currentODTimingMode,
-    placeEvent,
-    expectedReturnTime,
     reason
   };
 
@@ -129,11 +123,7 @@ async function submitStudentOnDuty(rollNo) {
     if (data.success) {
       showToast(data.message || 'On-Duty requisition submitted successfully!', 'success');
       const reasonInput = document.getElementById('odReason');
-      const placeInput = document.getElementById('odPlaceEvent');
-      const returnInput = document.getElementById('odExpectedReturn');
       if (reasonInput) reasonInput.value = '';
-      if (placeInput) placeInput.value = '';
-      if (returnInput) returnInput.value = '';
       loadStudentOnDutyStatus();
     } else {
       showToast(data.message || 'Failed to submit On-Duty requisition.', 'error');
@@ -196,12 +186,10 @@ async function loadStudentOnDutyStatus() {
             </td>
             <td>
               ${timingDisplay}
-              <div class="text-[10px] text-slate-500 font-medium mt-1">Return: ${escapeHtml(od.expectedReturnTime || '-')}</div>
+              ${od.expectedReturnTime && od.expectedReturnTime !== '-' ? `<div class="text-[10px] text-slate-500 font-medium mt-1">Return: ${escapeHtml(od.expectedReturnTime)}</div>` : ''}
             </td>
             <td class="max-w-xs">
-              <div class="font-semibold text-indigo-950 text-xs mb-0.5">
-                <span class="text-indigo-600 font-bold">Venue:</span> ${escapeHtml(od.placeEvent || od.event || 'College Assignment')}
-              </div>
+              ${od.placeEvent && od.placeEvent !== '-' ? `<div class="font-semibold text-indigo-950 text-xs mb-0.5"><span class="text-indigo-600 font-bold">Venue:</span> ${escapeHtml(od.placeEvent)}</div>` : ''}
               <div class="font-medium text-slate-700 text-xs leading-relaxed mb-1 line-clamp-2">
                 "${escapeHtml(od.reason)}"
               </div>
@@ -392,10 +380,20 @@ function formatOnDutyFallbackLetter(od) {
       ? `REJECTED (${od.rejection?.reason || 'Declined'} on ${od.rejection?.time || '-'})`
       : (od.advisorApproval?.approved ? `Pending HOD Sanction` : `Queued (Awaiting Advisor)`));
 
-  const placeEvent = String(od.placeEvent || od.event || 'Institutional Assignment / Symposium').trim();
-  const expectedReturn = String(od.expectedReturnTime || 'Promptly after event completion').trim();
+  const placeEvent = String(od.placeEvent || od.event || '').trim();
+  const expectedReturn = String(od.expectedReturnTime || '').trim();
   const reason = String(od.reason || '').trim();
   const deptUpper = String(od.dept || 'ENGINEERING').toUpperCase();
+
+  const particularItems = [];
+  if (placeEvent && placeEvent !== '-' && placeEvent !== 'Institutional Assignment / Symposium' && placeEvent !== 'College Assignment') {
+    particularItems.push(`  • Place / Event        : ${placeEvent}`);
+  }
+  particularItems.push(`  • OD Date & Time       : ${scheduleText}`);
+  particularItems.push(`  • OD Reason / Purpose  : ${reason}`);
+  if (expectedReturn && expectedReturn !== '-' && expectedReturn !== 'Promptly after event completion') {
+    particularItems.push(`  • Expected Return Time : ${expectedReturn}`);
+  }
 
   return `GRT INSTITUTE OF ENGINEERING AND TECHNOLOGY
 (Approved by AICTE, New Delhi | Affiliated to Anna University, Chennai)
@@ -426,10 +424,7 @@ Subject: Requisition for Academic On-Duty (OD) Permission - Regarding.
 
 I am writing to formally request On-Duty (OD) permission for myself to participate in / attend the specified academic engagement. The particulars of the proposed On-Duty engagement are detailed below:
 
-  • Place / Event        : ${placeEvent}
-  • OD Date & Time       : ${scheduleText}
-  • OD Reason / Purpose  : ${reason}
-  • Expected Return Time : ${expectedReturn}
+${particularItems.join('\n')}
 
 I kindly request you to consider this requisition favorably, grant me On-Duty permission for the duration stated above, and award academic attendance for the same. I assure you that I will observe all institutional rules and proactively complete all lectures, assignments, and laboratory coursework missed during my absence.
 

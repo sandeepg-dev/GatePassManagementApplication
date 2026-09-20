@@ -3,9 +3,11 @@
  */
 const mongoose = require('mongoose');
 const Pass = require('../models/Pass');
+const OnDuty = require('../models/OnDuty');
 const Student = require('../models/Student');
 const User = require('../models/User');
 const { getISTTimeString } = require('../utils/formatters');
+const { generateOnDutyLetter } = require('../utils/letterGenerator');
 
 /**
  * Tier 1: Class Counselor Phone Verification & Clearance
@@ -387,6 +389,100 @@ async function markWardenReturn(req, res) {
   }
 }
 
+/**
+ * Bulk Multi-Pass Approval for Authority Queues
+ */
+async function bulkApprovePasses(req, res) {
+  try {
+    const { passIds, role, authorityName, parentCalled } = req.body;
+    if (!Array.isArray(passIds) || passIds.length === 0) {
+      return res.status(400).json({ success: false, message: 'No pass IDs provided for bulk approval' });
+    }
+
+    const validIds = passIds.filter(id => mongoose.Types.ObjectId.isValid(id));
+    if (validIds.length === 0) {
+      return res.status(400).json({ success: false, message: 'No valid pass IDs provided' });
+    }
+
+    const now = getISTTimeString();
+    const expiry = new Date(Date.now() + 20 * 60 * 1000);
+    const authName = authorityName || 'Authorized Official';
+    let processedCount = 0;
+
+    for (const id of validIds) {
+      const pass = await Pass.findById(id);
+      if (pass) {
+        if (role === 'counselor') {
+          pass.status = 'Pending Advisor';
+          pass.parentCallVerified = !!parentCalled;
+          pass.parentCalledBy = `Bulk parent call verification (Counselor: ${authName})`;
+          pass.parentCallTime = now;
+          pass.counselorApproval = { counselorName: authName, approved: true, time: now };
+        } else if (role === 'advisor') {
+          pass.status = 'Pending HOD';
+          pass.advisorApproval = { advisorName: authName, approved: true, time: now };
+          if (!pass.parentCallVerified && parentCalled) {
+            pass.parentCallVerified = true;
+            pass.parentCallTime = now;
+          }
+        } else if (role === 'hod') {
+          const isHosteller = (/hoste?l|^h$/i.test(pass.accommodation || '') && !/day/i.test(pass.accommodation || ''));
+          pass.status = isHosteller ? 'Pending Principal' : 'Approved';
+          pass.hodApproval = { hodName: authName, approved: true, time: now };
+          if (!isHosteller) {
+            pass.approvalTime = now;
+            pass.validUntil = getISTTimeString(expiry);
+            pass.expiresAt = expiry;
+          }
+        } else if (role === 'principal') {
+          const isHosteller = (/hoste?l|^h$/i.test(pass.accommodation || '') && !/day/i.test(pass.accommodation || ''));
+          pass.status = isHosteller ? 'Pending Warden' : 'Approved';
+          pass.principalApproval = { principalName: authName, approved: true, time: now };
+          if (!isHosteller) {
+            pass.approvalTime = now;
+            pass.validUntil = getISTTimeString(expiry);
+            pass.expiresAt = expiry;
+          }
+        } else if (role === 'warden' || role === 'boys_warden' || role === 'girls_warden') {
+          pass.wardenApproval = { wardenName: authName, approved: true, time: now };
+          pass.status = 'Approved';
+          pass.approvalTime = now;
+          pass.validUntil = getISTTimeString(expiry);
+          pass.expiresAt = expiry;
+        }
+        await pass.save();
+        processedCount++;
+        continue;
+      }
+
+      const od = await OnDuty.findById(id);
+      if (od) {
+        if (role === 'counselor') {
+          od.status = 'Pending Advisor';
+          od.counselorApproval = { counselorName: authName, approved: true, time: now };
+        } else if (role === 'advisor') {
+          od.status = 'Pending HOD';
+          od.advisorApproval = { advisorName: authName, approved: true, time: now };
+        } else if (role === 'hod') {
+          od.status = 'Completed';
+          od.hodApproval = { hodName: authName, approved: true, time: now };
+        }
+        od.odLetter = generateOnDutyLetter(od);
+        await od.save();
+        processedCount++;
+      }
+    }
+
+    return res.json({
+      success: true,
+      count: processedCount,
+      message: `Successfully approved ${processedCount} requisition(s) in batch.`
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message || 'Bulk approval failed', error: err.message });
+  }
+}
+
 module.exports = {
   approveCounselor,
   approveAdvisor,
@@ -395,6 +491,7 @@ module.exports = {
   approveWarden,
   approveBoysWarden,
   approveGirlsWarden,
+  bulkApprovePasses,
   rejectPass,
   markWardenExit,
   markWardenReturn

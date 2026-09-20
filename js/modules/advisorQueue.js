@@ -7,7 +7,7 @@ async function fetchAdvisorQueue() {
   if (!el || !loggedUser) return;
 
   try {
-    const qUrl = `/api/passes?status=Pending Advisor&role=advisor&dept=${encodeURIComponent(
+    const qUrl = `/api/passes?authorityUserId=${encodeURIComponent(loggedUser.userId || '')}&status=Pending Advisor&role=advisor&dept=${encodeURIComponent(
       loggedUser.dept
     )}&yearSec=${encodeURIComponent(loggedUser.yearSec)}`;
     const passes = await Api.get(qUrl);
@@ -44,6 +44,7 @@ async function fetchAdvisorQueue() {
       <table class="enterprise-table min-w-[850px]">
         <thead>
           <tr>
+            <th class="w-10 text-center"><input type="checkbox" id="selectAllBatch" onchange="toggleSelectAllBatch(this)" class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" title="Select All"></th>
             <th>Student & Roll No</th>
             <th>Class & Accommodation</th>
             <th>Audit Timeline (IST)</th>
@@ -57,7 +58,10 @@ async function fetchAdvisorQueue() {
           ${passes
             .map(
               p => `
-            <tr>
+            <tr class="pending-queue-row" data-accommodation="${escapeAttr((p.accommodation || '').toLowerCase())}" data-search="${escapeAttr(((p.name || '') + ' ' + (p.rollNo || '') + ' ' + (p.dept || '') + ' ' + (p.reason || '')).toLowerCase())}">
+              <td class="text-center">
+                <input type="checkbox" class="batch-select-cb w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" value="${p._id || p.id}" onchange="updateBatchActionBar()">
+              </td>
               <td>
                 <div class="font-bold text-slate-900 text-sm">${escapeHtml(p.name)}</div>
                 <div class="font-mono text-xs font-bold text-red-700 bg-red-50/80 border border-red-200/60 inline-block px-2 py-0.5 rounded-md mt-0.5">${p.rollNo}</div>
@@ -154,7 +158,7 @@ async function fetchAdvisorODQueue() {
   if (!el || !loggedUser) return;
 
   try {
-    const qUrl = `/api/onduty?status=Pending Advisor&dept=${encodeURIComponent(
+    const qUrl = `/api/onduty?authorityUserId=${encodeURIComponent(loggedUser.userId || '')}&role=advisor&status=Pending Advisor&dept=${encodeURIComponent(
       loggedUser.dept
     )}&yearSec=${encodeURIComponent(loggedUser.yearSec)}`;
     const odRequests = await Api.get(qUrl);
@@ -185,6 +189,7 @@ async function fetchAdvisorODQueue() {
       <table class="enterprise-table min-w-[850px]">
         <thead>
           <tr>
+            <th class="w-10 text-center"><input type="checkbox" onchange="toggleSelectAllBatch(this)" class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" title="Select All"></th>
             <th>Student & Roll No</th>
             <th>Class & Academic Year</th>
             <th>Counsellor Clearance</th>
@@ -201,7 +206,10 @@ async function fetchAdvisorODQueue() {
                 : `<div><span class="font-bold text-indigo-800">From:</span> ${od.fromDate}</div><div><span class="font-bold text-indigo-800">To:</span> ${od.toDate}</div>`;
 
               return `
-                <tr>
+                <tr class="pending-queue-row" data-accommodation="${escapeAttr((od.accommodation || '').toLowerCase())}" data-search="${escapeAttr(((od.name || '') + ' ' + (od.rollNo || '') + ' ' + (od.dept || '') + ' ' + (od.reason || '')).toLowerCase())}">
+                  <td class="text-center">
+                    <input type="checkbox" class="batch-select-cb w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" value="${od._id || od.id}" onchange="updateBatchActionBar()">
+                  </td>
                   <td>
                     <div class="font-bold text-slate-900 text-sm">${escapeHtml(od.name)}</div>
                     <div class="font-mono text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 inline-block px-2 py-0.5 rounded-md mt-0.5">${od.rollNo}</div>
@@ -223,11 +231,11 @@ async function fetchAdvisorODQueue() {
                   <td>
                     <div class="text-xs bg-indigo-50/70 border border-indigo-100 p-2.5 rounded-xl space-y-1">
                       ${timingDisplay}
-                      <div class="text-[10px] text-slate-600 font-medium">Return: ${escapeHtml(od.expectedReturnTime || '-')}</div>
+                      ${od.expectedReturnTime && od.expectedReturnTime !== '-' ? `<div class="text-[10px] text-slate-600 font-medium">Return: ${escapeHtml(od.expectedReturnTime)}</div>` : ''}
                     </div>
                   </td>
                   <td class="max-w-xs">
-                    <div class="font-semibold text-indigo-950 text-xs mb-0.5"><span class="text-indigo-600 font-bold">Venue:</span> ${escapeHtml(od.placeEvent || od.event || 'College Assignment')}</div>
+                    ${od.placeEvent && od.placeEvent !== '-' ? `<div class="font-semibold text-indigo-950 text-xs mb-0.5"><span class="text-indigo-600 font-bold">Venue:</span> ${escapeHtml(od.placeEvent)}</div>` : ''}
                     <div class="font-medium text-slate-800 text-xs md:text-sm leading-relaxed">${escapeHtml(od.reason)}</div>
                   </td>
                   <td class="text-right">

@@ -123,8 +123,16 @@ async function applyOnDuty(req, res) {
  */
 async function getOnDutyRequests(req, res) {
   try {
-    const { status, dept, rollNo, counselorName, yearSec, role, startRoll, endRoll } = req.query;
+    const { status, dept, rollNo, counselorName, yearSec, role, startRoll, endRoll, authorityUserId, userId } = req.query;
     let filter = {};
+
+    const cleanRole = role ? role.toLowerCase().trim() : '';
+    const cleanAuthUid = (authorityUserId || userId || '').toLowerCase().trim();
+    const authorityKey = (cleanRole && cleanAuthUid) ? `${cleanRole}:${cleanAuthUid}` : '';
+
+    if (authorityKey) {
+      filter.clearedByAuthorities = { $ne: authorityKey };
+    }
 
     if (status) {
       if (status.includes(',')) {
@@ -189,6 +197,10 @@ async function getOnDutyRequests(req, res) {
     // Sequential clearance visibility hierarchy:
     // Student -> Counsellor (Tier 1) -> Class Advisor (Tier 2) -> HOD (Tier 3) -> Completed
     const normalized = enrichedRequests.filter(od => {
+      if (authorityKey && (od.clearedByAuthorities || []).includes(authorityKey)) {
+        return false;
+      }
+
       // Advisor (Tier 2): must have been approved by counselor
       if (role === 'advisor') {
         const reachedAdvisor = od.counselorApproval?.approved === true || od.status === 'Pending Advisor';
