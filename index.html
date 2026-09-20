@@ -30,6 +30,7 @@
       <div class="bg-white p-3 rounded-2xl shadow-2xl border-2 border-amber-400">
         <img
           src="/public/grt-logo.png"
+          onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='/grt-logo.png';}else if(this.dataset.retry==='1'){this.dataset.retry=2;this.src='/assets/grt-logo.png';}"
           alt="GRT Logo" class="w-24 h-24 object-contain">
       </div>
       <span class="px-3.5 py-1 bg-red-700 text-white rounded-full text-xs font-bold tracking-widest uppercase shadow-md">
@@ -58,7 +59,7 @@
   <header class="max-w-7xl w-full mx-auto glass-panel p-4 sm:p-5 rounded-3xl border border-white/60 shadow-md mb-6">
     <div class="flex flex-col md:flex-row items-center justify-between gap-4">
       <div class="flex items-center gap-4 text-center md:text-left">
-        <img src="/public/grt-logo.png" alt="GRTIET Official Emblem" class="w-16 h-16 object-contain drop-shadow-sm">
+        <img src="/public/grt-logo.png" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='/grt-logo.png';}else if(this.dataset.retry==='1'){this.dataset.retry=2;this.src='/assets/grt-logo.png';}" alt="GRTIET Official Emblem" class="w-16 h-16 object-contain drop-shadow-sm">
         <div>
           <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug uppercase">
             GRT Institute of Engineering and Technology
@@ -97,7 +98,7 @@
       <!-- Header / Portal Identity -->
       <div class="text-center space-y-2 relative z-10">
         <div class="w-16 h-16 mx-auto rounded-2xl bg-white p-2 shadow-lg border border-slate-200/80 flex items-center justify-center">
-          <img src="/public/grt-logo.png" alt="GRT College Logo" class="w-12 h-12 object-contain">
+          <img src="/public/grt-logo.png" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='/grt-logo.png';}else if(this.dataset.retry==='1'){this.dataset.retry=2;this.src='/assets/grt-logo.png';}" alt="GRT College Logo" class="w-12 h-12 object-contain">
         </div>
         <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Institutional Login</h2>
         <p class="text-sm text-slate-600 font-medium">
@@ -316,6 +317,7 @@
       <div class="flex items-center justify-between border-b border-slate-200 pb-4">
         <div class="flex items-center gap-3">
           <img src="/public/grt-logo.png"
+            onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='/grt-logo.png';}else if(this.dataset.retry==='1'){this.dataset.retry=2;this.src='/assets/grt-logo.png';}"
             alt="GRT" class="w-12 h-12 object-contain bg-white rounded-xl p-0.5 border border-slate-200">
           <div>
             <h3 class="text-sm font-bold text-slate-900 uppercase">GRT Institute of Engineering and Technology</h3>

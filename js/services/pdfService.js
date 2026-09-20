@@ -1408,7 +1408,15 @@ function getCollegeBannerBase64() {
         resolve(null);
       }
     };
-    img.onerror = () => resolve(null);
+    img.onerror = () => {
+      if (img.src.includes('/public/')) {
+        img.src = '/grt-banner.png';
+      } else if (!img.src.includes('/assets/')) {
+        img.src = '/assets/grt-banner.png';
+      } else {
+        resolve(null);
+      }
+    };
     img.src = '/public/grt-banner.png';
   });
 }
@@ -1434,7 +1442,15 @@ function getCollegeLogoBase64() {
         resolve(null);
       }
     };
-    img.onerror = () => resolve(null);
+    img.onerror = () => {
+      if (img.src.includes('/public/')) {
+        img.src = '/grt-logo.png';
+      } else if (!img.src.includes('/assets/')) {
+        img.src = '/assets/grt-logo.png';
+      } else {
+        resolve(null);
+      }
+    };
     img.src = '/public/grt-logo.png';
   });
 }
@@ -1468,7 +1484,15 @@ function getCollegeLogoWatermarkBase64() {
         resolve(null);
       }
     };
-    img.onerror = () => resolve(null);
+    img.onerror = () => {
+      if (img.src.includes('/public/')) {
+        img.src = '/grt-logo.png';
+      } else if (!img.src.includes('/assets/')) {
+        img.src = '/assets/grt-logo.png';
+      } else {
+        resolve(null);
+      }
+    };
     img.src = '/public/grt-logo.png';
   });
 }
