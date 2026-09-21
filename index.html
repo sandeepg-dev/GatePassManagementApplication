@@ -21,66 +21,32 @@
   <!-- TOAST NOTIFICATION CONTAINER -->
   <div id="toastContainer"></div>
 
-  <!-- SPLASH SCREEN -->
-  <div id="splashScreen"
-    class="fixed inset-0 z-50 bg-cover bg-center flex flex-col items-center justify-center text-white transition-all duration-700 p-4"
-    style="background-image: url('/public/splash-bg.jpg'), url('/splash-bg.jpg'), url('/assets/splash-bg.jpg');">
-    <div class="absolute inset-0 bg-slate-950/75 backdrop-blur-xs"></div>
-    <div class="relative z-10 flex flex-col items-center text-center max-w-xl mx-auto space-y-4">
-      <div class="bg-white p-3 rounded-2xl shadow-2xl border-2 border-amber-400">
-        <img
-          src="/public/grt-logo.png"
-          onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='/grt-logo.png';}else if(this.dataset.retry==='1'){this.dataset.retry=2;this.src='/assets/grt-logo.png';}"
-          alt="GRT Logo" class="w-24 h-24 object-contain">
-      </div>
-      <span class="px-3.5 py-1 bg-red-700 text-white rounded-full text-xs font-bold tracking-widest uppercase shadow-md">
-        Autonomous Institution
-      </span>
-      <h1 class="text-2xl md:text-3xl font-black uppercase tracking-wider text-amber-400 leading-snug drop-shadow-md">
-        GRT Institute of Engineering and Technology
-      </h1>
-      <p class="text-xs md:text-sm font-semibold text-slate-200 uppercase tracking-widest drop-shadow">
-        Campus PassPro Institutional Outpass & Governance System
-      </p>
-    </div>
-  </div>
-
-  <script>
-    setTimeout(function () {
-      const splash = document.getElementById('splashScreen');
-      if (splash) {
-        splash.style.opacity = '0';
-        setTimeout(() => splash.remove(), 600);
-      }
-    }, 1500);
-  </script>
-
   <!-- OFFICIAL HEADER -->
-  <header class="max-w-7xl w-full mx-auto glass-panel p-4 sm:p-5 rounded-3xl border border-white/60 shadow-md mb-6">
+  <header class="max-w-7xl w-full mx-auto glass-panel p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs mb-6">
     <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-      <div class="flex items-center gap-4 text-center md:text-left">
-        <img src="/public/grt-logo.png" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='/grt-logo.png';}else if(this.dataset.retry==='1'){this.dataset.retry=2;this.src='/assets/grt-logo.png';}" alt="GRTIET Official Emblem" class="w-16 h-16 object-contain drop-shadow-sm">
+      <div class="flex items-center gap-3.5 text-center md:text-left">
+        <img src="/public/grt-logo.png" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='/grt-logo.png';}else if(this.dataset.retry==='1'){this.dataset.retry=2;this.src='/assets/grt-logo.png';}" alt="GRTIET Official Emblem" class="w-14 h-14 object-contain">
         <div>
-          <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug uppercase">
+          <h1 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight uppercase leading-snug">
             GRT Institute of Engineering and Technology
           </h1>
-          <p class="text-xs sm:text-sm font-bold text-red-700 tracking-wide uppercase">
+          <p class="text-xs font-bold text-red-700 tracking-wide uppercase">
             Tiruttani • (An Autonomous Institution)
           </p>
-          <p class="text-xs font-semibold text-slate-600 mt-0.5">
-            Campus PassPro • Institutional Outpass Clearance & Governance Engine
+          <p class="text-xs font-semibold text-slate-500 mt-0.5">
+            Campus PassPro • Institutional Outpass & Governance System
           </p>
         </div>
       </div>
 
       <div class="flex flex-wrap items-center justify-center gap-2">
-        <span class="px-3 py-1 bg-amber-50 border border-amber-300 text-amber-900 rounded-lg text-xs font-extrabold tracking-wide">
+        <span class="px-3 py-1 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg text-xs font-bold tracking-wide">
           NAAC A++ ACCREDITED
         </span>
-        <span class="px-3 py-1 bg-blue-50 border border-blue-300 text-blue-900 rounded-lg text-xs font-extrabold tracking-wide">
+        <span class="px-3 py-1 bg-blue-50 border border-blue-200 text-blue-900 rounded-lg text-xs font-bold tracking-wide">
           AICTE APPROVED
         </span>
-        <span class="px-3 py-1 bg-indigo-50 border border-indigo-300 text-indigo-900 rounded-lg text-xs font-extrabold tracking-wide">
+        <span class="px-3 py-1 bg-indigo-50 border border-indigo-200 text-indigo-900 rounded-lg text-xs font-bold tracking-wide">
           ANNA UNIVERSITY AFFILIATED
         </span>
       </div>
@@ -88,91 +54,73 @@
   </header>
 
   <!-- SCREEN 1: SINGLE COMMON LOGIN PORTAL -->
-  <main id="singleLoginPortalScreen"
-    class="max-w-xl w-full mx-auto my-auto py-8 px-4 sm:px-6 z-10">
-    <div class="glass-panel p-6 sm:p-10 rounded-3xl border border-white/70 shadow-2xl relative overflow-hidden space-y-6">
-      <!-- Decorative ambient glows -->
-      <div class="absolute -top-24 -right-24 w-48 h-48 bg-red-500/10 rounded-full blur-3xl pointer-events-none"></div>
-      <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
+  <main id="singleLoginPortalScreen" class="max-w-md w-full mx-auto my-auto py-6 px-4 z-10">
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-md space-y-6 relative">
       <!-- Header / Portal Identity -->
-      <div class="text-center space-y-2 relative z-10">
-        <div class="w-16 h-16 mx-auto rounded-2xl bg-white p-2 shadow-lg border border-slate-200/80 flex items-center justify-center">
-          <img src="/public/grt-logo.png" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='/grt-logo.png';}else if(this.dataset.retry==='1'){this.dataset.retry=2;this.src='/assets/grt-logo.png';}" alt="GRT College Logo" class="w-12 h-12 object-contain">
+      <div class="text-center space-y-1.5">
+        <div class="w-14 h-14 mx-auto rounded-xl bg-slate-50 p-2 border border-slate-200 flex items-center justify-center mb-3">
+          <img src="/public/grt-logo.png" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='/grt-logo.png';}else if(this.dataset.retry==='1'){this.dataset.retry=2;this.src='/assets/grt-logo.png';}" alt="GRT College Logo" class="w-10 h-10 object-contain">
         </div>
-        <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Institutional Login</h2>
-        <p class="text-sm text-slate-600 font-medium">
-          Campus PassPro • Unified Outpass & Governance Portal
+        <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Institutional Sign In</h2>
+        <p class="text-xs text-slate-500 font-medium">
+          Enter your Register Number or Staff ID to continue
         </p>
-        <div class="pt-1 flex flex-wrap items-center justify-center gap-2">
-          <span class="px-2.5 py-0.5 bg-slate-100 border border-slate-200 text-slate-700 rounded-md text-xs font-bold">Students</span>
-          <span class="text-slate-300">•</span>
-          <span class="px-2.5 py-0.5 bg-slate-100 border border-slate-200 text-slate-700 rounded-md text-xs font-bold">Counselors</span>
-          <span class="text-slate-300">•</span>
-          <span class="px-2.5 py-0.5 bg-slate-100 border border-slate-200 text-slate-700 rounded-md text-xs font-bold">Advisors</span>
-          <span class="text-slate-300">•</span>
-          <span class="px-2.5 py-0.5 bg-slate-100 border border-slate-200 text-slate-700 rounded-md text-xs font-bold">HODs</span>
-          <span class="text-slate-300">•</span>
-          <span class="px-2.5 py-0.5 bg-slate-100 border border-slate-200 text-slate-700 rounded-md text-xs font-bold">Principal</span>
-          <span class="text-slate-300">•</span>
-          <span class="px-2.5 py-0.5 bg-slate-100 border border-slate-200 text-slate-700 rounded-md text-xs font-bold">Wardens</span>
-        </div>
       </div>
 
       <!-- Error Alert Box -->
       <div id="loginErrorAlert"
-        class="hidden p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl text-xs sm:text-sm font-semibold leading-relaxed text-center">
+        class="hidden p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs font-semibold leading-relaxed text-center">
       </div>
 
       <!-- Single Common Login Form -->
-      <form id="commonLoginForm" autocomplete="off" onsubmit="event.preventDefault(); handleCommonLogin(event);" class="space-y-4 relative z-10">
+      <form id="commonLoginForm" autocomplete="off" onsubmit="event.preventDefault(); handleCommonLogin(event);" class="space-y-4">
         <div>
-          <label for="commonLoginId" class="block text-sm font-bold text-slate-800 tracking-wide mb-1.5 flex items-center justify-between">
-            <span>Login ID / Register Number</span>
-            <span class="text-xs text-slate-500 font-normal">Roll No or Staff ID</span>
+          <label for="commonLoginId" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+            <span>Login ID / Roll Number</span>
+            <span class="text-[11px] text-slate-400 font-normal">Student Roll No or Staff ID</span>
           </label>
           <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-              <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
+              <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
             </div>
             <input
               type="text"
               id="commonLoginId"
               required
-              placeholder="Enter Roll Number or Staff ID"
+              placeholder="e.g. 110324104001 or staff ID"
               autocomplete="off"
               value=""
-              class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-300 rounded-2xl text-sm font-semibold text-slate-900 focus:outline-none focus:border-red-600 focus:bg-white focus:ring-2 focus:ring-red-600/20 transition shadow-2xs font-mono"
+              class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-900 focus:outline-none focus:border-red-600 focus:bg-white focus:ring-1 focus:ring-red-600 transition font-mono"
             >
           </div>
         </div>
 
         <div>
-          <label for="commonPassword" class="block text-sm font-bold text-slate-800 tracking-wide mb-1.5 flex items-center justify-between">
+          <label for="commonPassword" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
             <span>Password</span>
-            <span class="text-xs text-slate-500 font-normal">Enter Account Password</span>
+            <span class="text-[11px] text-slate-400 font-normal">Account Password</span>
           </label>
           <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-              <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
+              <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
             </div>
             <input
               type="password"
               id="commonPassword"
               required
-              placeholder="Enter Password"
+              placeholder="Enter password"
               autocomplete="new-password"
               value=""
-              class="w-full pl-11 pr-12 py-3.5 bg-slate-50 border border-slate-300 rounded-2xl text-sm font-semibold text-slate-900 focus:outline-none focus:border-red-600 focus:bg-white focus:ring-2 focus:ring-red-600/20 transition shadow-2xs"
+              class="w-full pl-10 pr-11 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-900 focus:outline-none focus:border-red-600 focus:bg-white focus:ring-1 focus:ring-red-600 transition"
             >
             <button
               type="button"
               onclick="togglePasswordVisibility('commonPassword', 'passwordEyeIcon')"
-              class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-700 transition"
+              class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-700 transition"
               title="Toggle password visibility"
             >
               <span id="passwordEyeIcon">
-                <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/></svg>
+                <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/></svg>
               </span>
             </button>
           </div>
@@ -181,7 +129,7 @@
         <button
           type="submit"
           id="commonLoginBtn"
-          class="w-full py-3.5 bg-red-700 hover:bg-red-800 text-white font-bold rounded-2xl text-sm shadow-md transition-all active:scale-[0.99] flex items-center justify-center gap-2 mt-2"
+          class="w-full py-2.5 bg-red-700 hover:bg-red-800 text-white font-bold rounded-xl text-xs sm:text-sm shadow-xs transition active:scale-[0.99] flex items-center justify-center gap-2 mt-2"
         >
           <span>Sign In to Dashboard</span>
           <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
@@ -189,8 +137,8 @@
       </form>
 
       <!-- Institutional Helper Links -->
-      <div class="pt-4 border-t border-slate-200/80 flex items-center justify-center text-sm text-slate-500 font-medium">
-        <a href="/admin.html" class="font-bold text-red-700 hover:text-red-900 flex items-center gap-1.5 transition">
+      <div class="pt-4 border-t border-slate-100 flex items-center justify-center text-xs text-slate-500 font-medium">
+        <a href="/admin.html" class="font-bold text-slate-700 hover:text-red-700 flex items-center gap-1.5 transition">
           <span>Administrator Control Portal</span>
           <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
         </a>
@@ -200,36 +148,37 @@
 
   <!-- SCREEN 3: WORKING DASHBOARD -->
   <div id="dashScreen" class="hidden max-w-7xl w-full mx-auto my-auto space-y-6 z-10">
-    <div class="glass-panel rounded-3xl p-6 shadow-sm flex flex-wrap items-center justify-between gap-4">
-      <div class="space-y-1">
-        <h3 id="dashGreeting" class="text-lg md:text-xl font-bold text-slate-900 tracking-tight">Welcome</h3>
-        <p id="dashRoleSubtitle" class="text-xs font-bold text-red-800 tracking-wide uppercase font-mono"></p>
+    <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
+      <div class="space-y-0.5">
+        <h3 id="dashGreeting" class="text-base sm:text-lg font-black text-slate-900 tracking-tight">Welcome</h3>
+        <p id="dashRoleSubtitle" class="text-xs font-bold text-red-700 tracking-wide uppercase font-mono"></p>
       </div>
 
-      <div class="flex items-center flex-wrap gap-2.5">
+      <div class="flex items-center flex-wrap gap-2">
         <button id="topBulkPdfBtn" onclick="downloadMasterPDF()"
-          class="hidden px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs md:text-sm font-bold shadow-2xs transition-all flex items-center gap-2 active:scale-95"
+          class="hidden px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 active:scale-95"
           title="Download Master Clearance & Pass Audit Dossier (PDF)">
           <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd"/></svg>
-          <span>Master Auditing PDF</span>
+          <span>Master PDF</span>
         </button>
 
         <button id="topBulkLettersBtn" onclick="downloadAllCompleteLettersPDF()"
-          class="hidden px-4 py-2.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded-xl text-xs md:text-sm font-bold shadow-2xs transition-all flex items-center gap-2 active:scale-95"
+          class="hidden px-3.5 py-2 bg-indigo-700 hover:bg-indigo-800 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 active:scale-95"
           title="Download All Gate Pass and OD Letters in One PDF">
           <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>
-          <span>Download All PDF</span>
+          <span>All Letters PDF</span>
         </button>
 
         <button id="clearAllDataBtn" onclick="confirmAndClearAllData()"
-          class="hidden px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/80 rounded-xl text-xs md:text-sm font-bold shadow-2xs transition-all flex items-center gap-2 active:scale-95"
+          class="hidden px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 active:scale-95"
           title="Clear all requests from current authority dashboard">
           <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-          <span>Clear All</span>
+          <span>Clear Dashboard</span>
         </button>
+
         <button onclick="logout()"
-          class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 hover:text-slate-900 border border-slate-200 rounded-xl text-xs md:text-sm font-bold text-slate-700 shadow-2xs transition-all active:scale-95">
-          Exit Dashboard
+          class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-xs transition-all active:scale-95">
+          Sign Out
         </button>
       </div>
     </div>

@@ -1,507 +1,859 @@
 /**
- * Dynamic Dashboard Orchestrator & View Controller
- * Unified Section Architecture & Executive KPI Metrics
- * GRT Institute of Engineering and Technology
+ * Campus PassPro • Dynamic Dashboard Orchestrator & View Controller
+ * GRT Institute of Engineering and Technology (Autonomous)
+ * Bespoke Role-Based Layouts: Student, Counselor, Advisor, HOD, Principal, Warden
  */
 
 let wardenAutoRefreshTimer = null;
-let currentAuthRequestType = 'passes';
-
-function switchAuthRequestType(type) {
-  currentAuthRequestType = type;
-  const passBtn = document.getElementById('authSubTab_passes');
-  const odBtn = document.getElementById('authSubTab_onduty');
-  const passCont = document.getElementById('authPassQueueContainer');
-  const odCont = document.getElementById('authOnDutyQueueContainer');
-
-  if (type === 'passes') {
-    if (passBtn) passBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-white text-slate-900 shadow-xs border border-slate-200/60';
-    if (odBtn) odBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:text-slate-900';
-    if (passCont) passCont.classList.remove('hidden');
-    if (odCont) odCont.classList.add('hidden');
-  } else {
-    if (odBtn) odBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-indigo-600 text-white shadow-xs';
-    if (passBtn) passBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:text-slate-900';
-    if (passCont) passCont.classList.add('hidden');
-    if (odCont) odCont.classList.remove('hidden');
-  }
-}
-window.switchAuthRequestType = switchAuthRequestType;
+let currentAuthorityTab = 'requests';
+let currentQueueChipFilter = 'all';
 
 /**
- * 6-tab unified switcher for Counselor/Advisor/HOD dashboards
- * Tabs: requests | approved | rejected | gp_all | od_all | all
+ * Universal Authority Tab Switcher
+ * Handles Counselor, Advisor, HOD, Principal, and Warden tabs
  */
-function switchExtendedAuthorityTab(tabName) {
-  const allSections = ['requests', 'approved', 'rejected', 'gp_all', 'od_all', 'all'];
-  const allKpiCards = ['requests', 'approved', 'rejected'];
-
-  // Hide all sections
-  allSections.forEach(t => {
-    const sec = document.getElementById(`authSec_${t}`);
-    if (sec) sec.classList.add('hidden');
-  });
-
-  // Deactivate all KPI cards
-  allKpiCards.forEach(k => {
-    const card = document.getElementById(`kpiCard_${k}`);
-    if (card) {
-      card.classList.remove('active-kpi-card', 'border-2', 'border-red-600', 'border-emerald-500', 'border-rose-500');
-      card.classList.add('border', 'border-slate-200/80', 'opacity-90');
-    }
-  });
+function switchAuthorityTab(tabName) {
+  currentAuthorityTab = tabName;
 
   // Deactivate all tab buttons
-  allSections.forEach(t => {
-    const btn = document.getElementById(`extTab_btn_${t}`);
-    if (btn) btn.className = 'flex-1 min-w-[110px] px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-slate-600 hover:text-slate-900 hover:bg-white/70';
+  document.querySelectorAll('.role-tab-btn').forEach(btn => {
+    btn.classList.remove('active-tab', 'bg-white', 'text-slate-900', 'shadow-xs');
+    btn.classList.add('text-slate-600');
   });
 
-  // Activate selected section
-  const activeSec = document.getElementById(`authSec_${tabName}`);
-  if (activeSec) activeSec.classList.remove('hidden');
-
   // Activate selected tab button
-  const activeBtn = document.getElementById(`extTab_btn_${tabName}`);
-  if (activeBtn) activeBtn.className = 'flex-1 min-w-[110px] px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-white text-slate-900 shadow-xs border border-slate-200/60';
-
-  // Activate matching KPI card
-  const tabToCard = { requests: 'requests', approved: 'approved', rejected: 'rejected' };
-  const cardKey = tabToCard[tabName];
-  if (cardKey) {
-    const card = document.getElementById(`kpiCard_${cardKey}`);
-    if (card) {
-      card.classList.add('active-kpi-card', 'border-2');
-      card.classList.remove('border', 'border-slate-200/80', 'opacity-90');
-    }
+  const activeBtn = document.getElementById(`roleTabBtn_${tabName}`) || document.getElementById(`extTab_btn_${tabName}`);
+  if (activeBtn) {
+    activeBtn.classList.add('active-tab', 'bg-white', 'text-slate-900', 'shadow-xs');
+    activeBtn.classList.remove('text-slate-600');
   }
 
-  currentAuthorityTab = tabName;
+  // Hide all authority sections
+  const sections = ['requests', 'onduty', 'approved', 'rejected', 'gp_all', 'od_all', 'all'];
+  sections.forEach(sec => {
+    const secEl = document.getElementById(`authSec_${sec}`);
+    if (secEl) secEl.classList.add('hidden');
+  });
+
+  // Show selected section
+  const targetSec = document.getElementById(`authSec_${tabName}`);
+  if (targetSec) {
+    targetSec.classList.remove('hidden');
+  }
+
+  // If selecting OD tab for Counselor/Advisor/HOD, ensure OD queue is rendered
+  if (tabName === 'onduty' && typeof window.refreshAllAuthorityViews === 'function') {
+    if (window.loggedUser) {
+      if (window.loggedUser.role === 'counselor' && typeof fetchCounselorODQueue === 'function') fetchCounselorODQueue();
+      if (window.loggedUser.role === 'advisor' && typeof fetchAdvisorODQueue === 'function') fetchAdvisorODQueue();
+      if (window.loggedUser.role === 'hod' && typeof fetchHODODQueue === 'function') fetchHODODQueue();
+    }
+  }
 }
+
+// Backward-compatibility aliases
+function switchExtendedAuthorityTab(tabName) {
+  switchAuthorityTab(tabName);
+}
+
+window.switchAuthorityTab = switchAuthorityTab;
 window.switchExtendedAuthorityTab = switchExtendedAuthorityTab;
 
-/** GP All section live search */
+/**
+ * Student 3-View Segmented Switcher:
+ * 'pass' -> Gate Pass Application
+ * 'onduty' -> On-Duty Application
+ * 'status' -> My Requests & Live Sign-Off Tracker
+ */
+function switchStudentPortalTab(tab) {
+  const passBtn = document.getElementById('stuTabBtn_pass');
+  const odBtn = document.getElementById('stuTabBtn_onduty');
+  const statusBtn = document.getElementById('stuTabBtn_status');
+
+  const passSec = document.getElementById('studentPassSection');
+  const odSec = document.getElementById('studentOnDutySection');
+  const personalView = document.getElementById('studentPersonalView');
+  const odHistoryView = document.getElementById('studentOnDutyHistoryView');
+
+  // Reset tab button states
+  [passBtn, odBtn, statusBtn].forEach(b => {
+    if (b) {
+      b.className = 'flex-1 py-2 px-3 text-xs md:text-sm font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center justify-center gap-1.5';
+    }
+  });
+
+  // Hide all views
+  if (passSec) passSec.classList.add('hidden');
+  if (odSec) odSec.classList.add('hidden');
+  if (personalView) personalView.classList.add('hidden');
+  if (odHistoryView) odHistoryView.classList.add('hidden');
+
+  if (tab === 'pass') {
+    if (passBtn) passBtn.className = 'flex-1 py-2 px-3 text-xs md:text-sm font-bold rounded-lg bg-white text-slate-900 shadow-xs border border-slate-200/80 transition flex items-center justify-center gap-1.5';
+    if (passSec) passSec.classList.remove('hidden');
+  } else if (tab === 'onduty') {
+    if (odBtn) odBtn.className = 'flex-1 py-2 px-3 text-xs md:text-sm font-bold rounded-lg bg-white text-indigo-700 shadow-xs border border-slate-200/80 transition flex items-center justify-center gap-1.5';
+    if (odSec) odSec.classList.remove('hidden');
+  } else if (tab === 'status') {
+    if (statusBtn) statusBtn.className = 'flex-1 py-2 px-3 text-xs md:text-sm font-bold rounded-lg bg-white text-slate-900 shadow-xs border border-slate-200/80 transition flex items-center justify-center gap-1.5';
+    if (personalView) personalView.classList.remove('hidden');
+    if (odHistoryView) odHistoryView.classList.remove('hidden');
+
+    if (typeof loadStudentPersonalStatus === 'function') loadStudentPersonalStatus();
+    if (typeof loadStudentOnDutyStatus === 'function') loadStudentOnDutyStatus();
+  }
+}
+window.switchStudentPortalTab = switchStudentPortalTab;
+
+/**
+ * Filter live search for All Gate Passes in jurisdiction
+ */
 function filterExtGPAll() {
   const query = (document.getElementById('gpAllSearch')?.value || '').toLowerCase().trim();
   const list = window.cachedGPAllRecords || [];
-  if (!query) { renderExtGPAllSection(list); return; }
-  renderExtGPAllSection(list.filter(p =>
-    (p.rollNo && p.rollNo.toLowerCase().includes(query)) ||
-    (p.name && p.name.toLowerCase().includes(query)) ||
-    (p.dept && p.dept.toLowerCase().includes(query)) ||
-    (p.status && p.status.toLowerCase().includes(query))
-  ));
+  if (!query) { if (typeof renderExtGPAllSection === 'function') renderExtGPAllSection(list); return; }
+  if (typeof renderExtGPAllSection === 'function') {
+    renderExtGPAllSection(list.filter(p =>
+      (p.rollNo && p.rollNo.toLowerCase().includes(query)) ||
+      (p.name && p.name.toLowerCase().includes(query)) ||
+      (p.dept && p.dept.toLowerCase().includes(query)) ||
+      (p.status && p.status.toLowerCase().includes(query))
+    ));
+  }
 }
 window.filterExtGPAll = filterExtGPAll;
 
-/** OD All section live search */
+/**
+ * Filter live search for All OD Requests in jurisdiction
+ */
 function filterExtODAll() {
   const query = (document.getElementById('odAllSearch')?.value || '').toLowerCase().trim();
   const list = window.cachedODAllRecords || [];
-  if (!query) { renderExtODAllSection(list); return; }
-  renderExtODAllSection(list.filter(p =>
-    (p.rollNo && p.rollNo.toLowerCase().includes(query)) ||
-    (p.name && p.name.toLowerCase().includes(query)) ||
-    (p.dept && p.dept.toLowerCase().includes(query)) ||
-    (p.status && p.status.toLowerCase().includes(query))
-  ));
+  if (!query) { if (typeof renderExtODAllSection === 'function') renderExtODAllSection(list); return; }
+  if (typeof renderExtODAllSection === 'function') {
+    renderExtODAllSection(list.filter(p =>
+      (p.rollNo && p.rollNo.toLowerCase().includes(query)) ||
+      (p.name && p.name.toLowerCase().includes(query)) ||
+      (p.dept && p.dept.toLowerCase().includes(query)) ||
+      (p.status && p.status.toLowerCase().includes(query))
+    ));
+  }
 }
 window.filterExtODAll = filterExtODAll;
 
-function getAuthorityDashboardHTML(user, config) {
-  // ── Extended unified layout for Counselor, Advisor, HOD ──
-  if (config.hasOnDutyQueue) {
-    return `
+/* ═════════════════════════════════════════════════════════════════════════
+   BESPOKE ROLE DASHBOARD RENDERERS
+   ═════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * 1. STUDENT DASHBOARD
+ */
+function getStudentDashboardHTML(user) {
+  const nowD = new Date();
+  const todayISO = `${nowD.getFullYear()}-${String(nowD.getMonth() + 1).padStart(2, '0')}-${String(nowD.getDate()).padStart(2, '0')}`;
+  const isHosteller = (/hoste?l|^h$/i.test(user.accommodation || '') && !/day/i.test(user.accommodation || ''));
+
+  return `
     <div class="space-y-6">
-      ${config.extraHeaderHTML || ''}
-
-      <!-- 3 COMBINED KPI STAT CARDS (Pending / Approved / Rejected) -->
-      <div class="grid grid-cols-3 gap-4">
-
-        <!-- Pending (GP + OD combined) -->
-        <div id="kpiCard_requests" class="kpi-card active-kpi-card flex items-center justify-between p-4 md:p-5 rounded-2xl bg-white border-2 border-red-600 shadow-sm cursor-pointer transition-all hover:scale-[1.02] active:scale-95" onclick="switchExtendedAuthorityTab('requests')">
-          <div class="flex items-center gap-3.5">
-            <div class="w-12 h-12 rounded-2xl bg-red-50 text-red-700 flex items-center justify-center shrink-0 border border-red-200 shadow-2xs">
-              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-            </div>
-            <div>
-              <div class="text-xs font-bold text-slate-500 uppercase tracking-wider">Pending Action</div>
-              <div id="kpi_pending" class="text-2xl font-black text-slate-900 mt-0.5">0</div>
-              <div class="text-[10px] text-slate-400 mt-0.5">
-                GP: <span id="kpi_sub_gp_pending" class="font-bold text-red-700">0</span> &nbsp;|&nbsp; OD: <span id="kpi_sub_od_pending" class="font-bold text-amber-700">0</span>
-              </div>
-            </div>
+      <!-- Student Profile & Standing Strip -->
+      <div class="jurisdiction-card flex flex-wrap items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <h3 class="text-base sm:text-lg font-bold text-slate-900">${escapeHtml(user.name)}</h3>
+            <span class="font-mono text-xs font-bold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded-md">${escapeHtml(user.userId)}</span>
           </div>
-          <span id="authBadge_requests" class="text-xs font-bold text-red-700 bg-red-50 px-2.5 py-1 rounded-lg border border-red-200 shadow-2xs">Pending</span>
+          <p class="text-xs text-slate-500 font-medium">
+            ${escapeHtml(user.academicYear || '3 Year')} • Department of ${escapeHtml(user.dept || 'CSE')} (Section ${escapeHtml(user.yearSec || 'A')})
+          </p>
         </div>
-
-        <!-- Approved (GP + OD combined) -->
-        <div id="kpiCard_approved" class="kpi-card flex items-center justify-between p-4 md:p-5 rounded-2xl bg-white/95 border border-slate-200/80 shadow-xs cursor-pointer transition-all hover:scale-[1.01] hover:border-emerald-300 opacity-90 hover:opacity-100 active:scale-95" onclick="switchExtendedAuthorityTab('approved')">
-          <div class="flex items-center gap-3.5">
-            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-200 shadow-2xs">
-              <svg class="w-6 h-6 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-            </div>
-            <div>
-              <div class="text-xs font-bold text-slate-500 uppercase tracking-wider">Approved by You</div>
-              <div id="kpi_approved" class="text-2xl font-black text-emerald-800 mt-0.5">0</div>
-              <div class="text-[10px] text-slate-400 mt-0.5">
-                GP: <span id="kpi_sub_gp_approved" class="font-bold text-emerald-700">0</span> &nbsp;|&nbsp; OD: <span id="kpi_sub_od_approved" class="font-bold text-indigo-700">0</span>
-              </div>
-            </div>
-          </div>
-          <span id="authBadge_approved" class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 shadow-2xs">Approved</span>
+        <div class="flex items-center gap-2">
+          ${formatAccommodationBadge(user.accommodation)}
         </div>
-
-        <!-- Rejected (GP + OD combined) -->
-        <div id="kpiCard_rejected" class="kpi-card flex items-center justify-between p-4 md:p-5 rounded-2xl bg-white/95 border border-slate-200/80 shadow-xs cursor-pointer transition-all hover:scale-[1.01] hover:border-rose-300 opacity-90 hover:opacity-100 active:scale-95" onclick="switchExtendedAuthorityTab('rejected')">
-          <div class="flex items-center gap-3.5">
-            <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-700 flex items-center justify-center shrink-0 border border-rose-200 shadow-2xs">
-              <svg class="w-6 h-6 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
-            </div>
-            <div>
-              <div class="text-xs font-bold text-slate-500 uppercase tracking-wider">Declined</div>
-              <div id="kpi_rejected" class="text-2xl font-black text-rose-800 mt-0.5">0</div>
-              <div class="text-[10px] text-slate-400 mt-0.5">
-                GP: <span id="kpi_sub_gp_rejected" class="font-bold text-rose-700">0</span> &nbsp;|&nbsp; OD: <span id="kpi_sub_od_rejected" class="font-bold text-rose-500">0</span>
-              </div>
-            </div>
-          </div>
-          <span id="authBadge_rejected" class="text-xs font-bold text-rose-700 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-200 shadow-2xs">Rejected</span>
-        </div>
-
       </div>
 
-      <!-- MASTER SECTION CARD -->
-      <div class="glass-panel rounded-3xl p-5 md:p-8 space-y-6">
+      <!-- Segmented Navigation (3 Clear Actions) -->
+      <div class="max-w-xl mx-auto flex p-1 bg-slate-200/80 rounded-xl border border-slate-300/80 gap-1">
+        <button id="stuTabBtn_pass" onclick="switchStudentPortalTab('pass')"
+          class="flex-1 py-2 px-3 text-xs md:text-sm font-bold rounded-lg bg-white text-slate-900 shadow-xs border border-slate-200/80 transition flex items-center justify-center gap-1.5">
+          <span>Apply Gate Pass</span>
+        </button>
+        <button id="stuTabBtn_onduty" onclick="switchStudentPortalTab('onduty')"
+          class="flex-1 py-2 px-3 text-xs md:text-sm font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center justify-center gap-1.5">
+          <span>Apply On-Duty (OD)</span>
+        </button>
+        <button id="stuTabBtn_status" onclick="switchStudentPortalTab('status')"
+          class="flex-1 py-2 px-3 text-xs md:text-sm font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center justify-center gap-1.5">
+          <span>Live Status & History</span>
+        </button>
+      </div>
 
-        <!-- TAB NAVIGATION BAR: 6 unified tabs -->
-        <div class="flex flex-wrap items-center gap-1.5 p-1.5 bg-slate-100/90 rounded-2xl border border-slate-200 shadow-2xs">
-          <button id="extTab_btn_requests" onclick="switchExtendedAuthorityTab('requests')"
-            class="flex-1 min-w-[110px] px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 bg-white text-slate-900 shadow-xs border border-slate-200/60">
-            <svg class="w-3.5 h-3.5 text-red-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-            <span>Pending</span>
-            <span id="extBadge_requests" class="px-1.5 py-0.5 rounded-full text-[10px] bg-red-500 text-white font-extrabold leading-none">0</span>
-          </button>
-
-          <button id="extTab_btn_approved" onclick="switchExtendedAuthorityTab('approved')"
-            class="flex-1 min-w-[110px] px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white/70">
-            <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-            <span>Approved</span>
-          </button>
-
-          <button id="extTab_btn_rejected" onclick="switchExtendedAuthorityTab('rejected')"
-            class="flex-1 min-w-[110px] px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white/70">
-            <svg class="w-3.5 h-3.5 text-rose-600 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
-            <span>Rejected</span>
-          </button>
-
-          <button id="extTab_btn_gp_all" onclick="switchExtendedAuthorityTab('gp_all')"
-            class="flex-1 min-w-[120px] px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white/70">
-            <svg class="w-3.5 h-3.5 shrink-0 text-emerald-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
-            <span>All Gate Passes</span>
-          </button>
-
-          <button id="extTab_btn_od_all" onclick="switchExtendedAuthorityTab('od_all')"
-            class="flex-1 min-w-[120px] px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white/70">
-            <svg class="w-3.5 h-3.5 shrink-0 text-indigo-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            <span>All OD Requests</span>
-          </button>
-
-          <button id="extTab_btn_all" onclick="switchExtendedAuthorityTab('all')"
-            class="flex-1 min-w-[120px] px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white/70">
-            <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
-            <span>Overall Records</span>
-          </button>
+      <!-- VIEW 1: GATE PASS APPLICATION FORM -->
+      <div id="studentPassSection" class="max-w-xl mx-auto bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-5">
+        <div class="border-b border-slate-100 pb-3">
+          <h4 class="font-bold text-slate-900 text-base">Gate Pass Application</h4>
+          <p class="text-xs text-slate-500 mt-0.5">Clearance routes to your Class Counselor & Class Advisor for verification.</p>
         </div>
 
-        <!-- ══ SECTION 1: PENDING REQUESTS (GP + OD via sub-tabs) ══ -->
-        <div id="authSec_requests" class="space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 pb-4">
+        ${isHosteller
+          ? `<!-- Hosteller Schedule Fields -->
+            <div class="p-4 rounded-xl bg-amber-50/60 border border-amber-200 space-y-3">
+              <div class="text-xs font-bold text-amber-900 uppercase tracking-wider">Hosteller Schedule Details</div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Departure Date <span class="text-red-600">*</span></label>
+                  <input type="date" id="departureDate" required class="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:border-red-600 transition" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Departure Time <span class="text-red-600">*</span></label>
+                  <input type="time" id="departureTime" required class="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:border-red-600 transition" />
+                </div>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Expected Return Date <span class="text-red-600">*</span></label>
+                  <input type="date" id="expectedReturnDate" required class="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:border-red-600 transition" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Expected Return Time <span class="text-red-600">*</span></label>
+                  <input type="time" id="expectedReturnTime" required class="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:border-red-600 transition" />
+                </div>
+              </div>
+            </div>`
+          : `<!-- Day Scholar Schedule Fields -->
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+              <div class="text-xs font-bold text-slate-800 uppercase tracking-wider">Day Scholar Schedule</div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Date <span class="text-red-600">*</span></label>
+                  <input type="date" id="dayScholarDate" value="${todayISO}" required class="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:border-red-600 transition" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Outpass Time <span class="text-red-600">*</span></label>
+                  <input type="time" id="dayScholarTime" required class="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:border-red-600 transition" />
+                </div>
+              </div>
+            </div>`
+        }
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Official Reason for Outpass <span class="text-red-600">*</span></label>
+          <textarea id="passReason" rows="3" placeholder="Provide accurate and specific reason..." class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:border-red-600 focus:bg-white transition text-slate-800"></textarea>
+        </div>
+
+        <button onclick="submitStudentPass('${escapeHtml(user.userId)}')" class="w-full py-3 bg-red-700 hover:bg-red-800 text-white font-bold rounded-xl text-xs sm:text-sm shadow-xs transition active:scale-98 flex items-center justify-center gap-2">
+          <span>Submit Gate Pass Application</span>
+        </button>
+      </div>
+
+      <!-- VIEW 2: ON-DUTY (OD) APPLICATION FORM -->
+      <div id="studentOnDutySection" class="hidden max-w-xl mx-auto bg-white border border-indigo-200 rounded-2xl p-6 shadow-xs space-y-5">
+        <div class="border-b border-slate-100 pb-3">
+          <h4 class="font-bold text-slate-900 text-base">Academic On-Duty (OD) Requisition</h4>
+          <p class="text-xs text-slate-500 mt-0.5">Approval Hierarchy: Counselor &rarr; Class Advisor &rarr; Head of Department (HOD).</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Duration Format</label>
+          <div class="flex gap-2 p-1 bg-slate-100 rounded-xl border border-slate-200">
+            <button type="button" id="odModeBtn_dates" onclick="setODTimingMode('dates')" class="flex-1 py-1.5 px-3 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow-xs transition">Date Range</button>
+            <button type="button" id="odModeBtn_time" onclick="setODTimingMode('time')" class="flex-1 py-1.5 px-3 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition">Specific Time Duration</button>
+          </div>
+        </div>
+
+        <div id="odDateRangeFields" class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">From Date <span class="text-red-500">*</span></label>
+            <input type="date" id="odFromDate" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-mono text-slate-800 focus:outline-none focus:border-indigo-600 focus:bg-white" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">To Date <span class="text-red-500">*</span></label>
+            <input type="date" id="odToDate" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-mono text-slate-800 focus:outline-none focus:border-indigo-600 focus:bg-white" />
+          </div>
+        </div>
+
+        <div id="odTimeFields" class="hidden space-y-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Date of OD <span class="text-red-500">*</span></label>
+            <input type="date" id="odSpecificDate" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-mono text-slate-800 focus:outline-none focus:border-indigo-600 focus:bg-white" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
             <div>
-              <h3 class="text-base md:text-lg font-bold text-slate-900 flex items-center gap-2.5">
-                <span>${config.requestsTitle || 'Pending Requests'}</span>
-                <span class="text-xs font-bold bg-red-50 text-red-800 border border-red-300 px-2.5 py-0.5 rounded-md uppercase tracking-wider">Action Required</span>
-              </h3>
-              <p class="text-xs md:text-sm text-slate-500 font-medium mt-1">${config.requestsSubtitle || 'Gate Pass and On-Duty requests awaiting your review.'}</p>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">From Time <span class="text-red-500">*</span></label>
+              <input type="time" id="odFromTime" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-mono text-slate-800 focus:outline-none focus:border-indigo-600 focus:bg-white" />
             </div>
-            <button onclick="refreshAllAuthorityViews(); showToast('Dashboard refreshed.', 'info', 2000);" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs md:text-sm rounded-xl border border-slate-200 shadow-2xs transition-all flex items-center gap-2 active:scale-95">
-              <span>Refresh Data</span>
-            </button>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">To Time <span class="text-red-500">*</span></label>
+              <input type="time" id="odToTime" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-mono text-slate-800 focus:outline-none focus:border-indigo-600 focus:bg-white" />
+            </div>
           </div>
+        </div>
 
-          <!-- Gate Pass / OD Sub-tabs -->
-          <div class="flex items-center gap-2 p-1.5 bg-slate-100/90 rounded-2xl w-fit border border-slate-200 shadow-2xs">
-            <button id="authSubTab_passes" onclick="switchAuthRequestType('passes')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-white text-slate-900 shadow-xs border border-slate-200/60">
-              <span>Gate Pass Requests</span>
-              <span id="subBadge_passes" class="px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-700 font-bold">0</span>
-            </button>
-            <button id="authSubTab_onduty" onclick="switchAuthRequestType('onduty')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:text-slate-900">
-              <span>On-Duty Requests</span>
-              <span id="subBadge_onduty" class="px-2 py-0.5 rounded-full text-xs bg-indigo-100 text-indigo-700 font-bold">0</span>
-            </button>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Official Academic Duty Purpose <span class="text-red-500">*</span></label>
+          <textarea id="odReason" rows="3" placeholder="State the academic purpose, competition, or departmental assignment..." class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-indigo-600 focus:bg-white transition text-slate-800"></textarea>
+        </div>
+
+        <button onclick="submitStudentOnDuty('${escapeHtml(user.userId)}')" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs sm:text-sm shadow-xs transition active:scale-98 flex items-center justify-center gap-2">
+          <span>Submit On-Duty Application</span>
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * 2. COUNSELOR DASHBOARD
+ * Core Mission: Parent Call Verification & First-Tier Review
+ */
+function getCounselorDashboardHTML(user) {
+  return `
+    <div class="space-y-6">
+      <!-- Counselor Ward Jurisdiction Banner -->
+      <div class="jurisdiction-card flex flex-wrap items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <h3 class="text-base sm:text-lg font-bold text-slate-900">Class Counselor Ward Jurisdiction</h3>
+            <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 uppercase">Tier 1 Verification</span>
           </div>
+          <p class="text-xs text-slate-600 font-mono">
+            Assigned Ward: <span class="font-bold text-slate-900">${user.startRoll || 'Start'}</span> to <span class="font-bold text-slate-900">${user.endRoll || 'End'}</span> • Mandatory Parent Call Confirmation
+          </p>
+        </div>
+        <button onclick="refreshAllAuthorityViews(); showToast('Counselor queue refreshed.', 'info', 2000);"
+          class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition flex items-center gap-1.5 active:scale-95">
+          <span>Refresh Queue</span>
+        </button>
+      </div>
 
-          <!-- Live Search & Filter Bar on Pending Requests -->
-          <div class="flex flex-wrap items-center justify-between gap-3 p-3 bg-slate-50/90 rounded-2xl border border-slate-200 shadow-2xs">
+      <!-- Navigation Tabs (Dedicated 5 Sections) -->
+      <div class="role-tab-bar">
+        <button id="roleTabBtn_requests" onclick="switchAuthorityTab('requests')" class="role-tab-btn active-tab bg-white text-slate-900 shadow-xs">
+          <span>Pending Parent Calls</span>
+          <span id="authBadge_requests" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-600 text-white leading-none">0</span>
+        </button>
+        <button id="roleTabBtn_onduty" onclick="switchAuthorityTab('onduty')" class="role-tab-btn text-slate-600">
+          <span>On-Duty Queue</span>
+          <span id="subBadge_onduty" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700 leading-none">0</span>
+        </button>
+        <button id="roleTabBtn_approved" onclick="switchAuthorityTab('approved')" class="role-tab-btn text-slate-600">
+          <span>Forwarded to Advisor</span>
+          <span id="authBadge_approved" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 leading-none">0</span>
+        </button>
+        <button id="roleTabBtn_rejected" onclick="switchAuthorityTab('rejected')" class="role-tab-btn text-slate-600">
+          <span>Declined Requests</span>
+          <span id="authBadge_rejected" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 leading-none">0</span>
+        </button>
+        <button id="roleTabBtn_all" onclick="switchAuthorityTab('all')" class="role-tab-btn text-slate-600">
+          <span>Ward Audit Ledger</span>
+        </button>
+      </div>
+
+      <!-- Main Section Container -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 space-y-4 shadow-xs">
+        <!-- SECTION 1: PENDING PARENT CALLS -->
+        <div id="authSec_requests" class="space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
             <div class="relative flex-1 min-w-[220px]">
-              <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/></svg>
-              </span>
-              <input type="text" id="pendingQueueSearch" oninput="filterPendingQueueLive()" placeholder="Live filter roll no, student name, reason..." class="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition shadow-2xs">
+              <input type="text" id="pendingQueueSearch" oninput="filterPendingQueueLive()" placeholder="Filter roll, student name, reason..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-red-600 focus:bg-white transition" />
             </div>
-            <div class="flex items-center gap-1.5 text-xs font-bold">
-              <button onclick="setQueueFilterChip('all')" id="chip_all" class="px-3 py-1.5 rounded-lg bg-red-700 text-white shadow-2xs transition">All</button>
-              <button onclick="setQueueFilterChip('hosteller')" id="chip_hosteller" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 shadow-2xs transition">Hosteller</button>
-              <button onclick="setQueueFilterChip('dayscholar')" id="chip_dayscholar" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 shadow-2xs transition">Day Scholar</button>
+            <div class="flex items-center gap-1 text-xs font-bold">
+              <button onclick="setQueueFilterChip('all')" id="chip_all" class="px-3 py-1.5 rounded-lg bg-slate-900 text-white transition">All</button>
+              <button onclick="setQueueFilterChip('hosteller')" id="chip_hosteller" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition">Hosteller</button>
+              <button onclick="setQueueFilterChip('dayscholar')" id="chip_dayscholar" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition">Day Scholar</button>
             </div>
           </div>
-
-          <div id="authPassQueueContainer" class="overflow-x-auto rounded-2xl border border-slate-200 shadow-2xs">
-            <div id="${config.queueContainerId}"></div>
-          </div>
-          <div id="authOnDutyQueueContainer" class="hidden overflow-x-auto rounded-2xl border border-slate-200 shadow-2xs">
-            <div id="${config.onDutyQueueContainerId || 'authODQueue'}"></div>
+          <div id="authPassQueueContainer" class="overflow-x-auto rounded-xl border border-slate-200">
+            <div id="counselorQueue"></div>
           </div>
 
-          <!-- Floating Batch Multi-Select Action Bar -->
-          <div id="batchActionBar" class="hidden sticky bottom-4 z-40 max-w-md mx-auto bg-slate-900/95 text-white p-3.5 rounded-2xl shadow-2xl border border-slate-700 backdrop-blur flex items-center justify-between gap-3 animate-fade-in">
+          <!-- Batch Action Bar -->
+          <div id="batchActionBar" class="hidden sticky bottom-4 z-40 max-w-md mx-auto bg-slate-900 text-white p-3 rounded-xl shadow-xl border border-slate-800 flex items-center justify-between gap-3">
             <div class="text-xs font-semibold flex items-center gap-2">
-              <span id="selectedCountBadge" class="px-2 py-0.5 rounded-full bg-red-600 font-bold text-white text-xs">0</span>
-              <span>pass(es) selected</span>
+              <span id="batchSelectedCount" class="px-2 py-0.5 rounded-full bg-red-600 font-bold text-white text-xs">0 selected</span>
             </div>
             <div class="flex items-center gap-2">
-              <button onclick="clearBatchSelection()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">Cancel</button>
-              <button id="batchApproveBtn" onclick="executeBatchApproval()" class="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-sm flex items-center gap-1.5 active:scale-95">
-                <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <button onclick="clearBatchSelection()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">Cancel</button>
+              <button id="batchApproveBtn" onclick="executeBatchApproval()" class="px-3.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs flex items-center gap-1.5 active:scale-95">
                 <span>Approve Selected</span>
               </button>
             </div>
           </div>
         </div>
 
-        <!-- ══ SECTION 2: APPROVED (GP + OD combined) ══ -->
+        <!-- SECTION 2: ON-DUTY QUEUE -->
+        <div id="authSec_onduty" class="hidden space-y-4">
+          <div class="border-b border-slate-100 pb-3">
+            <h4 class="font-bold text-slate-900 text-sm">Ward On-Duty Requisitions</h4>
+            <p class="text-xs text-slate-500 mt-0.5">Review academic on-duty requests before forwarding to Class Advisor.</p>
+          </div>
+          <div id="authOnDutyQueueContainer" class="overflow-x-auto rounded-xl border border-slate-200">
+            <div id="counselorODQueue"></div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: APPROVED (Forwarded to Advisor) -->
         <div id="authSec_approved" class="hidden space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 pb-4">
-            <div>
-              <h3 class="text-base md:text-lg font-bold text-slate-900 flex items-center gap-2.5">
-                <span>Approved Requests</span>
-                <span class="text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 rounded-md uppercase tracking-wider">Endorsed by You</span>
-              </h3>
-              <p class="text-xs md:text-sm text-slate-500 font-medium mt-1">All Gate Pass and On-Duty requests approved at your authority level.</p>
-            </div>
-            <button onclick="refreshAllAuthorityViews(); showToast('Dashboard refreshed.', 'info', 2000);" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs md:text-sm rounded-xl border border-slate-200 shadow-2xs transition-all flex items-center gap-2 active:scale-95">
-              <span>Refresh Data</span>
-            </button>
+          <div class="border-b border-slate-100 pb-3">
+            <h4 class="font-bold text-slate-900 text-sm">Forwarded to Class Advisor</h4>
+            <p class="text-xs text-slate-500 mt-0.5">Requests parent-verified and recommended for Tier 2 clearance.</p>
           </div>
-          <div class="overflow-x-auto rounded-2xl border border-slate-200 shadow-2xs" id="authorityApprovedContainer"></div>
+          <div class="overflow-x-auto rounded-xl border border-slate-200" id="authorityApprovedContainer"></div>
         </div>
 
-        <!-- ══ SECTION 3: REJECTED (GP + OD combined) ══ -->
+        <!-- SECTION 4: DECLINED -->
         <div id="authSec_rejected" class="hidden space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 pb-4">
-            <div>
-              <h3 class="text-base md:text-lg font-bold text-slate-900 flex items-center gap-2.5">
-                <span>Rejected Requests</span>
-                <span class="text-xs font-bold bg-rose-50 text-rose-800 border border-rose-300 px-2.5 py-0.5 rounded-md uppercase tracking-wider">Declined Applications</span>
-              </h3>
-              <p class="text-xs md:text-sm text-slate-500 font-medium mt-1">All Gate Pass and On-Duty requests declined at your authority level with recorded reasons.</p>
-            </div>
-            <button onclick="refreshAllAuthorityViews(); showToast('Dashboard refreshed.', 'info', 2000);" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs md:text-sm rounded-xl border border-slate-200 shadow-2xs transition-all flex items-center gap-2 active:scale-95">
-              <span>Refresh Data</span>
-            </button>
+          <div class="border-b border-slate-100 pb-3">
+            <h4 class="font-bold text-slate-900 text-sm">Declined Applications</h4>
+            <p class="text-xs text-slate-500 mt-0.5">Requisitions rejected at counselor level with logged reasons.</p>
           </div>
-          <div class="overflow-x-auto rounded-2xl border border-slate-200 shadow-2xs" id="authorityRejectedContainer"></div>
+          <div class="overflow-x-auto rounded-xl border border-slate-200" id="authorityRejectedContainer"></div>
         </div>
 
-        <!-- ══ SECTION 4: ALL GATE PASSES ══ -->
-        <div id="authSec_gp_all" class="hidden space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 pb-4">
-            <div>
-              <h3 class="text-base md:text-lg font-bold text-slate-900 flex items-center gap-2.5">
-                <span>All Gate Pass Requests</span>
-                <span class="text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 rounded-md uppercase tracking-wider">GP History</span>
-              </h3>
-              <p class="text-xs md:text-sm text-slate-500 font-medium mt-1">Complete history of all Gate Pass applications in your jurisdiction.</p>
-            </div>
-            <div class="flex items-center flex-wrap gap-2">
-              <input type="text" id="gpAllSearch" oninput="filterExtGPAll()" placeholder="Search roll, name, status..." class="px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold w-48 focus:outline-none focus:border-red-600 shadow-2xs">
-            </div>
-          </div>
-          <div class="overflow-x-auto rounded-2xl border border-slate-200 shadow-2xs" id="extGPAllContainer"></div>
-        </div>
-
-        <!-- ══ SECTION 5: ALL OD REQUESTS ══ -->
-        <div id="authSec_od_all" class="hidden space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 pb-4">
-            <div>
-              <h3 class="text-base md:text-lg font-bold text-slate-900 flex items-center gap-2.5">
-                <span>All On-Duty (OD) Requests</span>
-                <span class="text-xs font-bold bg-indigo-50 text-indigo-800 border border-indigo-300 px-2.5 py-0.5 rounded-md uppercase tracking-wider">OD History</span>
-              </h3>
-              <p class="text-xs md:text-sm text-slate-500 font-medium mt-1">Complete On-Duty history across all statuses within your academic jurisdiction.</p>
-            </div>
-            <input type="text" id="odAllSearch" oninput="filterExtODAll()" placeholder="Search roll, name, status..." class="px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold w-48 focus:outline-none focus:border-indigo-600 shadow-2xs">
-          </div>
-          <div class="overflow-x-auto rounded-2xl border border-slate-200 shadow-2xs" id="extODAllContainer"></div>
-        </div>
-
-        <!-- ══ SECTION 6: OVERALL RECORDS (GP + OD unified) ══ -->
+        <!-- SECTION 5: WARD AUDIT LEDGER -->
         <div id="authSec_all" class="hidden space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200/80 pb-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
             <div>
-              <h3 class="text-base md:text-lg font-bold text-slate-900 flex items-center gap-2.5">
-                <span>Overall Records Archive</span>
-                <span class="text-xs font-bold bg-purple-50 text-purple-800 border border-purple-300 px-2.5 py-0.5 rounded-md uppercase tracking-wider">Complete History</span>
-              </h3>
-              <p class="text-xs md:text-sm text-slate-500 font-medium mt-1">Comprehensive unified audit trail of all Gate Pass and OD requisitions in your jurisdiction.</p>
+              <h4 class="font-bold text-slate-900 text-sm">Ward Complete Audit Trail</h4>
+              <p class="text-xs text-slate-500 mt-0.5">Historical archive of all student requisitions in your ward.</p>
             </div>
-            <div class="flex items-center flex-wrap gap-2">
-              <input type="text" id="authAllRecordsSearch" oninput="filterAuthorityAllRecords()" placeholder="Search name, roll no, reason..." class="px-4 py-2 bg-white border border-slate-300 rounded-xl text-xs md:text-sm font-semibold w-56 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 shadow-2xs">
-              <button onclick="refreshAllAuthorityViews(); showToast('Dashboard records refreshed.', 'info', 2000);" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs md:text-sm rounded-xl border border-slate-200 shadow-2xs transition-all flex items-center gap-1.5 active:scale-95">
-                <span>Refresh</span>
-              </button>
-            </div>
+            <input type="text" id="authAllRecordsSearch" oninput="filterAuthorityAllRecords()" placeholder="Search records..." class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold w-48 focus:outline-none focus:border-red-600" />
           </div>
-          <div class="overflow-x-auto rounded-2xl border border-slate-200 shadow-2xs" id="authorityAllRecordsContainer"></div>
+          <div class="overflow-x-auto rounded-xl border border-slate-200" id="authorityAllRecordsContainer"></div>
         </div>
-
-      </div>
-    </div>
-  `;
-  }
-
-  // ── Original 4-card layout for Principal and Warden (unchanged) ──
-  return `
-    <div class="space-y-6">
-      ${config.extraHeaderHTML || ''}
-
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div id="kpiCard_requests" class="kpi-card active-kpi-card flex items-center justify-between p-4 md:p-5 rounded-2xl bg-white border-2 border-red-600 shadow-sm cursor-pointer transition-all hover:scale-[1.02] active:scale-95" onclick="switchAuthorityTab('requests')">
-          <div class="flex items-center gap-3.5">
-            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0 border border-amber-200 shadow-2xs">
-              <svg class="w-6 h-6 fill-current" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
-            </div>
-            <div>
-              <div class="text-xs font-bold text-slate-500 uppercase tracking-wider">Pending Action</div>
-              <div id="kpi_pending" class="text-2xl font-black text-slate-900 mt-0.5">0</div>
-            </div>
-          </div>
-          <span id="authBadge_requests" class="text-xs font-bold text-red-700 bg-red-50 px-2.5 py-1 rounded-lg border border-red-200 shadow-2xs">Requests</span>
-        </div>
-
-        <div id="kpiCard_approved" class="kpi-card flex items-center justify-between p-4 md:p-5 rounded-2xl bg-white/95 border border-slate-200/80 shadow-xs cursor-pointer transition-all hover:scale-[1.01] hover:border-slate-300 opacity-90 hover:opacity-100 active:scale-95" onclick="switchAuthorityTab('approved')">
-          <div class="flex items-center gap-3.5">
-            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-200 shadow-2xs">
-              <svg class="w-6 h-6 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-            </div>
-            <div>
-              <div class="text-xs font-bold text-slate-500 uppercase tracking-wider">Approved by You</div>
-              <div id="kpi_approved" class="text-2xl font-black text-emerald-800 mt-0.5">0</div>
-            </div>
-          </div>
-          <span id="authBadge_approved" class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 shadow-2xs">Approved</span>
-        </div>
-
-        <div id="kpiCard_rejected" class="kpi-card flex items-center justify-between p-4 md:p-5 rounded-2xl bg-white/95 border border-slate-200/80 shadow-xs cursor-pointer transition-all hover:scale-[1.01] hover:border-slate-300 opacity-90 hover:opacity-100 active:scale-95" onclick="switchAuthorityTab('rejected')">
-          <div class="flex items-center gap-3.5">
-            <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-700 flex items-center justify-center shrink-0 border border-rose-200 shadow-2xs">
-              <svg class="w-6 h-6 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
-            </div>
-            <div>
-              <div class="text-xs font-bold text-slate-500 uppercase tracking-wider">Declined</div>
-              <div id="kpi_rejected" class="text-2xl font-black text-rose-800 mt-0.5">0</div>
-            </div>
-          </div>
-          <span id="authBadge_rejected" class="text-xs font-bold text-rose-700 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-200 shadow-2xs">Rejected</span>
-        </div>
-
-        <div id="kpiCard_all" class="kpi-card flex items-center justify-between p-4 md:p-5 rounded-2xl bg-white/95 border border-slate-200/80 shadow-xs cursor-pointer transition-all hover:scale-[1.01] hover:border-slate-300 opacity-90 hover:opacity-100 active:scale-95" onclick="switchAuthorityTab('all')">
-          <div class="flex items-center gap-3.5">
-            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0 border border-indigo-200 shadow-2xs">
-              <svg class="w-6 h-6 fill-current" viewBox="0 0 20 20"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/></svg>
-            </div>
-            <div>
-              <div class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Records</div>
-              <div id="kpi_total" class="text-2xl font-black text-slate-900 mt-0.5">0</div>
-            </div>
-          </div>
-          <span id="authBadge_all" class="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-200 shadow-2xs">All Records</span>
-        </div>
-      </div>
-
-      <div class="glass-panel rounded-3xl p-6 md:p-8 space-y-6">
-
-        <div id="authSec_requests" class="space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 pb-4">
-            <div>
-              <h3 class="text-base md:text-lg font-bold text-slate-900 flex items-center gap-2.5">
-                <span>${config.requestsTitle || 'Student Leave Requests'}</span>
-                <span class="text-xs font-bold bg-amber-50 text-amber-800 border border-amber-300 px-2.5 py-0.5 rounded-md uppercase tracking-wider">Action Required</span>
-              </h3>
-              <p class="text-xs md:text-sm text-slate-500 font-medium mt-1">${config.requestsSubtitle || 'Leave applications waiting for your action.'}</p>
-            </div>
-            <button onclick="refreshAllAuthorityViews(); showToast('Dashboard records refreshed.', 'info', 2000);" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs md:text-sm rounded-xl border border-slate-200 shadow-2xs transition-all flex items-center gap-2 active:scale-95">
-              <span>Refresh Data</span>
-            </button>
-          </div>
-          <div id="authPassQueueContainer" class="overflow-x-auto rounded-2xl border border-slate-200 shadow-2xs">
-            <div id="${config.queueContainerId}"></div>
-          </div>
-        </div>
-
-        <div id="authSec_approved" class="hidden space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 pb-4">
-            <div>
-              <h3 class="text-base md:text-lg font-bold text-slate-900 flex items-center gap-2.5">
-                <span>Approved Leave Applications</span>
-                <span class="text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 rounded-md uppercase tracking-wider">Endorsed by You</span>
-              </h3>
-              <p class="text-xs md:text-sm text-slate-500 font-medium mt-1">Leave applications approved and endorsed at your authority level.</p>
-            </div>
-            <button onclick="refreshAllAuthorityViews(); showToast('Dashboard records refreshed.', 'info', 2000);" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs md:text-sm rounded-xl border border-slate-200 shadow-2xs transition-all flex items-center gap-2 active:scale-95">
-              <span>Refresh Data</span>
-            </button>
-          </div>
-          <div class="overflow-x-auto rounded-2xl border border-slate-200 shadow-2xs" id="authorityApprovedContainer"></div>
-        </div>
-
-        <div id="authSec_rejected" class="hidden space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 pb-4">
-            <div>
-              <h3 class="text-base md:text-lg font-bold text-slate-900 flex items-center gap-2.5">
-                <span>Declined Leave Applications</span>
-                <span class="text-xs font-bold bg-rose-50 text-rose-800 border border-rose-300 px-2.5 py-0.5 rounded-md uppercase tracking-wider">Declined Applications</span>
-              </h3>
-              <p class="text-xs md:text-sm text-slate-500 font-medium mt-1">Leave applications rejected with official reasons recorded.</p>
-            </div>
-            <button onclick="refreshAllAuthorityViews(); showToast('Dashboard records refreshed.', 'info', 2000);" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs md:text-sm rounded-xl border border-slate-200 shadow-2xs transition-all flex items-center gap-2 active:scale-95">
-              <span>Refresh Data</span>
-            </button>
-          </div>
-          <div class="overflow-x-auto rounded-2xl border border-slate-200 shadow-2xs" id="authorityRejectedContainer"></div>
-        </div>
-
-        <div id="authSec_all" class="hidden space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200/80 pb-4">
-            <div>
-              <h3 class="text-base md:text-lg font-bold text-slate-900 flex items-center gap-2.5">
-                <span>All Records Archive</span>
-                <span class="text-xs font-bold bg-purple-50 text-purple-800 border border-purple-300 px-2.5 py-0.5 rounded-md uppercase tracking-wider">Complete History</span>
-              </h3>
-              <p class="text-xs md:text-sm text-slate-500 font-medium mt-1">Comprehensive audit trail of all student leave requisitions handled in your jurisdiction.</p>
-            </div>
-            <div class="flex items-center flex-wrap gap-2">
-              <input type="text" id="authAllRecordsSearch" oninput="filterAuthorityAllRecords()" placeholder="Search name, roll no, reason..." class="px-4 py-2 bg-white border border-slate-300 rounded-xl text-xs md:text-sm font-semibold w-56 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 shadow-2xs">
-              <button onclick="refreshAllAuthorityViews(); showToast('Dashboard records refreshed.', 'info', 2000);" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs md:text-sm rounded-xl border border-slate-200 shadow-2xs transition-all flex items-center gap-1.5 active:scale-95"><span>Refresh</span></button>
-            </div>
-          </div>
-          <div class="overflow-x-auto rounded-2xl border border-slate-200 shadow-2xs" id="authorityAllRecordsContainer"></div>
-        </div>
-
       </div>
     </div>
   `;
 }
+
+/**
+ * 3. CLASS ADVISOR DASHBOARD
+ * Core Mission: Class Attendance & Academic Standing Endorsement
+ */
+function getAdvisorDashboardHTML(user) {
+  return `
+    <div class="space-y-6">
+      <!-- Advisor Class Jurisdiction Banner -->
+      <div class="jurisdiction-card flex flex-wrap items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <h3 class="text-base sm:text-lg font-bold text-slate-900">Class Advisory Jurisdiction</h3>
+            <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-indigo-50 text-indigo-800 border border-indigo-200 uppercase">Tier 2 Academic Review</span>
+          </div>
+          <p class="text-xs text-slate-600 font-mono">
+            Department: <span class="font-bold text-slate-900">${user.dept}</span> • Section: <span class="font-bold text-slate-900">${user.yearSec}</span> • Academic Year: <span class="font-bold text-slate-900">${user.academicYear || '3 Year'}</span>
+          </p>
+        </div>
+        <button onclick="refreshAllAuthorityViews(); showToast('Advisor queue refreshed.', 'info', 2000);"
+          class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition flex items-center gap-1.5 active:scale-95">
+          <span>Refresh Queue</span>
+        </button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="role-tab-bar">
+        <button id="roleTabBtn_requests" onclick="switchAuthorityTab('requests')" class="role-tab-btn active-tab bg-white text-slate-900 shadow-xs">
+          <span>Class Gate Pass Queue</span>
+          <span id="authBadge_requests" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-600 text-white leading-none">0</span>
+        </button>
+        <button id="roleTabBtn_onduty" onclick="switchAuthorityTab('onduty')" class="role-tab-btn text-slate-600">
+          <span>Class On-Duty Queue</span>
+          <span id="subBadge_onduty" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700 leading-none">0</span>
+        </button>
+        <button id="roleTabBtn_approved" onclick="switchAuthorityTab('approved')" class="role-tab-btn text-slate-600">
+          <span>Endorsed to HOD</span>
+          <span id="authBadge_approved" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 leading-none">0</span>
+        </button>
+        <button id="roleTabBtn_rejected" onclick="switchAuthorityTab('rejected')" class="role-tab-btn text-slate-600">
+          <span>Declined Applications</span>
+          <span id="authBadge_rejected" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 leading-none">0</span>
+        </button>
+        <button id="roleTabBtn_all" onclick="switchAuthorityTab('all')" class="role-tab-btn text-slate-600">
+          <span>Section Ledger</span>
+        </button>
+      </div>
+
+      <!-- Main Container -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 space-y-4 shadow-xs">
+        <!-- SECTION 1: PENDING GATE PASSES -->
+        <div id="authSec_requests" class="space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
+            <div class="relative flex-1 min-w-[220px]">
+              <input type="text" id="pendingQueueSearch" oninput="filterPendingQueueLive()" placeholder="Filter roll, student name, reason..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-red-600 focus:bg-white transition" />
+            </div>
+            <div class="flex items-center gap-1 text-xs font-bold">
+              <button onclick="setQueueFilterChip('all')" id="chip_all" class="px-3 py-1.5 rounded-lg bg-slate-900 text-white transition">All</button>
+              <button onclick="setQueueFilterChip('hosteller')" id="chip_hosteller" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition">Hosteller</button>
+              <button onclick="setQueueFilterChip('dayscholar')" id="chip_dayscholar" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition">Day Scholar</button>
+            </div>
+          </div>
+          <div id="authPassQueueContainer" class="overflow-x-auto rounded-xl border border-slate-200">
+            <div id="advisorQueue"></div>
+          </div>
+
+          <!-- Batch Action Bar -->
+          <div id="batchActionBar" class="hidden sticky bottom-4 z-40 max-w-md mx-auto bg-slate-900 text-white p-3 rounded-xl shadow-xl border border-slate-800 flex items-center justify-between gap-3">
+            <div class="text-xs font-semibold flex items-center gap-2">
+              <span id="batchSelectedCount" class="px-2 py-0.5 rounded-full bg-red-600 font-bold text-white text-xs">0 selected</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="clearBatchSelection()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">Cancel</button>
+              <button id="batchApproveBtn" onclick="executeBatchApproval()" class="px-3.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs flex items-center gap-1.5 active:scale-95">
+                <span>Endorse Selected</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: ON-DUTY QUEUE -->
+        <div id="authSec_onduty" class="hidden space-y-4">
+          <div class="border-b border-slate-100 pb-3">
+            <h4 class="font-bold text-slate-900 text-sm">Class On-Duty Applications</h4>
+            <p class="text-xs text-slate-500 mt-0.5">Endorse academic duty requisitions before forwarding to Head of Department.</p>
+          </div>
+          <div id="authOnDutyQueueContainer" class="overflow-x-auto rounded-xl border border-slate-200">
+            <div id="advisorODQueue"></div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: APPROVED -->
+        <div id="authSec_approved" class="hidden space-y-4">
+          <div class="border-b border-slate-100 pb-3">
+            <h4 class="font-bold text-slate-900 text-sm">Endorsed to Head of Department (HOD)</h4>
+            <p class="text-xs text-slate-500 mt-0.5">Applications approved at advisory level and forwarded for departmental clearance.</p>
+          </div>
+          <div class="overflow-x-auto rounded-xl border border-slate-200" id="authorityApprovedContainer"></div>
+        </div>
+
+        <!-- SECTION 4: DECLINED -->
+        <div id="authSec_rejected" class="hidden space-y-4">
+          <div class="border-b border-slate-100 pb-3">
+            <h4 class="font-bold text-slate-900 text-sm">Declined Applications</h4>
+            <p class="text-xs text-slate-500 mt-0.5">Requisitions declined due to academic, attendance, or disciplinary reasons.</p>
+          </div>
+          <div class="overflow-x-auto rounded-xl border border-slate-200" id="authorityRejectedContainer"></div>
+        </div>
+
+        <!-- SECTION 5: SECTION LEDGER -->
+        <div id="authSec_all" class="hidden space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+            <div>
+              <h4 class="font-bold text-slate-900 text-sm">Section Complete Audit Ledger</h4>
+              <p class="text-xs text-slate-500 mt-0.5">Full historical audit record of Section ${user.yearSec} student movements.</p>
+            </div>
+            <input type="text" id="authAllRecordsSearch" oninput="filterAuthorityAllRecords()" placeholder="Search records..." class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold w-48 focus:outline-none focus:border-red-600" />
+          </div>
+          <div class="overflow-x-auto rounded-xl border border-slate-200" id="authorityAllRecordsContainer"></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * 4. HEAD OF DEPARTMENT (HOD) DASHBOARD
+ * Core Mission: Department Executive Clearance & Final On-Duty Sign-Off
+ */
+function getHODDashboardHTML(user) {
+  return `
+    <div class="space-y-6">
+      <!-- HOD Department Command Banner -->
+      <div class="jurisdiction-card flex flex-wrap items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <h3 class="text-base sm:text-lg font-bold text-slate-900">Department of ${user.dept} Engineering</h3>
+            <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-800 border border-purple-200 uppercase">Tier 3 Department Clearance</span>
+          </div>
+          <p class="text-xs text-slate-600 font-mono">
+            Gate Pass Clearance (to Principal) &nbsp;|&nbsp; <span class="font-bold text-indigo-700">Final Signing Authority for On-Duty (OD)</span>
+          </p>
+        </div>
+        <button onclick="refreshAllAuthorityViews(); showToast('HOD queue refreshed.', 'info', 2000);"
+          class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition flex items-center gap-1.5 active:scale-95">
+          <span>Refresh Queue</span>
+        </button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="role-tab-bar">
+        <button id="roleTabBtn_requests" onclick="switchAuthorityTab('requests')" class="role-tab-btn active-tab bg-white text-slate-900 shadow-xs">
+          <span>Gate Pass Queue</span>
+          <span id="authBadge_requests" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-600 text-white leading-none">0</span>
+        </button>
+        <button id="roleTabBtn_onduty" onclick="switchAuthorityTab('onduty')" class="role-tab-btn text-slate-600">
+          <span>Final OD Approval</span>
+          <span id="subBadge_onduty" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700 leading-none">0</span>
+        </button>
+        <button id="roleTabBtn_approved" onclick="switchAuthorityTab('approved')" class="role-tab-btn text-slate-600">
+          <span>Approved Clearances</span>
+          <span id="authBadge_approved" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 leading-none">0</span>
+        </button>
+        <button id="roleTabBtn_rejected" onclick="switchAuthorityTab('rejected')" class="role-tab-btn text-slate-600">
+          <span>Declined Requisitions</span>
+          <span id="authBadge_rejected" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 leading-none">0</span>
+        </button>
+        <button id="roleTabBtn_all" onclick="switchAuthorityTab('all')" class="role-tab-btn text-slate-600">
+          <span>Department Master Records</span>
+        </button>
+      </div>
+
+      <!-- Main Container -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 space-y-4 shadow-xs">
+        <!-- SECTION 1: GATE PASS QUEUE -->
+        <div id="authSec_requests" class="space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
+            <div class="relative flex-1 min-w-[220px]">
+              <input type="text" id="pendingQueueSearch" oninput="filterPendingQueueLive()" placeholder="Filter roll, student name, reason..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-red-600 focus:bg-white transition" />
+            </div>
+            <div class="flex items-center gap-1 text-xs font-bold">
+              <button onclick="setQueueFilterChip('all')" id="chip_all" class="px-3 py-1.5 rounded-lg bg-slate-900 text-white transition">All</button>
+              <button onclick="setQueueFilterChip('hosteller')" id="chip_hosteller" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition">Hosteller</button>
+              <button onclick="setQueueFilterChip('dayscholar')" id="chip_dayscholar" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition">Day Scholar</button>
+            </div>
+          </div>
+          <div id="authPassQueueContainer" class="overflow-x-auto rounded-xl border border-slate-200">
+            <div id="hodQueue"></div>
+          </div>
+
+          <!-- Batch Action Bar -->
+          <div id="batchActionBar" class="hidden sticky bottom-4 z-40 max-w-md mx-auto bg-slate-900 text-white p-3 rounded-xl shadow-xl border border-slate-800 flex items-center justify-between gap-3">
+            <div class="text-xs font-semibold flex items-center gap-2">
+              <span id="batchSelectedCount" class="px-2 py-0.5 rounded-full bg-red-600 font-bold text-white text-xs">0 selected</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="clearBatchSelection()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">Cancel</button>
+              <button id="batchApproveBtn" onclick="executeBatchApproval()" class="px-3.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs flex items-center gap-1.5 active:scale-95">
+                <span>Clear to Principal</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: ON-DUTY FINAL APPROVAL -->
+        <div id="authSec_onduty" class="hidden space-y-4">
+          <div class="border-b border-slate-100 pb-3">
+            <h4 class="font-bold text-slate-900 text-sm">On-Duty Department Clearances (Final Authorization)</h4>
+            <p class="text-xs text-slate-500 mt-0.5">Head of Department sign-off concludes the On-Duty academic clearance cycle.</p>
+          </div>
+          <div id="authOnDutyQueueContainer" class="overflow-x-auto rounded-xl border border-slate-200">
+            <div id="hodODQueue"></div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: APPROVED -->
+        <div id="authSec_approved" class="hidden space-y-4">
+          <div class="border-b border-slate-100 pb-3">
+            <h4 class="font-bold text-slate-900 text-sm">Department Endorsed Applications</h4>
+            <p class="text-xs text-slate-500 mt-0.5">Gate passes forwarded to Principal and completed On-Duty clearances.</p>
+          </div>
+          <div class="overflow-x-auto rounded-xl border border-slate-200" id="authorityApprovedContainer"></div>
+        </div>
+
+        <!-- SECTION 4: DECLINED -->
+        <div id="authSec_rejected" class="hidden space-y-4">
+          <div class="border-b border-slate-100 pb-3">
+            <h4 class="font-bold text-slate-900 text-sm">Department Declined Requests</h4>
+            <p class="text-xs text-slate-500 mt-0.5">Requisitions declined at department level with official justification.</p>
+          </div>
+          <div class="overflow-x-auto rounded-xl border border-slate-200" id="authorityRejectedContainer"></div>
+        </div>
+
+        <!-- SECTION 5: DEPARTMENT MASTER RECORDS -->
+        <div id="authSec_all" class="hidden space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+            <div>
+              <h4 class="font-bold text-slate-900 text-sm">Department Complete Audit Records</h4>
+              <p class="text-xs text-slate-500 mt-0.5">Total historical archive for ${user.dept} Engineering.</p>
+            </div>
+            <input type="text" id="authAllRecordsSearch" oninput="filterAuthorityAllRecords()" placeholder="Search records..." class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold w-48 focus:outline-none focus:border-red-600" />
+          </div>
+          <div class="overflow-x-auto rounded-xl border border-slate-200" id="authorityAllRecordsContainer"></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * 5. PRINCIPAL DASHBOARD
+ * Core Mission: College-Wide Executive Clearance & Final Pass Issuance
+ */
+function getPrincipalDashboardHTML(user) {
+  return `
+    <div class="space-y-6">
+      <!-- Principal Directorate Banner -->
+      <div class="jurisdiction-card flex flex-wrap items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <h3 class="text-base sm:text-lg font-bold text-slate-900">Office of the Principal • Executive Directorate</h3>
+            <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-red-50 text-red-800 border border-red-200 uppercase">Institutional Sign-Off Authority</span>
+          </div>
+          <p class="text-xs text-slate-600 font-mono">
+            College-Wide Gate Pass Issuance • Multi-Department Governance (CSE, ECE, MECH, IT, AI&DS)
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="refreshAllAuthorityViews(); showToast('Directorate queue refreshed.', 'info', 2000);"
+            class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition flex items-center gap-1.5 active:scale-95">
+            <span>Refresh Directorate</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="role-tab-bar">
+        <button id="roleTabBtn_requests" onclick="switchAuthorityTab('requests')" class="role-tab-btn active-tab bg-white text-slate-900 shadow-xs">
+          <span>Institutional Clearance Queue</span>
+          <span id="authBadge_requests" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-600 text-white leading-none">0</span>
+        </button>
+        <button id="roleTabBtn_approved" onclick="switchAuthorityTab('approved')" class="role-tab-btn text-slate-600">
+          <span>Officially Issued Gate Passes</span>
+          <span id="authBadge_approved" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 leading-none">0</span>
+        </button>
+        <button id="roleTabBtn_rejected" onclick="switchAuthorityTab('rejected')" class="role-tab-btn text-slate-600">
+          <span>Declined Applications</span>
+          <span id="authBadge_rejected" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 leading-none">0</span>
+        </button>
+        <button id="roleTabBtn_all" onclick="switchAuthorityTab('all')" class="role-tab-btn text-slate-600">
+          <span>College Audit Trail</span>
+        </button>
+      </div>
+
+      <!-- Main Container -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 space-y-4 shadow-xs">
+        <!-- SECTION 1: PRINCIPAL QUEUE -->
+        <div id="authSec_requests" class="space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
+            <div class="relative flex-1 min-w-[220px]">
+              <input type="text" id="pendingQueueSearch" oninput="filterPendingQueueLive()" placeholder="Filter roll, student, department, reason..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-red-600 focus:bg-white transition" />
+            </div>
+            <div class="flex items-center gap-1 text-xs font-bold">
+              <button onclick="setQueueFilterChip('all')" id="chip_all" class="px-3 py-1.5 rounded-lg bg-slate-900 text-white transition">All</button>
+              <button onclick="setQueueFilterChip('hosteller')" id="chip_hosteller" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition">Hosteller</button>
+              <button onclick="setQueueFilterChip('dayscholar')" id="chip_dayscholar" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition">Day Scholar</button>
+            </div>
+          </div>
+          <div id="authPassQueueContainer" class="overflow-x-auto rounded-xl border border-slate-200">
+            <div id="principalQueue"></div>
+          </div>
+
+          <!-- Batch Action Bar -->
+          <div id="batchActionBar" class="hidden sticky bottom-4 z-40 max-w-md mx-auto bg-slate-900 text-white p-3 rounded-xl shadow-xl border border-slate-800 flex items-center justify-between gap-3">
+            <div class="text-xs font-semibold flex items-center gap-2">
+              <span id="batchSelectedCount" class="px-2 py-0.5 rounded-full bg-red-600 font-bold text-white text-xs">0 selected</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="clearBatchSelection()" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">Cancel</button>
+              <button id="batchApproveBtn" onclick="executeBatchApproval()" class="px-3.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs flex items-center gap-1.5 active:scale-95">
+                <span>Issue Gate Passes</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: APPROVED -->
+        <div id="authSec_approved" class="hidden space-y-4">
+          <div class="border-b border-slate-100 pb-3">
+            <h4 class="font-bold text-slate-900 text-sm">Officially Issued Gate Passes</h4>
+            <p class="text-xs text-slate-500 mt-0.5">Endorsed institutional passes verified across all tiers.</p>
+          </div>
+          <div class="overflow-x-auto rounded-xl border border-slate-200" id="authorityApprovedContainer"></div>
+        </div>
+
+        <!-- SECTION 3: DECLINED -->
+        <div id="authSec_rejected" class="hidden space-y-4">
+          <div class="border-b border-slate-100 pb-3">
+            <h4 class="font-bold text-slate-900 text-sm">Declined Applications</h4>
+            <p class="text-xs text-slate-500 mt-0.5">Requisitions declined at executive directorate level.</p>
+          </div>
+          <div class="overflow-x-auto rounded-xl border border-slate-200" id="authorityRejectedContainer"></div>
+        </div>
+
+        <!-- SECTION 4: AUDIT TRAIL -->
+        <div id="authSec_all" class="hidden space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+            <div>
+              <h4 class="font-bold text-slate-900 text-sm">Institution-Wide Audit Trail</h4>
+              <p class="text-xs text-slate-500 mt-0.5">Comprehensive institutional movement archive across all academic departments.</p>
+            </div>
+            <input type="text" id="authAllRecordsSearch" oninput="filterAuthorityAllRecords()" placeholder="Search records..." class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold w-48 focus:outline-none focus:border-red-600" />
+          </div>
+          <div class="overflow-x-auto rounded-xl border border-slate-200" id="authorityAllRecordsContainer"></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * 6. HOSTEL WARDEN DASHBOARD
+ * Core Mission: Hostel Student Gate Exit & Return Verification
+ */
+function getWardenDashboardHTML(user) {
+  const isFemale = user.role === 'girls_warden';
+  const hostelTitle = isFemale ? 'Girls Hostel Warden Governance' : 'Boys Hostel Warden Governance';
+
+  return `
+    <div class="space-y-6">
+      <!-- Warden Hostel Jurisdiction Banner -->
+      <div class="jurisdiction-card flex flex-wrap items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <h3 class="text-base sm:text-lg font-bold text-slate-900">${hostelTitle}</h3>
+            <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-teal-50 text-teal-800 border border-teal-200 uppercase">${isFemale ? 'Female' : 'Male'} Hostellers</span>
+          </div>
+          <p class="text-xs text-slate-600 font-mono">
+            Hostel Gate Clearance & Movement Tracking (Departure & Return Verification)
+          </p>
+        </div>
+        <button onclick="refreshWardenDashboard(); showToast('Warden dashboard refreshed.', 'info', 2000);"
+          class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition flex items-center gap-1.5 active:scale-95">
+          <span>Refresh Movement</span>
+        </button>
+      </div>
+
+      <!-- 2 Dedicated Warden Tabs -->
+      <div class="role-tab-bar">
+        <button id="wardenTabBtn_requests" onclick="switchWardenSection('requests')" class="role-tab-btn active-tab bg-white text-slate-900 shadow-xs">
+          <span>Hostel Leave Requests</span>
+          <span id="wardenBadge_requests" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-600 text-white leading-none">0</span>
+        </button>
+        <button id="wardenTabBtn_records" onclick="switchWardenSection('records')" class="role-tab-btn text-slate-600">
+          <span>Hostel Movement Records</span>
+          <span id="wardenBadge_records" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700 leading-none">0</span>
+        </button>
+      </div>
+
+      <!-- Main Container -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 space-y-4 shadow-xs">
+        <!-- SECTION 1: LEAVE REQUESTS -->
+        <div id="wardenSec_requests" class="space-y-4">
+          <div class="border-b border-slate-100 pb-3">
+            <h4 class="font-bold text-slate-900 text-sm">Approved Leave Requests Awaiting Hostel Exit Sign-Off</h4>
+            <p class="text-xs text-slate-500 mt-0.5">Students who have received full Principal clearance and are leaving the hostel.</p>
+          </div>
+          <div class="overflow-x-auto rounded-xl border border-slate-200">
+            <div id="wardenRequestsTableContainer"></div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: MOVEMENT RECORDS -->
+        <div id="wardenSec_records" class="hidden space-y-4">
+          <div class="border-b border-slate-100 pb-3">
+            <h4 class="font-bold text-slate-900 text-sm">Hostel Movement Records & Return Tracking</h4>
+            <p class="text-xs text-slate-500 mt-0.5">Track hostellers currently outside campus and record returns.</p>
+          </div>
+          <div class="overflow-x-auto rounded-xl border border-slate-200">
+            <div id="wardenRecordsTableContainer"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ═════════════════════════════════════════════════════════════════════════
+   DASHBOARD LIFECYCLE CONTROLLER
+   ═════════════════════════════════════════════════════════════════════════ */
 
 function openDashboard(user) {
   document.getElementById('singleLoginPortalScreen')?.classList.add('hidden');
@@ -512,13 +864,13 @@ function openDashboard(user) {
   if (greeting) greeting.innerText = `Welcome, ${user.name}`;
 
   const subtitles = {
-    principal: 'EXECUTIVE DIRECTORATE • GRTIET Institution-Wide Clearance',
-    hod: `HEAD OF DEPARTMENT • Department of ${user.dept}`,
-    advisor: `CLASS ADVISOR • ${user.academicYear || '3 Year'} - ${user.dept} Sec ${user.yearSec}`,
-    counselor: `CLASS COUNSELOR • Assigned Ward (${user.startRoll || 'Start'} to ${user.endRoll || 'End'})`,
-    student: `STUDENT • ${user.academicYear || '3 Year'} • Dept: ${user.dept || 'Engineering'} - Sec ${user.yearSec || 'A'}`,
-    boys_warden: 'HOSTEL WARDEN GOVERNANCE • Boys Hostel Clearance Portal',
-    girls_warden: 'HOSTEL WARDEN GOVERNANCE • Girls Hostel Clearance Portal'
+    principal: 'Executive Directorate • Institution-Wide Clearance',
+    hod: `Head of Department • Department of ${user.dept}`,
+    advisor: `Class Advisor • ${user.academicYear || '3 Year'} - ${user.dept} (Sec ${user.yearSec})`,
+    counselor: `Class Counselor • Assigned Ward (${user.startRoll || 'Start'} to ${user.endRoll || 'End'})`,
+    student: `Student • ${user.academicYear || '3 Year'} - ${user.dept || 'Engineering'} (Sec ${user.yearSec || 'A'})`,
+    boys_warden: 'Hostel Warden • Boys Hostel Clearance Portal',
+    girls_warden: 'Hostel Warden • Girls Hostel Clearance Portal'
   };
 
   const roleSubtitle = document.getElementById('dashRoleSubtitle');
@@ -537,77 +889,12 @@ function openDashboard(user) {
     if (topPdfBtn) topPdfBtn.classList.add('hidden');
     if (topBulkLettersBtn) topBulkLettersBtn.classList.add('hidden');
     if (clearDataBtn) clearDataBtn.classList.add('hidden');
-    if (studentView) studentView.classList.remove('hidden');
-
-    const nowD = new Date();
-    const todayISO = `${nowD.getFullYear()}-${String(nowD.getMonth() + 1).padStart(2, '0')}-${String(nowD.getDate()).padStart(2, '0')}`;
 
     if (content) {
-      content.innerHTML = `
-        <div class="max-w-xl mx-auto space-y-5">
-          <div class="flex items-center justify-center p-1.5 bg-slate-200/80 backdrop-blur rounded-2xl border border-slate-300/80 shadow-2xs gap-2">
-            <button id="stuTabBtn_pass" onclick="switchStudentPortalTab('pass')" class="flex-1 py-3 px-4 rounded-xl text-sm font-bold bg-red-700 text-white shadow-sm transition flex items-center justify-center gap-2 border border-red-800 active:scale-98"><span>Gate Pass Application</span></button>
-            <button id="stuTabBtn_onduty" onclick="switchStudentPortalTab('onduty')" class="flex-1 py-3 px-4 rounded-xl text-sm font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center justify-center gap-2 border border-slate-200 active:scale-98"><span>On-Duty Application</span></button>
-          </div>
-
-          <div id="studentPassSection" class="glass-panel rounded-3xl p-6 md:p-8 space-y-5">
-            <div>
-              <h4 class="font-bold text-slate-900 text-lg">Apply for Institutional Gate Pass</h4>
-              <p class="text-xs md:text-sm text-slate-500 mt-1">Please provide a clear, valid institutional reason for leaving campus.</p>
-            </div>
-            <div class="flex items-center flex-wrap gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs md:text-sm font-semibold text-slate-700">
-              <span>Academic Standing:</span><span class="font-bold text-red-700">${user.academicYear || '3 Year'}</span>
-              <span>•</span><span>Dept:</span><span class="font-bold text-red-700">${user.dept || 'Engineering'}</span>
-              <span>•</span><span>Sec:</span><span class="font-bold text-red-700">${user.yearSec || 'A'}</span>
-              <span>•</span>${formatAccommodationBadge(user.accommodation)}
-            </div>
-            ${(/hoste?l|^h$/i.test(user.accommodation || '') && !/day/i.test(user.accommodation || ''))
-              ? `<div class="space-y-3.5 p-4 rounded-2xl bg-amber-50/70 border border-amber-200">
-                  <div class="flex items-center gap-2 text-xs font-bold text-amber-900 uppercase tracking-wider">
-                    <svg class="w-4 h-4 text-amber-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    <span>Hosteller Gate Pass Schedule</span>
-                  </div>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div><label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Departure Date <span class="text-red-600">*</span></label><input type="date" id="departureDate" required class="w-full p-3 bg-white border border-slate-300 rounded-xl text-xs md:text-sm font-semibold text-slate-800 focus:outline-none focus:border-red-600 transition" /></div>
-                    <div><label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Departure Time <span class="text-red-600">*</span></label><input type="time" id="departureTime" required class="w-full p-3 bg-white border border-slate-300 rounded-xl text-xs md:text-sm font-semibold text-slate-800 focus:outline-none focus:border-red-600 transition" /></div>
-                  </div>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div><label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Expected Return Date <span class="text-red-600">*</span></label><input type="date" id="expectedReturnDate" required class="w-full p-3 bg-white border border-slate-300 rounded-xl text-xs md:text-sm font-semibold text-slate-800 focus:outline-none focus:border-red-600 transition" /></div>
-                    <div><label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Expected Return Time <span class="text-red-600">*</span></label><input type="time" id="expectedReturnTime" required class="w-full p-3 bg-white border border-slate-300 rounded-xl text-xs md:text-sm font-semibold text-slate-800 focus:outline-none focus:border-red-600 transition" /></div>
-                  </div>
-                </div>
-                <div><label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Reason (Manual Text Entry) <span class="text-red-600">*</span></label><textarea id="passReason" rows="3" placeholder="Enter outpass reason manually..." class="w-full p-3.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium focus:outline-none focus:border-red-600 focus:bg-white transition text-slate-800"></textarea></div>`
-              : `<div class="space-y-3.5 p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200">
-                  <div class="flex items-center gap-2 text-xs font-bold text-indigo-900 uppercase tracking-wider">
-                    <svg class="w-4 h-4 text-indigo-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <span>Day Scholar Gate Pass Timing</span>
-                  </div>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div><label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Date <span class="text-red-600">*</span></label><input type="date" id="dayScholarDate" value="${todayISO}" required class="w-full p-3 bg-white border border-slate-300 rounded-xl text-xs md:text-sm font-semibold text-slate-800 focus:outline-none focus:border-indigo-600 transition" /></div>
-                    <div><label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Time (Select Required Time) <span class="text-red-600">*</span></label><input type="time" id="dayScholarTime" required class="w-full p-3 bg-white border border-slate-300 rounded-xl text-xs md:text-sm font-semibold text-slate-800 focus:outline-none focus:border-indigo-600 transition" /></div>
-                  </div>
-                </div>
-                <div><label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Reason (Manual Text Entry) <span class="text-red-600">*</span></label><textarea id="passReason" rows="3" placeholder="Enter reason manually..." class="w-full p-3.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium focus:outline-none focus:border-indigo-600 focus:bg-white transition text-slate-800"></textarea></div>`
-            }
-            <button onclick="submitStudentPass('${user.userId}')" class="w-full py-3.5 bg-red-700 hover:bg-red-800 text-white font-bold rounded-xl text-sm shadow-sm transition active:scale-98 flex items-center justify-center gap-2"><span>Draft Official Letter & Submit Application</span></button>
-          </div>
-
-          <div id="studentOnDutySection" class="hidden glass-panel rounded-3xl p-6 md:p-8 space-y-5 border-2 border-indigo-100">
-            <div class="border-b border-slate-100 pb-3"><h4 class="font-bold text-slate-900 text-lg">Apply for Academic On-Duty (OD)</h4><p class="text-xs md:text-sm text-slate-500 mt-1">Approval chain: Counsellor &rarr; Class Advisor &rarr; HOD &rarr; Completed</p></div>
-            <div class="flex items-center flex-wrap gap-2 p-3 bg-indigo-50/50 rounded-xl border border-indigo-100 text-xs md:text-sm font-semibold text-slate-700">
-              <span>Academic Standing:</span><span class="font-bold text-indigo-700">${user.academicYear || '3 Year'}</span><span>•</span><span>Dept:</span><span class="font-bold text-indigo-700">${user.dept || 'Engineering'}</span><span>•</span><span>Sec:</span><span class="font-bold text-indigo-700">${user.yearSec || 'A'}</span>
-            </div>
-            <div><label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Select On-Duty Duration Format</label><div class="flex gap-2 p-1 bg-slate-100 rounded-xl border border-slate-200"><button type="button" id="odModeBtn_dates" onclick="setODTimingMode('dates')" class="flex-1 py-2 px-3 text-xs md:text-sm font-bold rounded-lg bg-indigo-600 text-white shadow-xs transition">Date Range (From - To Date)</button><button type="button" id="odModeBtn_time" onclick="setODTimingMode('time')" class="flex-1 py-2 px-3 text-xs md:text-sm font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition">Specific Time Duration</button></div></div>
-            <div id="odDateRangeFields" class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">From Date <span class="text-red-500">*</span></label><input type="date" id="odFromDate" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono text-slate-800 focus:outline-none focus:border-indigo-600 focus:bg-white" /></div><div><label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">To Date <span class="text-red-500">*</span></label><input type="date" id="odToDate" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono text-slate-800 focus:outline-none focus:border-indigo-600 focus:bg-white" /></div></div>
-            <div id="odTimeFields" class="hidden space-y-3"><div><label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Date of On-Duty <span class="text-red-500">*</span></label><input type="date" id="odSpecificDate" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono text-slate-800 focus:outline-none focus:border-indigo-600 focus:bg-white" /></div><div class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">From Time <span class="text-red-500">*</span></label><input type="time" id="odFromTime" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono text-slate-800 focus:outline-none focus:border-indigo-600 focus:bg-white" /></div><div><label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">To Time <span class="text-red-500">*</span></label><input type="time" id="odToTime" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-mono text-slate-800 focus:outline-none focus:border-indigo-600 focus:bg-white" /></div></div></div>
-            <div><label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Reason for On-Duty <span class="text-red-500">*</span></label><textarea id="odReason" rows="3" placeholder="Enter academic/institutional purpose..." class="w-full p-3.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-indigo-600 focus:bg-white transition text-slate-800"></textarea></div>
-            <button onclick="submitStudentOnDuty('${user.userId}')" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm shadow-sm transition active:scale-98 flex items-center justify-center gap-2"><span>Submit On-Duty Request</span></button>
-          </div>
-        </div>
-      `;
+      content.innerHTML = getStudentDashboardHTML(user);
     }
-    if (typeof switchStudentPortalTab === 'function') switchStudentPortalTab('pass');
-    else loadStudentPersonalStatus();
+    // Switch to first tab: apply pass
+    switchStudentPortalTab('pass');
   } else {
     if (studentView) studentView.classList.add('hidden');
     if (topPdfBtn) topPdfBtn.classList.remove('hidden');
@@ -615,55 +902,20 @@ function openDashboard(user) {
     if (clearDataBtn) clearDataBtn.classList.remove('hidden');
 
     if (user.role === 'counselor') {
-      const counselorConfig = {
-        requestsTitle: 'Counselor Queue: Parent Call & On-Duty Review',
-        requestsSubtitle: 'Call parent to verify leave passes, and review On-Duty requests before forwarding to Class Advisor.',
-        queueContainerId: 'counselorQueue',
-        hasOnDutyQueue: true,
-        onDutyQueueContainerId: 'counselorODQueue',
-        extraHeaderHTML: `<div class="glass-panel rounded-3xl p-6 shadow-sm flex flex-wrap justify-between items-center gap-4"><div class="space-y-1"><h4 class="font-bold text-slate-900 text-base">Counseling Ward Jurisdiction</h4><p class="text-xs md:text-sm text-slate-600">Assigned Ward: <span class="font-mono font-bold bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-300 text-emerald-800">${user.startRoll || 'Start'}</span> to <span class="font-mono font-bold bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-300 text-emerald-800">${user.endRoll || 'End'}</span></p></div></div>`
-      };
-      if (content) content.innerHTML = getAuthorityDashboardHTML(user, counselorConfig);
+      if (content) content.innerHTML = getCounselorDashboardHTML(user);
     } else if (user.role === 'advisor') {
-      const advisorConfig = {
-        requestsTitle: `Class Advisor Review Queue (${user.dept} - Section ${user.yearSec})`,
-        requestsSubtitle: 'Students pre-verified by counselors awaiting Class Advisor review and forwarding to HOD.',
-        queueContainerId: 'advisorQueue',
-        hasOnDutyQueue: true,
-        onDutyQueueContainerId: 'advisorODQueue',
-        extraHeaderHTML: `<div class="glass-panel rounded-3xl p-6 shadow-sm flex items-center justify-between gap-4"><div class="space-y-1"><h4 class="font-bold text-slate-900 text-base">Class Advisory Jurisdiction</h4><p class="text-xs md:text-sm text-slate-600 font-mono">Department: <span class="font-bold text-red-700">${user.dept}</span> • Section: <span class="font-bold text-red-700">${user.yearSec}</span> • Academic Year: <span class="font-bold text-red-700">${user.academicYear || '3 Year'}</span></p></div></div>`
-      };
-      if (content) content.innerHTML = getAuthorityDashboardHTML(user, advisorConfig);
+      if (content) content.innerHTML = getAdvisorDashboardHTML(user);
     } else if (user.role === 'hod') {
-      const hodConfig = {
-        requestsTitle: `Head of Department Queue (${user.dept} Department)`,
-        requestsSubtitle: 'Requests endorsed by Class Advisors awaiting Department Head authorization (Final Approval for On-Duty).',
-        queueContainerId: 'hodQueue',
-        hasOnDutyQueue: true,
-        onDutyQueueContainerId: 'hodODQueue',
-        extraHeaderHTML: `<div class="glass-panel rounded-3xl p-6 shadow-sm flex items-center justify-between gap-4"><div class="space-y-1"><h4 class="font-bold text-slate-900 text-base">Department Head Authority</h4><p class="text-xs md:text-sm text-slate-600 font-mono">Department: <span class="font-bold text-purple-700">${user.dept} Engineering</span></p></div></div>`
-      };
-      if (content) content.innerHTML = getAuthorityDashboardHTML(user, hodConfig);
+      if (content) content.innerHTML = getHODDashboardHTML(user);
     } else if (user.role === 'principal') {
-      const principalConfig = {
-        requestsTitle: 'Principal Directorate Final Clearance',
-        requestsSubtitle: 'College-wide outpass requisitions for Executive Directorate approval.',
-        queueContainerId: 'principalQueue',
-        extraHeaderHTML: `<div class="glass-panel rounded-3xl p-6 shadow-sm flex items-center justify-between gap-4"><div class="space-y-1"><h4 class="font-bold text-slate-900 text-base">Executive Directorate Authority</h4><p class="text-xs md:text-sm text-slate-600 font-mono">Institution-Wide Governance • Final Clearance Engine</p></div></div>`
-      };
-      if (content) content.innerHTML = getAuthorityDashboardHTML(user, principalConfig);
+      if (content) content.innerHTML = getPrincipalDashboardHTML(user);
     } else if (user.role === 'boys_warden' || user.role === 'girls_warden') {
-      const isFemale = user.role === 'girls_warden';
-      const wardenConfig = {
-        requestsTitle: `${isFemale ? 'Girls' : 'Boys'} Hostel Student Leave Requests`,
-        requestsSubtitle: `Approved leave requests received after Principal approval for ${isFemale ? 'Girls' : 'Boys'} Hostel clearance.`,
-        queueContainerId: 'wardenRequestsTableContainer',
-        extraHeaderHTML: `<div class="glass-panel rounded-3xl p-6 shadow-sm flex items-center justify-between gap-4"><div class="space-y-1"><h4 class="font-bold text-slate-900 text-base">${isFemale ? 'Girls' : 'Boys'} Hostel Warden Governance</h4><p class="text-xs md:text-sm text-slate-600 font-mono">${isFemale ? 'Female' : 'Male'} Hostellers Only • Gate Window & Leave Governance</p></div></div>`
-      };
-      if (content) content.innerHTML = getAuthorityDashboardHTML(user, wardenConfig);
+      if (content) content.innerHTML = getWardenDashboardHTML(user);
       wardenAutoRefreshTimer = setInterval(() => {
-        if (loggedUser && (loggedUser.role === 'boys_warden' || loggedUser.role === 'girls_warden')) refreshAllAuthorityViews();
-      }, 3500);
+        if (loggedUser && (loggedUser.role === 'boys_warden' || loggedUser.role === 'girls_warden')) {
+          if (typeof refreshWardenDashboard === 'function') refreshWardenDashboard();
+        }
+      }, 4000);
     }
 
     refreshAllAuthorityViews();
@@ -672,12 +924,22 @@ function openDashboard(user) {
 
 function refreshAllAuthorityViews() {
   if (!loggedUser) return;
-  if (loggedUser.role === 'counselor') { fetchCounselorQueue(); if (typeof fetchCounselorODQueue === 'function') fetchCounselorODQueue(); }
-  if (loggedUser.role === 'advisor') { fetchAdvisorQueue(); if (typeof fetchAdvisorODQueue === 'function') fetchAdvisorODQueue(); }
-  if (loggedUser.role === 'hod') { fetchHODQueue(); if (typeof fetchHODODQueue === 'function') fetchHODODQueue(); }
-  if (loggedUser.role === 'principal') fetchPrincipalQueue();
-  if (loggedUser.role === 'boys_warden' || loggedUser.role === 'girls_warden') fetchWardenLeaveRequests(loggedUser.role);
-  loadUniversalLogs();
+  if (loggedUser.role === 'counselor') {
+    if (typeof fetchCounselorQueue === 'function') fetchCounselorQueue();
+    if (typeof fetchCounselorODQueue === 'function') fetchCounselorODQueue();
+  } else if (loggedUser.role === 'advisor') {
+    if (typeof fetchAdvisorQueue === 'function') fetchAdvisorQueue();
+    if (typeof fetchAdvisorODQueue === 'function') fetchAdvisorODQueue();
+  } else if (loggedUser.role === 'hod') {
+    if (typeof fetchHODQueue === 'function') fetchHODQueue();
+    if (typeof fetchHODODQueue === 'function') fetchHODODQueue();
+  } else if (loggedUser.role === 'principal') {
+    if (typeof fetchPrincipalQueue === 'function') fetchPrincipalQueue();
+  } else if (loggedUser.role === 'boys_warden' || loggedUser.role === 'girls_warden') {
+    if (typeof refreshWardenDashboard === 'function') refreshWardenDashboard();
+  }
+
+  if (typeof loadUniversalLogs === 'function') loadUniversalLogs();
 }
 
 function logout() {
@@ -700,8 +962,9 @@ window.openDashboard = openDashboard;
 window.refreshAllAuthorityViews = refreshAllAuthorityViews;
 window.logout = logout;
 
-// Live Queue Filtering & Search
-let currentQueueChipFilter = 'all';
+/* ═════════════════════════════════════════════════════════════════════════
+   LIVE QUEUE FILTERING & SEARCH
+   ═════════════════════════════════════════════════════════════════════════ */
 
 function setQueueFilterChip(chipType) {
   currentQueueChipFilter = chipType;
@@ -821,7 +1084,7 @@ async function executeBatchApproval() {
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = `<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span>Approve Selected</span>`;
+      btn.innerHTML = `<span>Approve Selected</span>`;
     }
   }
 }
@@ -833,19 +1096,9 @@ document.addEventListener('keydown', (e) => {
     if (rejectModal && !rejectModal.classList.contains('hidden')) {
       if (typeof closeRejectModal === 'function') closeRejectModal();
     }
-    const detailsModal = document.getElementById('detailsModal');
-    if (detailsModal && !detailsModal.classList.contains('hidden')) {
-      if (typeof closeDetailsModal === 'function') closeDetailsModal();
-    }
-    const formalModal = document.getElementById('formalLetterModal');
-    if (formalModal && !formalModal.classList.contains('hidden')) {
-      formalModal.classList.add('hidden');
-    }
-  }
-  if ((e.key === 'a' || e.key === 'A') && !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
-    const bar = document.getElementById('batchActionBar');
-    if (bar && !bar.classList.contains('hidden')) {
-      executeBatchApproval();
+    const letterModal = document.getElementById('letterModal');
+    if (letterModal && !letterModal.classList.contains('hidden')) {
+      if (typeof closeLetterModal === 'function') closeLetterModal();
     }
   }
 });
