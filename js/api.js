@@ -57,3 +57,10 @@ const Api = {
     }
   }
 };
+
+if (typeof window !== 'undefined') {
+  window.Api = Api;
+}
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = Api;
+}

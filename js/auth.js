@@ -4,8 +4,11 @@
  */
 
 let loggedUser = null;
+if (typeof window !== 'undefined') {
+  window.loggedUser = null;
+}
 
-// Ensure login fields are completely empty by default on every page load
+// Auto-restore session or ensure clean inputs on page load
 window.addEventListener('DOMContentLoaded', () => {
   const idInput = document.getElementById('commonLoginId');
   const passInput = document.getElementById('commonPassword');
@@ -13,13 +16,34 @@ window.addEventListener('DOMContentLoaded', () => {
   if (passInput) passInput.value = '';
   const errorAlert = document.getElementById('loginErrorAlert');
   if (errorAlert) errorAlert.classList.add('hidden');
+
+  // Check for active session
+  try {
+    const saved = sessionStorage.getItem('campusPassUser') || localStorage.getItem('campusPassUser');
+    if (saved) {
+      const user = JSON.parse(saved);
+      if (user && user.userId && user.role) {
+        loggedUser = user;
+        window.loggedUser = user;
+        const loginPortal = document.getElementById('singleLoginPortalScreen');
+        if (loginPortal) loginPortal.classList.add('hidden');
+        if (typeof openDashboard === 'function') {
+          openDashboard(user);
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to restore active session:', err);
+  }
 });
 
 window.addEventListener('pageshow', () => {
-  const idInput = document.getElementById('commonLoginId');
-  const passInput = document.getElementById('commonPassword');
-  if (idInput) idInput.value = '';
-  if (passInput) passInput.value = '';
+  if (!loggedUser && !sessionStorage.getItem('campusPassUser')) {
+    const idInput = document.getElementById('commonLoginId');
+    const passInput = document.getElementById('commonPassword');
+    if (idInput) idInput.value = '';
+    if (passInput) passInput.value = '';
+  }
 });
 
 /**
@@ -85,6 +109,7 @@ async function handleCommonLogin(e) {
 
     const user = data.user;
     loggedUser = user;
+    window.loggedUser = user;
     sessionStorage.setItem('campusPassUser', JSON.stringify(user));
     localStorage.setItem('campusPassUser', JSON.stringify(user));
 
@@ -144,6 +169,7 @@ function logout() {
     wardenAutoRefreshTimer = null;
   }
   loggedUser = null;
+  window.loggedUser = null;
   sessionStorage.removeItem('campusPassUser');
   localStorage.removeItem('campusPassUser');
   sessionStorage.clear();

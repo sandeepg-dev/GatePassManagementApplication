@@ -2,15 +2,13 @@
  * Main Application Orchestrator & Window Global Bindings
  */
 
-// Dismiss splash screen after 2 seconds
+// Clean up splash screen if still present
 window.addEventListener('DOMContentLoaded', () => {
-  setTimeout(() => {
-    const splash = document.getElementById('splashScreen');
-    if (splash) {
-      splash.style.opacity = '0';
-      setTimeout(() => splash.remove(), 800);
-    }
-  }, 2000);
+  const splash = document.getElementById('splashScreen');
+  if (splash) {
+    splash.style.opacity = '0';
+    setTimeout(() => splash.remove(), 400);
+  }
 });
 
 // Periodic background synchronization (every 8 seconds when active session exists)
@@ -244,57 +242,57 @@ async function confirmAndClearAllData() {
 }
 
 // Explicitly bind all interface functions to window for HTML onclick / onsubmit compatibility
-window.confirmAndClearAllData = confirmAndClearAllData;
-window.requestUnlock = requestUnlock;
-window.closeUnlockModal = closeUnlockModal;
-window.verifyUnlockCode = verifyUnlockCode;
-window.openAuthScreen = openAuthScreen;
-window.backToPortals = backToPortals;
-window.clearAuthInputs = clearAuthInputs;
-window.updateSingleRoleRegistrationStatus = updateSingleRoleRegistrationStatus;
-window.toggleAuth = toggleAuth;
-window.checkRoleAvailability = checkRoleAvailability;
-window.handleAuthSubmit = handleAuthSubmit;
-window.openDashboard = openDashboard;
-window.refreshAllAuthorityViews = refreshAllAuthorityViews;
-window.submitStudentPass = submitStudentPass;
-window.loadStudentPersonalStatus = loadStudentPersonalStatus;
-window.fetchCounselorQueue = fetchCounselorQueue;
-window.verifyCounselorPass = verifyCounselorPass;
-window.fetchAdvisorQueue = fetchAdvisorQueue;
-window.approveAdvisorPass = approveAdvisorPass;
-window.fetchHODQueue = fetchHODQueue;
-window.approveHODPass = approveHODPass;
-window.fetchPrincipalQueue = fetchPrincipalQueue;
-window.approveGenericPass = approveGenericPass;
-window.switchWardenSection = switchWardenSection;
-window.refreshWardenDashboard = refreshWardenDashboard;
-window.fetchWardenLeaveRequests = fetchWardenLeaveRequests;
-window.fetchWardenRecords = fetchWardenRecords;
-window.filterWardenRecords = filterWardenRecords;
-window.getWardenRole = getWardenRole;
-window.approveBoysWardenPass = approveBoysWardenPass;
-window.approveGirlsWardenPass = approveGirlsWardenPass;
-window.loadUniversalLogs = loadUniversalLogs;
-window.viewFormalLetter = viewFormalLetter;
-window.closeLetterModal = closeLetterModal;
-window.openRejectModal = openRejectModal;
-window.closeRejectModal = closeRejectModal;
-window.submitRejectPass = submitRejectPass;
-window.formatRemainingTime = formatRemainingTime;
-window.formatClassSection = formatClassSection;
-window.downloadMasterPDF = downloadMasterPDF;
-window.downloadAllCompleteLettersPDF = downloadAllCompleteLettersPDF;
-window.downloadOfficialLetterOnlyPDF = downloadOfficialLetterOnlyPDF;
-window.downloadGatePassCardPDF = typeof downloadGatePassCardPDF !== 'undefined' ? downloadGatePassCardPDF : undefined;
-window.downloadGatePassPDF = typeof downloadGatePassPDF !== 'undefined' ? downloadGatePassPDF : undefined;
-window.downloadSinglePassPDF = downloadSinglePassPDF;
-window.downloadOnDutyLetterPDF = typeof downloadOnDutyLetterPDF !== 'undefined' ? downloadOnDutyLetterPDF : undefined;
-window.downloadAllRecordsCSV = typeof downloadAllRecordsCSV !== 'undefined' ? downloadAllRecordsCSV : undefined;
-window.viewOnDutyLetter = typeof viewOnDutyLetter !== 'undefined' ? viewOnDutyLetter : undefined;
-window.viewOnDutyLetterById = typeof viewOnDutyLetterById !== 'undefined' ? viewOnDutyLetterById : undefined;
-window.downloadOnDutyLetterById = typeof downloadOnDutyLetterById !== 'undefined' ? downloadOnDutyLetterById : undefined;
-window.logout = logout;
-window.escapeHtml = escapeHtml;
-window.escapeAttr = escapeAttr;
+if (typeof confirmAndClearAllData !== 'undefined') window.confirmAndClearAllData = confirmAndClearAllData;
+if (typeof requestUnlock !== 'undefined') window.requestUnlock = requestUnlock;
+if (typeof closeUnlockModal !== 'undefined') window.closeUnlockModal = closeUnlockModal;
+if (typeof verifyUnlockCode !== 'undefined') window.verifyUnlockCode = verifyUnlockCode;
+if (typeof openAuthScreen !== 'undefined') window.openAuthScreen = openAuthScreen;
+if (typeof backToPortals !== 'undefined') window.backToPortals = backToPortals;
+if (typeof clearAuthInputs !== 'undefined') window.clearAuthInputs = clearAuthInputs;
+if (typeof updateSingleRoleRegistrationStatus !== 'undefined') window.updateSingleRoleRegistrationStatus = updateSingleRoleRegistrationStatus;
+if (typeof toggleAuth !== 'undefined') window.toggleAuth = toggleAuth;
+if (typeof checkRoleAvailability !== 'undefined') window.checkRoleAvailability = checkRoleAvailability;
+if (typeof handleAuthSubmit !== 'undefined') window.handleAuthSubmit = handleAuthSubmit;
+if (typeof openDashboard !== 'undefined') window.openDashboard = openDashboard;
+if (typeof refreshAllAuthorityViews !== 'undefined') window.refreshAllAuthorityViews = refreshAllAuthorityViews;
+if (typeof submitStudentPass !== 'undefined') window.submitStudentPass = submitStudentPass;
+if (typeof loadStudentPersonalStatus !== 'undefined') window.loadStudentPersonalStatus = loadStudentPersonalStatus;
+if (typeof fetchCounselorQueue !== 'undefined') window.fetchCounselorQueue = fetchCounselorQueue;
+if (typeof verifyCounselorPass !== 'undefined') window.verifyCounselorPass = verifyCounselorPass;
+if (typeof fetchAdvisorQueue !== 'undefined') window.fetchAdvisorQueue = fetchAdvisorQueue;
+if (typeof approveAdvisorPass !== 'undefined') window.approveAdvisorPass = approveAdvisorPass;
+if (typeof fetchHODQueue !== 'undefined') window.fetchHODQueue = fetchHODQueue;
+if (typeof approveHODPass !== 'undefined') window.approveHODPass = approveHODPass;
+if (typeof fetchPrincipalQueue !== 'undefined') window.fetchPrincipalQueue = fetchPrincipalQueue;
+if (typeof approveGenericPass !== 'undefined') window.approveGenericPass = approveGenericPass;
+if (typeof switchWardenSection !== 'undefined') window.switchWardenSection = switchWardenSection;
+if (typeof refreshWardenDashboard !== 'undefined') window.refreshWardenDashboard = refreshWardenDashboard;
+if (typeof fetchWardenLeaveRequests !== 'undefined') window.fetchWardenLeaveRequests = fetchWardenLeaveRequests;
+if (typeof fetchWardenRecords !== 'undefined') window.fetchWardenRecords = fetchWardenRecords;
+if (typeof filterWardenRecords !== 'undefined') window.filterWardenRecords = filterWardenRecords;
+if (typeof getWardenRole !== 'undefined') window.getWardenRole = getWardenRole;
+if (typeof approveBoysWardenPass !== 'undefined') window.approveBoysWardenPass = approveBoysWardenPass;
+if (typeof approveGirlsWardenPass !== 'undefined') window.approveGirlsWardenPass = approveGirlsWardenPass;
+if (typeof loadUniversalLogs !== 'undefined') window.loadUniversalLogs = loadUniversalLogs;
+if (typeof viewFormalLetter !== 'undefined') window.viewFormalLetter = viewFormalLetter;
+if (typeof closeLetterModal !== 'undefined') window.closeLetterModal = closeLetterModal;
+if (typeof openRejectModal !== 'undefined') window.openRejectModal = openRejectModal;
+if (typeof closeRejectModal !== 'undefined') window.closeRejectModal = closeRejectModal;
+if (typeof submitRejectPass !== 'undefined') window.submitRejectPass = submitRejectPass;
+if (typeof formatRemainingTime !== 'undefined') window.formatRemainingTime = formatRemainingTime;
+if (typeof formatClassSection !== 'undefined') window.formatClassSection = formatClassSection;
+if (typeof downloadMasterPDF !== 'undefined') window.downloadMasterPDF = downloadMasterPDF;
+if (typeof downloadAllCompleteLettersPDF !== 'undefined') window.downloadAllCompleteLettersPDF = downloadAllCompleteLettersPDF;
+if (typeof downloadOfficialLetterOnlyPDF !== 'undefined') window.downloadOfficialLetterOnlyPDF = downloadOfficialLetterOnlyPDF;
+if (typeof downloadGatePassCardPDF !== 'undefined') window.downloadGatePassCardPDF = downloadGatePassCardPDF;
+if (typeof downloadGatePassPDF !== 'undefined') window.downloadGatePassPDF = downloadGatePassPDF;
+if (typeof downloadSinglePassPDF !== 'undefined') window.downloadSinglePassPDF = downloadSinglePassPDF;
+if (typeof downloadOnDutyLetterPDF !== 'undefined') window.downloadOnDutyLetterPDF = downloadOnDutyLetterPDF;
+if (typeof downloadAllRecordsCSV !== 'undefined') window.downloadAllRecordsCSV = downloadAllRecordsCSV;
+if (typeof viewOnDutyLetter !== 'undefined') window.viewOnDutyLetter = viewOnDutyLetter;
+if (typeof viewOnDutyLetterById !== 'undefined') window.viewOnDutyLetterById = viewOnDutyLetterById;
+if (typeof downloadOnDutyLetterById !== 'undefined') window.downloadOnDutyLetterById = downloadOnDutyLetterById;
+if (typeof logout !== 'undefined') window.logout = logout;
+if (typeof escapeHtml !== 'undefined') window.escapeHtml = escapeHtml;
+if (typeof escapeAttr !== 'undefined') window.escapeAttr = escapeAttr;
 

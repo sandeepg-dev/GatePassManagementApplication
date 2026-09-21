@@ -46,13 +46,19 @@
   </div>
 
   <script>
-    setTimeout(function () {
+    (function () {
       const splash = document.getElementById('splashScreen');
       if (splash) {
-        splash.style.opacity = '0';
-        setTimeout(() => splash.remove(), 600);
+        if (sessionStorage.getItem('campusPassUser')) {
+          splash.remove();
+        } else {
+          setTimeout(() => {
+            splash.style.opacity = '0';
+            setTimeout(() => splash.remove(), 400);
+          }, 400);
+        }
       }
-    }, 1500);
+    })();
   </script>
 
   <!-- OFFICIAL HEADER -->
