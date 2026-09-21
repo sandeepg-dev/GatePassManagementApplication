@@ -245,16 +245,16 @@ async function confirmAndClearAllData() {
 
 // Explicitly bind all interface functions to window for HTML onclick / onsubmit compatibility
 window.confirmAndClearAllData = confirmAndClearAllData;
-if (typeof requestUnlock !== 'undefined') window.requestUnlock = requestUnlock;
-if (typeof closeUnlockModal !== 'undefined') window.closeUnlockModal = closeUnlockModal;
-if (typeof verifyUnlockCode !== 'undefined') window.verifyUnlockCode = verifyUnlockCode;
-if (typeof openAuthScreen !== 'undefined') window.openAuthScreen = openAuthScreen;
-if (typeof backToPortals !== 'undefined') window.backToPortals = backToPortals;
-if (typeof clearAuthInputs !== 'undefined') window.clearAuthInputs = clearAuthInputs;
-if (typeof updateSingleRoleRegistrationStatus !== 'undefined') window.updateSingleRoleRegistrationStatus = updateSingleRoleRegistrationStatus;
-if (typeof toggleAuth !== 'undefined') window.toggleAuth = toggleAuth;
-if (typeof checkRoleAvailability !== 'undefined') window.checkRoleAvailability = checkRoleAvailability;
-if (typeof handleAuthSubmit !== 'undefined') window.handleAuthSubmit = handleAuthSubmit;
+window.requestUnlock = requestUnlock;
+window.closeUnlockModal = closeUnlockModal;
+window.verifyUnlockCode = verifyUnlockCode;
+window.openAuthScreen = openAuthScreen;
+window.backToPortals = backToPortals;
+window.clearAuthInputs = clearAuthInputs;
+window.updateSingleRoleRegistrationStatus = updateSingleRoleRegistrationStatus;
+window.toggleAuth = toggleAuth;
+window.checkRoleAvailability = checkRoleAvailability;
+window.handleAuthSubmit = handleAuthSubmit;
 window.openDashboard = openDashboard;
 window.refreshAllAuthorityViews = refreshAllAuthorityViews;
 window.submitStudentPass = submitStudentPass;
