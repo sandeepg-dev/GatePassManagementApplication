@@ -184,14 +184,14 @@ async function confirmAndClearAllData() {
 
           // 3. Immediately render empty states across all views
           const queueEmptyHTML = (msg, sub) => `
-            <div class="p-12 text-center bg-white space-y-3">
-              <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center mx-auto shadow-2xs">
+            <div class="p-12 text-center bg-slate-900/60 border border-slate-800 rounded-2xl space-y-3">
+              <div class="w-12 h-12 rounded-2xl bg-slate-800 text-slate-400 flex items-center justify-center mx-auto shadow-2xs border border-slate-700">
                 <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <div class="text-base font-bold text-slate-800">${msg}</div>
-              <p class="text-xs md:text-sm text-slate-500 max-w-sm mx-auto">${sub}</p>
+              <div class="text-base font-bold text-white">${msg}</div>
+              <p class="text-xs md:text-sm text-slate-400 max-w-sm mx-auto">${sub}</p>
             </div>`;
 
           const queues = [
@@ -316,10 +316,10 @@ function openProfileDrawer() {
     }
 
     detailsEl.innerHTML = rows.map(r => `
-      <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3">
-        <span class="text-xs font-semibold text-slate-500">${r.label}</span>
-        <span class="text-xs font-bold text-slate-900 ${r.mono ? 'font-mono' : ''} text-right">
-          ${r.badge ? `<span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200">${r.value}</span>` : r.value}
+      <div class="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-center justify-between gap-3">
+        <span class="text-xs font-semibold text-slate-400">${r.label}</span>
+        <span class="text-xs font-bold text-white ${r.mono ? 'font-mono' : ''} text-right">
+          ${r.badge ? `<span class="px-2 py-0.5 rounded-md bg-blue-950 text-blue-300 border border-blue-800 font-mono">${r.value}</span>` : r.value}
         </span>
       </div>
     `).join('');
@@ -376,16 +376,16 @@ function openNotificationsDrawer() {
     }
 
     list.innerHTML = items.map(it => `
-      <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex gap-3 items-start">
-        <div class="w-8 h-8 rounded-xl ${it.type === 'pending' ? 'bg-amber-100 text-amber-700' : it.type === 'success' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'} flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs">
+      <div class="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 flex gap-3 items-start">
+        <div class="w-8 h-8 rounded-xl ${it.type === 'pending' ? 'bg-amber-950 text-amber-300 border border-amber-800' : it.type === 'success' ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' : 'bg-blue-950 text-blue-300 border border-blue-800'} flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs font-mono">
           ${it.type === 'pending' ? '⏳' : it.type === 'success' ? '✓' : 'ℹ'}
         </div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center justify-between gap-2">
-            <h5 class="text-xs font-bold text-slate-900 truncate">${it.title}</h5>
+            <h5 class="text-xs font-bold text-white truncate">${it.title}</h5>
             <span class="text-[10px] text-slate-400 font-mono shrink-0">${it.time}</span>
           </div>
-          <p class="text-xs text-slate-600 mt-1 leading-relaxed">${it.desc}</p>
+          <p class="text-xs text-slate-400 mt-1 leading-relaxed">${it.desc}</p>
         </div>
       </div>
     `).join('');
