@@ -241,7 +241,239 @@ async function confirmAndClearAllData() {
   });
 }
 
+// Slide-over Drawers & Preferences Controller
+function getInitials(name) {
+  if (!name) return 'U';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function getRoleLabel(role) {
+  const map = {
+    student: 'Student Scholar',
+    counselor: 'Faculty Counselor',
+    advisor: 'Class Advisor',
+    hod: 'Head of Department (HOD)',
+    principal: 'Institutional Principal',
+    warden: 'Hostel Executive Warden',
+    admin: 'System Administrator'
+  };
+  return map[role?.toLowerCase()] || (role ? role.toUpperCase() : 'Authenticated User');
+}
+
+function openProfileDrawer() {
+  const user = (typeof loggedUser !== 'undefined' && loggedUser) ? loggedUser : (typeof Auth !== 'undefined' && Auth.getUser ? Auth.getUser() : null);
+  if (!user) {
+    if (typeof showToast === 'function') showToast('No active user session found.', 'info');
+    return;
+  }
+
+  const drawer = document.getElementById('profileDrawer');
+  const backdrop = document.getElementById('profileDrawerBackdrop');
+  const nameEl = document.getElementById('drawerUserName');
+  const roleEl = document.getElementById('drawerUserRoleBadge');
+  const avatarEl = document.getElementById('drawerAvatarInitials');
+  const detailsEl = document.getElementById('drawerProfileDetailsContainer');
+
+  if (nameEl) nameEl.textContent = user.name || 'User';
+  if (roleEl) roleEl.textContent = getRoleLabel(user.role);
+  if (avatarEl) avatarEl.textContent = getInitials(user.name);
+
+  if (detailsEl) {
+    const isStudent = user.role === 'student';
+    let rows = [];
+
+    if (isStudent) {
+      rows = [
+        { label: 'Register Number', value: user.regNo || 'N/A', mono: true },
+        { label: 'Department / Branch', value: user.dept || 'Engineering' },
+        { label: 'Year & Section', value: `Year ${user.year || '-'}, Section ${user.sec || '-'}` },
+        { label: 'Accommodation Type', value: user.studentType || user.stayType || (user.hostel ? 'Hosteller' : 'Day Scholar'), badge: true },
+        { label: 'Student Mobile', value: user.phone || 'Not recorded', mono: true },
+        { label: 'Parent / Guardian Contact', value: user.parentPhone || 'Not recorded', mono: true },
+        { label: 'Designated Counselor', value: user.counselorName || user.counselor || 'Assigned by Dept' }
+      ];
+    } else {
+      rows = [
+        { label: 'Staff Identification ID', value: user.staffId || user.regNo || 'STAFF-AUTH', mono: true },
+        { label: 'Designated Role', value: getRoleLabel(user.role) },
+        { label: 'Department', value: user.dept || 'Institutional Administration' }
+      ];
+
+      if (user.role === 'counselor' || user.role === 'advisor') {
+        if (user.year) rows.push({ label: 'Assigned Year / Cohort', value: `Year ${user.year}` });
+        if (user.sec) rows.push({ label: 'Assigned Class Section', value: `Section ${user.sec}` });
+      }
+
+      if (user.role === 'warden') {
+        rows.push({ label: 'Hostel Jurisdiction', value: `${user.hostelType || 'Executive'} Campus Hostel` });
+      }
+
+      if (user.phone) {
+        rows.push({ label: 'Official Contact', value: user.phone, mono: true });
+      }
+    }
+
+    detailsEl.innerHTML = rows.map(r => `
+      <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3">
+        <span class="text-xs font-semibold text-slate-500">${r.label}</span>
+        <span class="text-xs font-bold text-slate-900 ${r.mono ? 'font-mono' : ''} text-right">
+          ${r.badge ? `<span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200">${r.value}</span>` : r.value}
+        </span>
+      </div>
+    `).join('');
+  }
+
+  if (backdrop) backdrop.classList.remove('hidden');
+  if (drawer) {
+    drawer.classList.remove('drawer-closed');
+    drawer.classList.add('drawer-open');
+  }
+}
+
+function closeProfileDrawer() {
+  const drawer = document.getElementById('profileDrawer');
+  const backdrop = document.getElementById('profileDrawerBackdrop');
+  if (drawer) {
+    drawer.classList.remove('drawer-open');
+    drawer.classList.add('drawer-closed');
+  }
+  if (backdrop) backdrop.classList.add('hidden');
+}
+
+function openNotificationsDrawer() {
+  const drawer = document.getElementById('notificationsDrawer');
+  const backdrop = document.getElementById('notificationsDrawerBackdrop');
+  const list = document.getElementById('notificationsListContainer');
+  const user = (typeof loggedUser !== 'undefined' && loggedUser) ? loggedUser : null;
+
+  if (list) {
+    const items = [];
+    if (user) {
+      items.push({
+        type: 'info',
+        title: `Active Session: ${user.name}`,
+        desc: `Operating as ${getRoleLabel(user.role)}. Institutional telemetry active.`,
+        time: 'Live'
+      });
+
+      if (user.role === 'student') {
+        items.push({
+          type: 'success',
+          title: 'Gate Pass & OD Services Online',
+          desc: 'Real-time multi-tier digital tracking for Outing, Leave, and On-Duty requests is active.',
+          time: 'Ready'
+        });
+      } else {
+        items.push({
+          type: 'pending',
+          title: 'Automated 8s Queue Refresh Active',
+          desc: 'Incoming student requests and workflow updates are polled continuously in the background.',
+          time: 'Active'
+        });
+      }
+    }
+
+    list.innerHTML = items.map(it => `
+      <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex gap-3 items-start">
+        <div class="w-8 h-8 rounded-xl ${it.type === 'pending' ? 'bg-amber-100 text-amber-700' : it.type === 'success' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'} flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs">
+          ${it.type === 'pending' ? '⏳' : it.type === 'success' ? '✓' : 'ℹ'}
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between gap-2">
+            <h5 class="text-xs font-bold text-slate-900 truncate">${it.title}</h5>
+            <span class="text-[10px] text-slate-400 font-mono shrink-0">${it.time}</span>
+          </div>
+          <p class="text-xs text-slate-600 mt-1 leading-relaxed">${it.desc}</p>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  if (backdrop) backdrop.classList.remove('hidden');
+  if (drawer) {
+    drawer.classList.remove('drawer-closed');
+    drawer.classList.add('drawer-open');
+  }
+}
+
+function closeNotificationsDrawer() {
+  const drawer = document.getElementById('notificationsDrawer');
+  const backdrop = document.getElementById('notificationsDrawerBackdrop');
+  if (drawer) {
+    drawer.classList.remove('drawer-open');
+    drawer.classList.add('drawer-closed');
+  }
+  if (backdrop) backdrop.classList.add('hidden');
+}
+
+function openSettingsDrawer() {
+  const drawer = document.getElementById('settingsDrawer');
+  const backdrop = document.getElementById('settingsDrawerBackdrop');
+  const toggle = document.getElementById('compactModeToggle');
+  if (toggle) {
+    toggle.checked = localStorage.getItem('compactTableMode') === 'true';
+  }
+  if (backdrop) backdrop.classList.remove('hidden');
+  if (drawer) {
+    drawer.classList.remove('drawer-closed');
+    drawer.classList.add('drawer-open');
+  }
+}
+
+function closeSettingsDrawer() {
+  const drawer = document.getElementById('settingsDrawer');
+  const backdrop = document.getElementById('settingsDrawerBackdrop');
+  if (drawer) {
+    drawer.classList.remove('drawer-open');
+    drawer.classList.add('drawer-closed');
+  }
+  if (backdrop) backdrop.classList.add('hidden');
+}
+
+function toggleCompactTableMode(checked) {
+  localStorage.setItem('compactTableMode', checked ? 'true' : 'false');
+  if (checked) {
+    document.body.classList.add('compact-table-density');
+  } else {
+    document.body.classList.remove('compact-table-density');
+  }
+  if (typeof showToast === 'function') {
+    showToast(checked ? 'Compact table density enabled' : 'Standard table density restored', 'info', 2000);
+  }
+}
+
+// Global Keyboard Shortcuts
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeProfileDrawer();
+    closeNotificationsDrawer();
+    closeSettingsDrawer();
+    if (typeof closeRejectModal === 'function') closeRejectModal();
+    if (typeof closeLetterModal === 'function') closeLetterModal();
+    if (typeof closeUnlockModal === 'function') closeUnlockModal();
+  } else if ((e.altKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
+    e.preventDefault();
+    const drawer = document.getElementById('profileDrawer');
+    if (drawer && drawer.classList.contains('drawer-open')) closeProfileDrawer();
+    else openProfileDrawer();
+  } else if ((e.altKey || e.metaKey) && (e.key === 'n' || e.key === 'N')) {
+    e.preventDefault();
+    const drawer = document.getElementById('notificationsDrawer');
+    if (drawer && drawer.classList.contains('drawer-open')) closeNotificationsDrawer();
+    else openNotificationsDrawer();
+  }
+});
+
 // Explicitly bind all interface functions to window for HTML onclick / onsubmit compatibility
+if (typeof openProfileDrawer !== 'undefined') window.openProfileDrawer = openProfileDrawer;
+if (typeof closeProfileDrawer !== 'undefined') window.closeProfileDrawer = closeProfileDrawer;
+if (typeof openNotificationsDrawer !== 'undefined') window.openNotificationsDrawer = openNotificationsDrawer;
+if (typeof closeNotificationsDrawer !== 'undefined') window.closeNotificationsDrawer = closeNotificationsDrawer;
+if (typeof openSettingsDrawer !== 'undefined') window.openSettingsDrawer = openSettingsDrawer;
+if (typeof closeSettingsDrawer !== 'undefined') window.closeSettingsDrawer = closeSettingsDrawer;
+if (typeof toggleCompactTableMode !== 'undefined') window.toggleCompactTableMode = toggleCompactTableMode;
 if (typeof confirmAndClearAllData !== 'undefined') window.confirmAndClearAllData = confirmAndClearAllData;
 if (typeof requestUnlock !== 'undefined') window.requestUnlock = requestUnlock;
 if (typeof closeUnlockModal !== 'undefined') window.closeUnlockModal = closeUnlockModal;

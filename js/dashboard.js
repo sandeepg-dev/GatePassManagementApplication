@@ -503,6 +503,140 @@ function getAuthorityDashboardHTML(user, config) {
   `;
 }
 
+function renderUserProfileCard(user) {
+  if (!user) return '';
+  const isStudent = user.role === 'student';
+  const roleNameMap = {
+    student: 'Student Scholar',
+    counselor: 'Faculty Counselor',
+    advisor: 'Class Advisor',
+    hod: 'Head of Department (HOD)',
+    principal: 'Institutional Principal',
+    boys_warden: 'Boys Hostel Executive Warden',
+    girls_warden: 'Girls Hostel Executive Warden',
+    warden: 'Hostel Executive Warden',
+    admin: 'System Administrator'
+  };
+  const roleLabel = roleNameMap[user.role?.toLowerCase()] || (user.role ? user.role.toUpperCase() : 'Authenticated User');
+  
+  let initials = 'U';
+  if (user.name) {
+    const parts = user.name.trim().split(/\s+/);
+    initials = parts.length === 1 ? parts[0].substring(0, 2).toUpperCase() : (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+
+  let badgesHTML = '';
+  let metaGridHTML = '';
+
+  if (isStudent) {
+    const isHosteller = (/hoste?l|^h$/i.test(user.accommodation || user.studentType || '') && !/day/i.test(user.accommodation || user.studentType || ''));
+    badgesHTML = `
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-200">
+        <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+        Student Scholar
+      </span>
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${isHosteller ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-blue-100 text-blue-900 border border-blue-300'}">
+        ${isHosteller ? '🏠 Hosteller' : '🚌 Day Scholar'}
+      </span>
+    `;
+
+    metaGridHTML = `
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3.5 border-t border-slate-100">
+        <div>
+          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Register No</div>
+          <div class="text-xs sm:text-sm font-black font-mono text-slate-800 truncate">${typeof escapeHtml === 'function' ? escapeHtml(user.userId || user.regNo || 'N/A') : (user.userId || user.regNo || 'N/A')}</div>
+        </div>
+        <div>
+          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Department</div>
+          <div class="text-xs sm:text-sm font-bold text-slate-800 truncate">${typeof escapeHtml === 'function' ? escapeHtml(user.dept || 'Engineering') : (user.dept || 'Engineering')}</div>
+        </div>
+        <div>
+          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Year & Section</div>
+          <div class="text-xs sm:text-sm font-bold text-slate-800 truncate">${typeof escapeHtml === 'function' ? escapeHtml(user.academicYear || (user.year ? `Year ${user.year}` : '3 Year')) : (user.academicYear || '3 Year')} • Sec ${typeof escapeHtml === 'function' ? escapeHtml(user.yearSec || user.sec || 'A') : (user.yearSec || 'A')}</div>
+        </div>
+        <div>
+          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Parent Contact</div>
+          <div class="text-xs sm:text-sm font-bold font-mono text-slate-800 truncate">${typeof escapeHtml === 'function' ? escapeHtml(user.parentPhone || user.phone || 'Verified') : (user.parentPhone || user.phone || 'Verified')}</div>
+        </div>
+      </div>
+    `;
+  } else {
+    let jurisdiction = 'Institutional Authority';
+    if (user.role === 'counselor') jurisdiction = `Ward: ${user.startRoll || 'Start'} to ${user.endRoll || 'End'}`;
+    else if (user.role === 'advisor') jurisdiction = `${user.academicYear || '3 Year'} - ${user.dept || 'Dept'} Sec ${user.yearSec || 'A'}`;
+    else if (user.role === 'hod') jurisdiction = `Dept of ${user.dept || 'Engineering'}`;
+    else if (user.role === 'principal') jurisdiction = 'Institution-Wide Governance';
+    else if (user.role === 'boys_warden') jurisdiction = 'Boys Campus Hostel Clearance';
+    else if (user.role === 'girls_warden') jurisdiction = 'Girls Campus Hostel Clearance';
+
+    badgesHTML = `
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-900 text-white shadow-2xs">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        ${roleLabel}
+      </span>
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-300">
+        Dept of ${typeof escapeHtml === 'function' ? escapeHtml(user.dept || 'Admin') : (user.dept || 'Admin')}
+      </span>
+    `;
+
+    metaGridHTML = `
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3.5 border-t border-slate-100">
+        <div>
+          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Staff ID</div>
+          <div class="text-xs sm:text-sm font-black font-mono text-slate-800 truncate">${typeof escapeHtml === 'function' ? escapeHtml(user.userId || user.staffId || user.regNo || 'STAFF-AUTH') : (user.userId || user.staffId || user.regNo || 'STAFF-AUTH')}</div>
+        </div>
+        <div>
+          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Department</div>
+          <div class="text-xs sm:text-sm font-bold text-slate-800 truncate">${typeof escapeHtml === 'function' ? escapeHtml(user.dept || 'Academic') : (user.dept || 'Academic')}</div>
+        </div>
+        <div>
+          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Jurisdiction</div>
+          <div class="text-xs sm:text-sm font-bold text-slate-800 truncate">${typeof escapeHtml === 'function' ? escapeHtml(jurisdiction) : jurisdiction}</div>
+        </div>
+        <div>
+          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Clearance Status</div>
+          <div class="text-xs sm:text-sm font-bold text-emerald-700 flex items-center gap-1">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Active Authority
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="glass-panel rounded-3xl p-5 md:p-6 shadow-sm border border-slate-200/80 mb-6 relative overflow-hidden bg-white/95">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-red-700 to-rose-600 text-white font-black text-xl flex items-center justify-center shadow-md border-2 border-white shrink-0">
+            ${initials}
+          </div>
+          <div class="space-y-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <h3 class="text-lg md:text-xl font-black text-slate-900 tracking-tight leading-none">${typeof escapeHtml === 'function' ? escapeHtml(user.name || 'User') : (user.name || 'User')}</h3>
+              ${badgesHTML}
+            </div>
+            <p class="text-xs text-slate-500">GRT Institute of Engineering and Technology • Authenticated Profile</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 self-end md:self-center shrink-0">
+          <button type="button" onclick="if(typeof openProfileDrawer === 'function') openProfileDrawer()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 active:scale-95 cursor-pointer">
+            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+            <span>Full Profile</span>
+          </button>
+          <button type="button" onclick="if(typeof openNotificationsDrawer === 'function') openNotificationsDrawer()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 active:scale-95 cursor-pointer">
+            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            <span>Alerts</span>
+          </button>
+        </div>
+      </div>
+
+      ${metaGridHTML}
+    </div>
+  `;
+}
+window.renderUserProfileCard = renderUserProfileCard;
+
 function openDashboard(user) {
   document.getElementById('singleLoginPortalScreen')?.classList.add('hidden');
   document.getElementById('authScreen')?.classList.add('hidden');
@@ -510,6 +644,18 @@ function openDashboard(user) {
 
   const greeting = document.getElementById('dashGreeting');
   if (greeting) greeting.innerText = `Welcome, ${user.name}`;
+
+  const headerAvatar = document.getElementById('headerAvatarInitials');
+  const headerName = document.getElementById('headerUserName');
+  if (headerAvatar) {
+    let ini = 'U';
+    if (user.name) {
+      const parts = user.name.trim().split(/\s+/);
+      ini = parts.length === 1 ? parts[0].substring(0, 2).toUpperCase() : (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    headerAvatar.innerText = ini;
+  }
+  if (headerName) headerName.innerText = user.name || 'User';
 
   const subtitles = {
     principal: 'EXECUTIVE DIRECTORATE • GRTIET Institution-Wide Clearance',
@@ -544,7 +690,8 @@ function openDashboard(user) {
 
     if (content) {
       content.innerHTML = `
-        <div class="max-w-xl mx-auto space-y-5">
+        ${renderUserProfileCard(user)}
+        <div class="max-w-2xl mx-auto space-y-5">
           <div class="flex items-center justify-center p-1.5 bg-slate-200/80 backdrop-blur rounded-2xl border border-slate-300/80 shadow-2xs gap-2">
             <button id="stuTabBtn_pass" onclick="switchStudentPortalTab('pass')" class="flex-1 py-3 px-4 rounded-xl text-sm font-bold bg-red-700 text-white shadow-sm transition flex items-center justify-center gap-2 border border-red-800 active:scale-98"><span>Gate Pass Application</span></button>
             <button id="stuTabBtn_onduty" onclick="switchStudentPortalTab('onduty')" class="flex-1 py-3 px-4 rounded-xl text-sm font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center justify-center gap-2 border border-slate-200 active:scale-98"><span>On-Duty Application</span></button>
@@ -559,7 +706,7 @@ function openDashboard(user) {
               <span>Academic Standing:</span><span class="font-bold text-red-700">${user.academicYear || '3 Year'}</span>
               <span>•</span><span>Dept:</span><span class="font-bold text-red-700">${user.dept || 'Engineering'}</span>
               <span>•</span><span>Sec:</span><span class="font-bold text-red-700">${user.yearSec || 'A'}</span>
-              <span>•</span>${formatAccommodationBadge(user.accommodation)}
+              <span>•</span>${typeof formatAccommodationBadge === 'function' ? formatAccommodationBadge(user.accommodation) : (user.accommodation || '')}
             </div>
             ${(/hoste?l|^h$/i.test(user.accommodation || '') && !/day/i.test(user.accommodation || ''))
               ? `<div class="space-y-3.5 p-4 rounded-2xl bg-amber-50/70 border border-amber-200">
@@ -614,6 +761,8 @@ function openDashboard(user) {
     if (topBulkLettersBtn) topBulkLettersBtn.classList.remove('hidden');
     if (clearDataBtn) clearDataBtn.classList.remove('hidden');
 
+    const staffProfileCard = renderUserProfileCard(user);
+
     if (user.role === 'counselor') {
       const counselorConfig = {
         requestsTitle: 'Counselor Queue: Parent Call & On-Duty Review',
@@ -621,7 +770,15 @@ function openDashboard(user) {
         queueContainerId: 'counselorQueue',
         hasOnDutyQueue: true,
         onDutyQueueContainerId: 'counselorODQueue',
-        extraHeaderHTML: `<div class="glass-panel rounded-3xl p-6 shadow-sm flex flex-wrap justify-between items-center gap-4"><div class="space-y-1"><h4 class="font-bold text-slate-900 text-base">Counseling Ward Jurisdiction</h4><p class="text-xs md:text-sm text-slate-600">Assigned Ward: <span class="font-mono font-bold bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-300 text-emerald-800">${user.startRoll || 'Start'}</span> to <span class="font-mono font-bold bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-300 text-emerald-800">${user.endRoll || 'End'}</span></p></div></div>`
+        extraHeaderHTML: `
+          ${staffProfileCard}
+          <div class="glass-panel rounded-3xl p-5 md:p-6 shadow-sm flex flex-wrap justify-between items-center gap-4 bg-white/95 border border-slate-200">
+            <div class="space-y-1">
+              <h4 class="font-bold text-slate-900 text-base">Counseling Ward Jurisdiction</h4>
+              <p class="text-xs md:text-sm text-slate-600">Assigned Ward: <span class="font-mono font-bold bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-300 text-emerald-800">${user.startRoll || 'Start'}</span> to <span class="font-mono font-bold bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-300 text-emerald-800">${user.endRoll || 'End'}</span></p>
+            </div>
+          </div>
+        `
       };
       if (content) content.innerHTML = getAuthorityDashboardHTML(user, counselorConfig);
     } else if (user.role === 'advisor') {
@@ -631,7 +788,15 @@ function openDashboard(user) {
         queueContainerId: 'advisorQueue',
         hasOnDutyQueue: true,
         onDutyQueueContainerId: 'advisorODQueue',
-        extraHeaderHTML: `<div class="glass-panel rounded-3xl p-6 shadow-sm flex items-center justify-between gap-4"><div class="space-y-1"><h4 class="font-bold text-slate-900 text-base">Class Advisory Jurisdiction</h4><p class="text-xs md:text-sm text-slate-600 font-mono">Department: <span class="font-bold text-red-700">${user.dept}</span> • Section: <span class="font-bold text-red-700">${user.yearSec}</span> • Academic Year: <span class="font-bold text-red-700">${user.academicYear || '3 Year'}</span></p></div></div>`
+        extraHeaderHTML: `
+          ${staffProfileCard}
+          <div class="glass-panel rounded-3xl p-5 md:p-6 shadow-sm flex items-center justify-between gap-4 bg-white/95 border border-slate-200">
+            <div class="space-y-1">
+              <h4 class="font-bold text-slate-900 text-base">Class Advisory Jurisdiction</h4>
+              <p class="text-xs md:text-sm text-slate-600 font-mono">Department: <span class="font-bold text-red-700">${user.dept}</span> • Section: <span class="font-bold text-red-700">${user.yearSec}</span> • Academic Year: <span class="font-bold text-red-700">${user.academicYear || '3 Year'}</span></p>
+            </div>
+          </div>
+        `
       };
       if (content) content.innerHTML = getAuthorityDashboardHTML(user, advisorConfig);
     } else if (user.role === 'hod') {
@@ -641,7 +806,15 @@ function openDashboard(user) {
         queueContainerId: 'hodQueue',
         hasOnDutyQueue: true,
         onDutyQueueContainerId: 'hodODQueue',
-        extraHeaderHTML: `<div class="glass-panel rounded-3xl p-6 shadow-sm flex items-center justify-between gap-4"><div class="space-y-1"><h4 class="font-bold text-slate-900 text-base">Department Head Authority</h4><p class="text-xs md:text-sm text-slate-600 font-mono">Department: <span class="font-bold text-purple-700">${user.dept} Engineering</span></p></div></div>`
+        extraHeaderHTML: `
+          ${staffProfileCard}
+          <div class="glass-panel rounded-3xl p-5 md:p-6 shadow-sm flex items-center justify-between gap-4 bg-white/95 border border-slate-200">
+            <div class="space-y-1">
+              <h4 class="font-bold text-slate-900 text-base">Department Head Authority</h4>
+              <p class="text-xs md:text-sm text-slate-600 font-mono">Department: <span class="font-bold text-purple-700">${user.dept} Engineering</span></p>
+            </div>
+          </div>
+        `
       };
       if (content) content.innerHTML = getAuthorityDashboardHTML(user, hodConfig);
     } else if (user.role === 'principal') {
@@ -649,7 +822,15 @@ function openDashboard(user) {
         requestsTitle: 'Principal Directorate Final Clearance',
         requestsSubtitle: 'College-wide outpass requisitions for Executive Directorate approval.',
         queueContainerId: 'principalQueue',
-        extraHeaderHTML: `<div class="glass-panel rounded-3xl p-6 shadow-sm flex items-center justify-between gap-4"><div class="space-y-1"><h4 class="font-bold text-slate-900 text-base">Executive Directorate Authority</h4><p class="text-xs md:text-sm text-slate-600 font-mono">Institution-Wide Governance • Final Clearance Engine</p></div></div>`
+        extraHeaderHTML: `
+          ${staffProfileCard}
+          <div class="glass-panel rounded-3xl p-5 md:p-6 shadow-sm flex items-center justify-between gap-4 bg-white/95 border border-slate-200">
+            <div class="space-y-1">
+              <h4 class="font-bold text-slate-900 text-base">Executive Directorate Authority</h4>
+              <p class="text-xs md:text-sm text-slate-600 font-mono">Institution-Wide Governance • Final Clearance Engine</p>
+            </div>
+          </div>
+        `
       };
       if (content) content.innerHTML = getAuthorityDashboardHTML(user, principalConfig);
     } else if (user.role === 'boys_warden' || user.role === 'girls_warden') {
@@ -658,7 +839,15 @@ function openDashboard(user) {
         requestsTitle: `${isFemale ? 'Girls' : 'Boys'} Hostel Student Leave Requests`,
         requestsSubtitle: `Approved leave requests received after Principal approval for ${isFemale ? 'Girls' : 'Boys'} Hostel clearance.`,
         queueContainerId: 'wardenRequestsTableContainer',
-        extraHeaderHTML: `<div class="glass-panel rounded-3xl p-6 shadow-sm flex items-center justify-between gap-4"><div class="space-y-1"><h4 class="font-bold text-slate-900 text-base">${isFemale ? 'Girls' : 'Boys'} Hostel Warden Governance</h4><p class="text-xs md:text-sm text-slate-600 font-mono">${isFemale ? 'Female' : 'Male'} Hostellers Only • Gate Window & Leave Governance</p></div></div>`
+        extraHeaderHTML: `
+          ${staffProfileCard}
+          <div class="glass-panel rounded-3xl p-5 md:p-6 shadow-sm flex items-center justify-between gap-4 bg-white/95 border border-slate-200">
+            <div class="space-y-1">
+              <h4 class="font-bold text-slate-900 text-base">${isFemale ? 'Girls' : 'Boys'} Hostel Warden Governance</h4>
+              <p class="text-xs md:text-sm text-slate-600 font-mono">${isFemale ? 'Female' : 'Male'} Hostellers Only • Gate Window & Leave Governance</p>
+            </div>
+          </div>
+        `
       };
       if (content) content.innerHTML = getAuthorityDashboardHTML(user, wardenConfig);
       wardenAutoRefreshTimer = setInterval(() => {

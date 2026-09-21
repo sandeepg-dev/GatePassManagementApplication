@@ -206,36 +206,61 @@
 
   <!-- SCREEN 3: WORKING DASHBOARD -->
   <div id="dashScreen" class="hidden max-w-7xl w-full mx-auto my-auto space-y-6 z-10">
-    <div class="glass-panel rounded-3xl p-6 shadow-sm flex flex-wrap items-center justify-between gap-4">
+    <div class="glass-panel rounded-3xl p-5 md:p-6 shadow-md flex flex-wrap items-center justify-between gap-4 border border-white/80">
       <div class="space-y-1">
-        <h3 id="dashGreeting" class="text-lg md:text-xl font-bold text-slate-900 tracking-tight">Welcome</h3>
-        <p id="dashRoleSubtitle" class="text-xs font-bold text-red-800 tracking-wide uppercase font-mono"></p>
+        <h3 id="dashGreeting" class="text-lg md:text-xl font-black text-slate-900 tracking-tight">Welcome</h3>
+        <p id="dashRoleSubtitle" class="text-xs font-extrabold text-red-800 tracking-wide uppercase font-mono"></p>
       </div>
 
-      <div class="flex items-center flex-wrap gap-2.5">
+      <div class="flex items-center flex-wrap gap-2 sm:gap-2.5">
+        <!-- Interactive Header Triggers -->
+        <button type="button" onclick="openNotificationsDrawer()"
+          class="relative p-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/90 rounded-xl shadow-2xs transition flex items-center justify-center active:scale-95 cursor-pointer"
+          title="Live Notifications & Alerts">
+          <svg class="w-4 h-4 fill-current text-slate-700" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/></svg>
+          <span id="headerNotifBadge" class="hidden absolute -top-1 -right-1 px-1.5 py-0.2 bg-red-600 text-white rounded-full text-[10px] font-black border-2 border-white shadow-xs">0</span>
+        </button>
+
+        <button type="button" onclick="openSettingsDrawer()"
+          class="p-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/90 rounded-xl shadow-2xs transition flex items-center justify-center active:scale-95 cursor-pointer"
+          title="System Preferences & Keyboard Shortcuts">
+          <svg class="w-4 h-4 fill-current text-slate-700" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
+        </button>
+
+        <button type="button" onclick="openProfileDrawer()"
+          class="user-chip-btn bg-white hover:bg-slate-50 border border-slate-200/90"
+          title="Open Full Profile Panel">
+          <span id="headerAvatarInitials" class="w-6 h-6 rounded-full bg-red-700 text-white font-black text-xs flex items-center justify-center shadow-2xs">U</span>
+          <span id="headerUserName" class="text-xs font-bold text-slate-800 max-w-[130px] truncate">Profile</span>
+          <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+
         <button id="topBulkPdfBtn" onclick="downloadMasterPDF()"
-          class="hidden px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs md:text-sm font-bold shadow-2xs transition-all flex items-center gap-2 active:scale-95"
+          class="hidden px-3.5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs md:text-sm font-bold shadow-2xs transition-all flex items-center gap-2 active:scale-95 cursor-pointer"
           title="Download Master Clearance & Pass Audit Dossier (PDF)">
           <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd"/></svg>
           <span>Master Auditing PDF</span>
         </button>
 
         <button id="topBulkLettersBtn" onclick="downloadAllCompleteLettersPDF()"
-          class="hidden px-4 py-2.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded-xl text-xs md:text-sm font-bold shadow-2xs transition-all flex items-center gap-2 active:scale-95"
+          class="hidden px-3.5 py-2.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded-xl text-xs md:text-sm font-bold shadow-2xs transition-all flex items-center gap-2 active:scale-95 cursor-pointer"
           title="Download All Gate Pass and OD Letters in One PDF">
           <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>
           <span>Download All PDF</span>
         </button>
 
         <button id="clearAllDataBtn" onclick="confirmAndClearAllData()"
-          class="hidden px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/80 rounded-xl text-xs md:text-sm font-bold shadow-2xs transition-all flex items-center gap-2 active:scale-95"
+          class="hidden px-3.5 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/80 rounded-xl text-xs md:text-sm font-bold shadow-2xs transition-all flex items-center gap-2 active:scale-95 cursor-pointer"
           title="Clear all requests from current authority dashboard">
           <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
           <span>Clear All</span>
         </button>
+
         <button onclick="logout()"
-          class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 hover:text-slate-900 border border-slate-200 rounded-xl text-xs md:text-sm font-bold text-slate-700 shadow-2xs transition-all active:scale-95">
-          Exit Dashboard
+          class="px-4 py-2.5 bg-slate-100 hover:bg-rose-50 hover:text-rose-800 hover:border-rose-200 border border-slate-200 rounded-xl text-xs md:text-sm font-bold text-slate-700 shadow-2xs transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer"
+          title="Secure Sign Out">
+          <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/></svg>
+          <span>Exit</span>
         </button>
       </div>
     </div>
@@ -412,6 +437,145 @@
       if (input) input.value = reason;
     }
   </script>
+
+  <!-- USER PROFILE SLIDE-OVER DRAWER -->
+  <div id="profileDrawerBackdrop" class="hidden drawer-backdrop" onclick="closeProfileDrawer()"></div>
+  <aside id="profileDrawer" class="drawer-panel drawer-closed" aria-label="User Profile Drawer">
+    <div class="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-xl bg-red-50 text-red-700 border border-red-200 flex items-center justify-center font-bold text-xs">
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide">Institutional Profile</h3>
+          <p class="text-[11px] text-slate-500 font-mono">Authenticated Credentials</p>
+        </div>
+      </div>
+      <button onclick="closeProfileDrawer()" class="w-8 h-8 rounded-full bg-white hover:bg-slate-100 text-slate-500 hover:text-slate-800 flex items-center justify-center border border-slate-200 transition active:scale-95 cursor-pointer" aria-label="Close Profile">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-6 space-y-6">
+      <div class="p-5 rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white shadow-xl relative overflow-hidden border border-slate-700">
+        <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-red-600/20 rounded-full blur-2xl"></div>
+        <div class="relative z-10 flex items-center gap-4">
+          <div id="drawerAvatarInitials" class="w-16 h-16 rounded-2xl bg-red-700 text-white font-black text-xl flex items-center justify-center shadow-md border-2 border-red-400 shrink-0">
+            U
+          </div>
+          <div class="space-y-1.5 min-w-0">
+            <h4 id="drawerUserName" class="text-lg font-black tracking-tight text-white leading-snug truncate">User Name</h4>
+            <span id="drawerUserRoleBadge" class="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-extrabold uppercase tracking-wider bg-red-500/25 text-amber-300 border border-amber-400/40">Role</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-3" id="drawerProfileDetailsContainer">
+        <!-- Dynamically populated by JS based on user details -->
+      </div>
+    </div>
+
+    <div class="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-3">
+      <button onclick="logout()" class="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition flex items-center gap-2 active:scale-95 cursor-pointer">
+        <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/></svg>
+        <span>Sign Out</span>
+      </button>
+      <button onclick="closeProfileDrawer()" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer">
+        Close
+      </button>
+    </div>
+  </aside>
+
+  <!-- NOTIFICATIONS SLIDE-OVER DRAWER -->
+  <div id="notificationsDrawerBackdrop" class="hidden drawer-backdrop" onclick="closeNotificationsDrawer()"></div>
+  <aside id="notificationsDrawer" class="drawer-panel drawer-closed" aria-label="Notifications Drawer">
+    <div class="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center font-bold text-xs">
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/></svg>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide">Notifications & Alerts</h3>
+          <p class="text-[11px] text-slate-500 font-medium">Real-time status updates & pending actions</p>
+        </div>
+      </div>
+      <button onclick="closeNotificationsDrawer()" class="w-8 h-8 rounded-full bg-white hover:bg-slate-100 text-slate-500 hover:text-slate-800 flex items-center justify-center border border-slate-200 transition active:scale-95 cursor-pointer" aria-label="Close Notifications">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-5 space-y-3" id="notificationsListContainer">
+      <!-- Populated dynamically by JS -->
+    </div>
+
+    <div class="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+      <span class="text-[11px] text-slate-400 font-mono">Real-time sync active</span>
+      <button onclick="closeNotificationsDrawer()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer">Done</button>
+    </div>
+  </aside>
+
+  <!-- SETTINGS SLIDE-OVER DRAWER -->
+  <div id="settingsDrawerBackdrop" class="hidden drawer-backdrop" onclick="closeSettingsDrawer()"></div>
+  <aside id="settingsDrawer" class="drawer-panel drawer-closed" aria-label="Settings Drawer">
+    <div class="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 border border-slate-200 flex items-center justify-center font-bold text-xs">
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide">System Preferences</h3>
+          <p class="text-[11px] text-slate-500 font-medium">Display mode & keyboard shortcuts</p>
+        </div>
+      </div>
+      <button onclick="closeSettingsDrawer()" class="w-8 h-8 rounded-full bg-white hover:bg-slate-100 text-slate-500 hover:text-slate-800 flex items-center justify-center border border-slate-200 transition active:scale-95 cursor-pointer" aria-label="Close Settings">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-6 space-y-6">
+      <div class="space-y-3">
+        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Interface Display</h4>
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+          <div>
+            <div class="text-sm font-bold text-slate-900">Compact Queue Density</div>
+            <div class="text-xs text-slate-500">Tighter row padding for large data tables</div>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="compactModeToggle" onchange="toggleCompactTableMode(this.checked)" class="sr-only peer">
+            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-700"></div>
+          </label>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Keyboard Shortcuts</h4>
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5 text-xs font-semibold text-slate-700">
+          <div class="flex items-center justify-between">
+            <span>Approve Selected Passes</span>
+            <kbd class="px-2.5 py-1 bg-white border border-slate-300 rounded-md font-mono text-[11px] shadow-2xs">A</kbd>
+          </div>
+          <div class="flex items-center justify-between">
+            <span>Close Active Modal / Drawer</span>
+            <kbd class="px-2.5 py-1 bg-white border border-slate-300 rounded-md font-mono text-[11px] shadow-2xs">Esc</kbd>
+          </div>
+          <div class="flex items-center justify-between">
+            <span>Open Profile Drawer</span>
+            <kbd class="px-2.5 py-1 bg-white border border-slate-300 rounded-md font-mono text-[11px] shadow-2xs">Alt + P</kbd>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-slate-100 border border-slate-200 text-xs text-slate-600 space-y-1">
+        <div class="font-bold text-slate-900">GRT Institute of Engineering and Technology</div>
+        <div>Campus PassPro Engine • Version 2.4.0 Institutional Edition</div>
+        <div class="text-[11px] text-slate-500">Autonomous Governance • AICTE & Anna University Affiliated</div>
+      </div>
+    </div>
+
+    <div class="p-4 border-t border-slate-200 bg-slate-50 text-right">
+      <button onclick="closeSettingsDrawer()" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer">Close</button>
+    </div>
+  </aside>
 
   <!-- FOOTER -->
   <footer
