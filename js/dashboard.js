@@ -670,31 +670,35 @@ function getAuthorityDashboardHTML(user, config) {
 }
 
 function openDashboard(user) {
-  try {
-    if (!user || !user.role) {
-      throw new Error('Invalid user profile or role.');
-    }
+  if (!user || !user.role) {
+    console.error('Invalid user profile or role passed to openDashboard:', user);
+    return;
+  }
 
-    if (user.role === 'admin') {
-      window.location.replace('/admin.html');
-      return;
-    }
+  const role = typeof normalizeRole === 'function' ? normalizeRole(user.role) : String(user.role).trim().toLowerCase().replace(/[\s-]+/g, '_');
+  user.role = role;
 
-    const validRoles = ['student', 'counselor', 'advisor', 'hod', 'principal', 'boys_warden', 'girls_warden'];
-    if (!validRoles.includes(user.role)) {
-      throw new Error(`Unrecognized authority role: ${user.role}`);
-    }
+  if (role === 'admin') {
+    window.location.replace('/admin.html');
+    return;
+  }
 
-    loggedUser = user;
-    if (typeof window !== 'undefined') window.loggedUser = user;
+  loggedUser = user;
+  if (typeof window !== 'undefined') window.loggedUser = user;
 
-    const greeting = document.getElementById('dashGreeting');
-    if (greeting) greeting.innerText = `Welcome, ${user.name}`;
+  // Immediately hide login screen and reveal dashboard screen
+  document.getElementById('singleLoginPortalScreen')?.classList.add('hidden');
+  document.getElementById('authScreen')?.classList.add('hidden');
+  document.getElementById('dashScreen')?.classList.remove('hidden');
+  document.getElementById('authCheckingOverlay')?.classList.add('hidden');
+
+  const greeting = document.getElementById('dashGreeting');
+  if (greeting) greeting.innerText = `Welcome, ${user.name}`;
 
   const subtitles = {
     principal: 'EXECUTIVE DIRECTORATE • GRTIET Institution-Wide Clearance',
-    hod: `HEAD OF DEPARTMENT • Department of ${user.dept}`,
-    advisor: `CLASS ADVISOR • ${user.academicYear || '3 Year'} - ${user.dept} Sec ${user.yearSec}`,
+    hod: `HEAD OF DEPARTMENT • Department of ${user.dept || 'Engineering'}`,
+    advisor: `CLASS ADVISOR • ${user.academicYear || '3 Year'} - ${user.dept || 'Department'} Sec ${user.yearSec || 'A'}`,
     counselor: `CLASS COUNSELOR • Assigned Ward (${user.startRoll || 'Start'} to ${user.endRoll || 'End'})`,
     student: `STUDENT • ${user.academicYear || '3 Year'} • Dept: ${user.dept || 'Engineering'} - Sec ${user.yearSec || 'A'}`,
     boys_warden: 'HOSTEL WARDEN GOVERNANCE • Boys Hostel Clearance Portal',
@@ -702,7 +706,7 @@ function openDashboard(user) {
   };
 
   const roleSubtitle = document.getElementById('dashRoleSubtitle');
-  if (roleSubtitle) roleSubtitle.innerText = subtitles[user.role] || '';
+  if (roleSubtitle) roleSubtitle.innerText = subtitles[role] || '';
 
   const topPdfBtn = document.getElementById('topBulkPdfBtn');
   const topBulkLettersBtn = document.getElementById('topBulkLettersBtn');
@@ -1065,24 +1069,12 @@ function openDashboard(user) {
       }, 3500);
     }
 
-    refreshAllAuthorityViews();
+    try {
+      refreshAllAuthorityViews();
+    } catch (e) {
+      console.warn('Background views refresh error:', e);
+    }
   }
-
-  // Safely show dashboard and hide login portal only after complete successful rendering
-  document.getElementById('singleLoginPortalScreen')?.classList.add('hidden');
-  document.getElementById('authScreen')?.classList.add('hidden');
-  document.getElementById('dashScreen')?.classList.remove('hidden');
-
-} catch (err) {
-  console.error('Fatal error initializing authorized dashboard:', err);
-  document.getElementById('dashScreen')?.classList.add('hidden');
-  document.getElementById('singleLoginPortalScreen')?.classList.remove('hidden');
-  sessionStorage.removeItem('campusPassUser');
-  localStorage.removeItem('campusPassUser');
-  if (typeof showToast === 'function') {
-    showToast('Failed to initialize dashboard. Returning to login.', 'error', 4000);
-  }
-}
 }
 
 function refreshAllAuthorityViews() {

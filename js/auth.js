@@ -21,6 +21,20 @@ const AuthState = {
 let currentAuthState = AuthState.UNAUTHENTICATED;
 
 /**
+ * Normalizes role string to canonical format
+ */
+function normalizeRole(role) {
+  if (!role) return '';
+  const r = String(role).trim().toLowerCase().replace(/[\s-]+/g, '_');
+  if (r === 'boyswarden' || r === 'boys_warden') return 'boys_warden';
+  if (r === 'girlswarden' || r === 'girls_warden') return 'girls_warden';
+  if (r === 'class_advisor' || r === 'advisor') return 'advisor';
+  if (r === 'class_counselor' || r === 'counselor') return 'counselor';
+  if (r === 'head_of_department' || r === 'hod') return 'hod';
+  return r;
+}
+
+/**
  * Manage 3-State Auth Transitions
  */
 function setAuthState(state, user = null) {
@@ -31,7 +45,6 @@ function setAuthState(state, user = null) {
 
   if (state === AuthState.CHECKING) {
     if (overlay) overlay.classList.remove('hidden');
-    // Keep login portal visible in background during session verification
     if (loginPortal) loginPortal.classList.remove('hidden');
     if (dashScreen) dashScreen.classList.add('hidden');
   } else if (state === AuthState.UNAUTHENTICATED) {
@@ -42,20 +55,35 @@ function setAuthState(state, user = null) {
     window.loggedUser = null;
   } else if (state === AuthState.AUTHENTICATED) {
     if (overlay) overlay.classList.add('hidden');
-    if (user && user.role === 'admin') {
+
+    if (!user) {
+      console.warn('Authenticated state called without user');
+      return;
+    }
+
+    user.role = normalizeRole(user.role);
+    loggedUser = user;
+    window.loggedUser = user;
+
+    if (user.role === 'admin') {
       window.location.replace('/admin.html');
       return;
     }
-    if (typeof openDashboard === 'function' && user) {
+
+    // Direct, immediate transition to authenticated dashboard
+    if (loginPortal) loginPortal.classList.add('hidden');
+    if (dashScreen) dashScreen.classList.remove('hidden');
+    if (typeof window !== 'undefined' && window.scrollTo) {
+      window.scrollTo(0, 0);
+    }
+
+    if (typeof openDashboard === 'function') {
       try {
         openDashboard(user);
       } catch (err) {
-        console.error('Failed to open dashboard:', err);
-        setAuthState(AuthState.UNAUTHENTICATED);
-        sessionStorage.removeItem('campusPassUser');
-        localStorage.removeItem('campusPassUser');
+        console.error('Error initializing dashboard for authenticated user:', err);
         if (typeof showToast === 'function') {
-          showToast('Session could not be opened. Please sign in again.', 'error', 3500);
+          showToast('Dashboard loaded with notice: ' + (err.message || 'Check console'), 'warning', 3500);
         }
       }
     }
@@ -119,13 +147,15 @@ async function checkInitialAuthState() {
     const data = await res.json();
 
     if (res.ok && data && data.success && data.user) {
-      loggedUser = data.user;
-      window.loggedUser = data.user;
-      sessionStorage.setItem('campusPassUser', JSON.stringify(data.user));
+      const verifiedUser = data.user;
+      verifiedUser.role = normalizeRole(verifiedUser.role || data.role);
+      loggedUser = verifiedUser;
+      window.loggedUser = verifiedUser;
+      sessionStorage.setItem('campusPassUser', JSON.stringify(verifiedUser));
       if (localStorage.getItem('campusPassUser')) {
-        localStorage.setItem('campusPassUser', JSON.stringify(data.user));
+        localStorage.setItem('campusPassUser', JSON.stringify(verifiedUser));
       }
-      setAuthState(AuthState.AUTHENTICATED, data.user);
+      setAuthState(AuthState.AUTHENTICATED, verifiedUser);
     } else {
       console.warn('Session verification rejected by server:', data?.message);
       sessionStorage.removeItem('campusPassUser');
@@ -216,14 +246,11 @@ async function handleCommonLogin(e) {
         showToast(errMsg, 'error', 3500);
       }
       setAuthState(AuthState.UNAUTHENTICATED);
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = `<span>Sign In to Institutional Portal</span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>`;
-      }
       return;
     }
 
     const user = data.user;
+    user.role = normalizeRole(user.role || data.role);
     loggedUser = user;
     window.loggedUser = user;
 
@@ -238,7 +265,7 @@ async function handleCommonLogin(e) {
       showToast(`Welcome back, ${user.name}!`, 'success', 2500);
     }
 
-    // Transition to authenticated state
+    // Direct, immediate transition to authenticated dashboard
     setAuthState(AuthState.AUTHENTICATED, user);
 
   } catch (err) {
@@ -306,6 +333,7 @@ function logout() {
 
 // Global window bindings
 window.AuthState = AuthState;
+window.normalizeRole = normalizeRole;
 window.setAuthState = setAuthState;
 window.checkInitialAuthState = checkInitialAuthState;
 window.handleCommonLogin = handleCommonLogin;

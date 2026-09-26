@@ -7,7 +7,7 @@ async function fetchCounselorQueue() {
   if (!el || !loggedUser) return;
 
   try {
-    const qUrl = `/api/passes?authorityUserId=${encodeURIComponent(loggedUser.userId || '')}&status=Pending Counselor&role=counselor&counselorName=${encodeURIComponent(
+    const qUrl = `/api/passes?authorityUserId=${encodeURIComponent(loggedUser.userId || '')}&status=Pending%20Counselor&role=counselor&counselorName=${encodeURIComponent(
       loggedUser.name
     )}&startRoll=${encodeURIComponent(loggedUser.startRoll || '')}&endRoll=${encodeURIComponent(
       loggedUser.endRoll || ''
@@ -157,7 +157,7 @@ async function fetchCounselorODQueue() {
   if (!el || !loggedUser) return;
 
   try {
-    const qUrl = `/api/onduty?authorityUserId=${encodeURIComponent(loggedUser.userId || '')}&role=counselor&status=Pending Counselor&counselorName=${encodeURIComponent(
+    const qUrl = `/api/onduty?authorityUserId=${encodeURIComponent(loggedUser.userId || '')}&role=counselor&status=Pending%20Counselor&counselorName=${encodeURIComponent(
       loggedUser.name
     )}&startRoll=${encodeURIComponent(loggedUser.startRoll || '')}&endRoll=${encodeURIComponent(
       loggedUser.endRoll || ''

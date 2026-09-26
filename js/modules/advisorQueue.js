@@ -7,7 +7,7 @@ async function fetchAdvisorQueue() {
   if (!el || !loggedUser) return;
 
   try {
-    const qUrl = `/api/passes?authorityUserId=${encodeURIComponent(loggedUser.userId || '')}&status=Pending Advisor&role=advisor&dept=${encodeURIComponent(
+    const qUrl = `/api/passes?authorityUserId=${encodeURIComponent(loggedUser.userId || '')}&status=Pending%20Advisor&role=advisor&dept=${encodeURIComponent(
       loggedUser.dept
     )}&yearSec=${encodeURIComponent(loggedUser.yearSec)}`;
     const passes = await Api.get(qUrl);
@@ -158,7 +158,7 @@ async function fetchAdvisorODQueue() {
   if (!el || !loggedUser) return;
 
   try {
-    const qUrl = `/api/onduty?authorityUserId=${encodeURIComponent(loggedUser.userId || '')}&role=advisor&status=Pending Advisor&dept=${encodeURIComponent(
+    const qUrl = `/api/onduty?authorityUserId=${encodeURIComponent(loggedUser.userId || '')}&role=advisor&status=Pending%20Advisor&dept=${encodeURIComponent(
       loggedUser.dept
     )}&yearSec=${encodeURIComponent(loggedUser.yearSec)}`;
     const odRequests = await Api.get(qUrl);

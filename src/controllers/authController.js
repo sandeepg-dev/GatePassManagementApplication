@@ -268,6 +268,10 @@ async function login(req, res) {
     const safeUser = user.toObject();
     delete safeUser.password;
 
+    safeUser.loginId = safeUser.userId;
+    safeUser.role = String(safeUser.role || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+    safeUser.userType = safeUser.role === 'student' ? 'Student' : (safeUser.role === 'admin' ? 'Admin' : 'Staff');
+
     // If student, enrich with latest Student model data
     if (safeUser.role === 'student') {
       const studentProfile = await Student.findOne({ rollNo: safeUser.userId.toUpperCase() });
@@ -283,7 +287,14 @@ async function login(req, res) {
       }
     }
 
-    res.json({ success: true, user: safeUser });
+    res.json({
+      success: true,
+      user: safeUser,
+      userId: safeUser.userId,
+      loginId: safeUser.userId,
+      role: safeUser.role,
+      userType: safeUser.userType
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -300,13 +311,18 @@ async function verifySession(req, res) {
     }
 
     const cleanId = String(userId).trim().toLowerCase();
-    const user = await User.findOne({ userId: cleanId, role });
+    const cleanRole = String(role).trim().toLowerCase().replace(/[\s-]+/g, '_');
+    const user = await User.findOne({ userId: cleanId, role: { $in: [cleanRole, role] } });
     if (!user) {
       return res.status(401).json({ success: false, message: 'Session expired or user not found.' });
     }
 
     const safeUser = user.toObject();
     delete safeUser.password;
+
+    safeUser.loginId = safeUser.userId;
+    safeUser.role = String(safeUser.role || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+    safeUser.userType = safeUser.role === 'student' ? 'Student' : (safeUser.role === 'admin' ? 'Admin' : 'Staff');
 
     if (safeUser.role === 'student') {
       const studentProfile = await Student.findOne({ rollNo: safeUser.userId.toUpperCase() });
@@ -322,7 +338,14 @@ async function verifySession(req, res) {
       }
     }
 
-    res.json({ success: true, user: safeUser });
+    res.json({
+      success: true,
+      user: safeUser,
+      userId: safeUser.userId,
+      loginId: safeUser.userId,
+      role: safeUser.role,
+      userType: safeUser.userType
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

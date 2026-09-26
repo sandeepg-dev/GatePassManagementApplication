@@ -7,7 +7,7 @@ async function fetchHODQueue() {
   if (!el || !loggedUser) return;
 
   try {
-    const qUrl = `/api/passes?authorityUserId=${encodeURIComponent(loggedUser.userId || '')}&status=Pending HOD&role=hod&dept=${encodeURIComponent(loggedUser.dept)}`;
+    const qUrl = `/api/passes?authorityUserId=${encodeURIComponent(loggedUser.userId || '')}&status=Pending%20HOD&role=hod&dept=${encodeURIComponent(loggedUser.dept)}`;
     const passes = await Api.get(qUrl);
 
     const countBadge = document.getElementById('authBadge_requests');
@@ -144,7 +144,7 @@ async function fetchHODODQueue() {
   if (!el || !loggedUser) return;
 
   try {
-    const qUrl = `/api/onduty?authorityUserId=${encodeURIComponent(loggedUser.userId || '')}&role=hod&status=Pending HOD&dept=${encodeURIComponent(loggedUser.dept)}`;
+    const qUrl = `/api/onduty?authorityUserId=${encodeURIComponent(loggedUser.userId || '')}&role=hod&status=Pending%20HOD&dept=${encodeURIComponent(loggedUser.dept)}`;
     const odRequests = await Api.get(qUrl);
 
     const odBadge = document.getElementById('subBadge_onduty');
