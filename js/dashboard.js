@@ -670,16 +670,26 @@ function getAuthorityDashboardHTML(user, config) {
 }
 
 function openDashboard(user) {
-  if (user) {
+  try {
+    if (!user || !user.role) {
+      throw new Error('Invalid user profile or role.');
+    }
+
+    if (user.role === 'admin') {
+      window.location.replace('/admin.html');
+      return;
+    }
+
+    const validRoles = ['student', 'counselor', 'advisor', 'hod', 'principal', 'boys_warden', 'girls_warden'];
+    if (!validRoles.includes(user.role)) {
+      throw new Error(`Unrecognized authority role: ${user.role}`);
+    }
+
     loggedUser = user;
     if (typeof window !== 'undefined') window.loggedUser = user;
-  }
-  document.getElementById('singleLoginPortalScreen')?.classList.add('hidden');
-  document.getElementById('authScreen')?.classList.add('hidden');
-  document.getElementById('dashScreen')?.classList.remove('hidden');
 
-  const greeting = document.getElementById('dashGreeting');
-  if (greeting) greeting.innerText = `Welcome, ${user.name}`;
+    const greeting = document.getElementById('dashGreeting');
+    if (greeting) greeting.innerText = `Welcome, ${user.name}`;
 
   const subtitles = {
     principal: 'EXECUTIVE DIRECTORATE • GRTIET Institution-Wide Clearance',
@@ -1057,6 +1067,22 @@ function openDashboard(user) {
 
     refreshAllAuthorityViews();
   }
+
+  // Safely show dashboard and hide login portal only after complete successful rendering
+  document.getElementById('singleLoginPortalScreen')?.classList.add('hidden');
+  document.getElementById('authScreen')?.classList.add('hidden');
+  document.getElementById('dashScreen')?.classList.remove('hidden');
+
+} catch (err) {
+  console.error('Fatal error initializing authorized dashboard:', err);
+  document.getElementById('dashScreen')?.classList.add('hidden');
+  document.getElementById('singleLoginPortalScreen')?.classList.remove('hidden');
+  sessionStorage.removeItem('campusPassUser');
+  localStorage.removeItem('campusPassUser');
+  if (typeof showToast === 'function') {
+    showToast('Failed to initialize dashboard. Returning to login.', 'error', 4000);
+  }
+}
 }
 
 function refreshAllAuthorityViews() {

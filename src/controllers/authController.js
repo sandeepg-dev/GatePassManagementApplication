@@ -289,8 +289,48 @@ async function login(req, res) {
   }
 }
 
+/**
+ * Verify if an existing session user is valid and active in the database
+ */
+async function verifySession(req, res) {
+  try {
+    const { userId, role } = req.body;
+    if (!userId || !role) {
+      return res.status(401).json({ success: false, message: 'Invalid session credentials.' });
+    }
+
+    const cleanId = String(userId).trim().toLowerCase();
+    const user = await User.findOne({ userId: cleanId, role });
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Session expired or user not found.' });
+    }
+
+    const safeUser = user.toObject();
+    delete safeUser.password;
+
+    if (safeUser.role === 'student') {
+      const studentProfile = await Student.findOne({ rollNo: safeUser.userId.toUpperCase() });
+      if (studentProfile) {
+        safeUser.parentContact = studentProfile.parentContact || safeUser.parentContact;
+        safeUser.mobile = studentProfile.mobile || safeUser.mobile;
+        safeUser.counselorName = studentProfile.counselorName || safeUser.counselorName;
+        safeUser.accommodation = studentProfile.accommodation || safeUser.accommodation;
+        safeUser.gender = studentProfile.gender || safeUser.gender;
+        safeUser.dept = studentProfile.dept || safeUser.dept;
+        safeUser.yearSec = studentProfile.yearSec || safeUser.yearSec;
+        safeUser.academicYear = studentProfile.academicYear || safeUser.academicYear;
+      }
+    }
+
+    res.json({ success: true, user: safeUser });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+}
+
 module.exports = {
   checkRoleExists,
   register,
-  login
+  login,
+  verifySession
 };

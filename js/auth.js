@@ -1,6 +1,11 @@
 /**
  * Single Common Authentication & Role Detection Module
  * Campus PassPro • GRT Institute of Engineering and Technology
+ * 
+ * Enforces 3-State Authentication Lifecycle:
+ * 1. CHECKING: Verifies active session against /api/auth/verify-session without flickering
+ * 2. UNAUTHENTICATED: Institutional Login continuously visible (never blank blue screen)
+ * 3. AUTHENTICATED: Seamlessly transitions to the authorized dashboard
  */
 
 let loggedUser = null;
@@ -8,8 +13,59 @@ if (typeof window !== 'undefined') {
   window.loggedUser = null;
 }
 
-// Auto-restore session or ensure clean inputs on page load
-window.addEventListener('DOMContentLoaded', () => {
+const AuthState = {
+  CHECKING: 'CHECKING',
+  UNAUTHENTICATED: 'UNAUTHENTICATED',
+  AUTHENTICATED: 'AUTHENTICATED'
+};
+let currentAuthState = AuthState.UNAUTHENTICATED;
+
+/**
+ * Manage 3-State Auth Transitions
+ */
+function setAuthState(state, user = null) {
+  currentAuthState = state;
+  const overlay = document.getElementById('authCheckingOverlay');
+  const loginPortal = document.getElementById('singleLoginPortalScreen');
+  const dashScreen = document.getElementById('dashScreen');
+
+  if (state === AuthState.CHECKING) {
+    if (overlay) overlay.classList.remove('hidden');
+    // Keep login portal visible in background during session verification
+    if (loginPortal) loginPortal.classList.remove('hidden');
+    if (dashScreen) dashScreen.classList.add('hidden');
+  } else if (state === AuthState.UNAUTHENTICATED) {
+    if (overlay) overlay.classList.add('hidden');
+    if (loginPortal) loginPortal.classList.remove('hidden');
+    if (dashScreen) dashScreen.classList.add('hidden');
+    loggedUser = null;
+    window.loggedUser = null;
+  } else if (state === AuthState.AUTHENTICATED) {
+    if (overlay) overlay.classList.add('hidden');
+    if (user && user.role === 'admin') {
+      window.location.replace('/admin.html');
+      return;
+    }
+    if (typeof openDashboard === 'function' && user) {
+      try {
+        openDashboard(user);
+      } catch (err) {
+        console.error('Failed to open dashboard:', err);
+        setAuthState(AuthState.UNAUTHENTICATED);
+        sessionStorage.removeItem('campusPassUser');
+        localStorage.removeItem('campusPassUser');
+        if (typeof showToast === 'function') {
+          showToast('Session could not be opened. Please sign in again.', 'error', 3500);
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Check authentication session on application launch
+ */
+async function checkInitialAuthState() {
   const idInput = document.getElementById('commonLoginId');
   const passInput = document.getElementById('commonPassword');
   if (idInput) idInput.value = '';
@@ -17,34 +73,92 @@ window.addEventListener('DOMContentLoaded', () => {
   const errorAlert = document.getElementById('loginErrorAlert');
   if (errorAlert) errorAlert.classList.add('hidden');
 
-  // Check for active session
+  let saved = null;
   try {
-    const saved = sessionStorage.getItem('campusPassUser') || localStorage.getItem('campusPassUser');
-    if (saved) {
-      const user = JSON.parse(saved);
-      if (user && user.userId && user.role) {
-        loggedUser = user;
-        window.loggedUser = user;
-        const loginPortal = document.getElementById('singleLoginPortalScreen');
-        if (loginPortal) loginPortal.classList.add('hidden');
-        if (typeof openDashboard === 'function') {
-          openDashboard(user);
-        }
+    saved = sessionStorage.getItem('campusPassUser') || localStorage.getItem('campusPassUser');
+  } catch (err) {
+    console.warn('Storage access warning:', err);
+  }
+
+  // 1. If NO saved user session:
+  // Immediately UNAUTHENTICATED. Keep Institutional Login permanently visible.
+  if (!saved) {
+    setAuthState(AuthState.UNAUTHENTICATED);
+    return;
+  }
+
+  // 2. Parse session
+  let user = null;
+  try {
+    user = JSON.parse(saved);
+  } catch (err) {
+    console.warn('Invalid saved session JSON:', err);
+    sessionStorage.removeItem('campusPassUser');
+    localStorage.removeItem('campusPassUser');
+    setAuthState(AuthState.UNAUTHENTICATED);
+    return;
+  }
+
+  if (!user || !user.userId || !user.role) {
+    sessionStorage.removeItem('campusPassUser');
+    localStorage.removeItem('campusPassUser');
+    setAuthState(AuthState.UNAUTHENTICATED);
+    return;
+  }
+
+  // 3. Stored session present: CHECKING state with institutional backend validation
+  setAuthState(AuthState.CHECKING);
+
+  try {
+    const res = await fetch('/api/auth/verify-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: user.userId, role: user.role })
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data && data.success && data.user) {
+      loggedUser = data.user;
+      window.loggedUser = data.user;
+      sessionStorage.setItem('campusPassUser', JSON.stringify(data.user));
+      if (localStorage.getItem('campusPassUser')) {
+        localStorage.setItem('campusPassUser', JSON.stringify(data.user));
       }
+      setAuthState(AuthState.AUTHENTICATED, data.user);
+    } else {
+      console.warn('Session verification rejected by server:', data?.message);
+      sessionStorage.removeItem('campusPassUser');
+      localStorage.removeItem('campusPassUser');
+      setAuthState(AuthState.UNAUTHENTICATED);
     }
   } catch (err) {
-    console.warn('Failed to restore active session:', err);
+    console.warn('Session verification network error:', err);
+    sessionStorage.removeItem('campusPassUser');
+    localStorage.removeItem('campusPassUser');
+    setAuthState(AuthState.UNAUTHENTICATED);
   }
-});
+}
 
-window.addEventListener('pageshow', () => {
-  if (!loggedUser && !sessionStorage.getItem('campusPassUser')) {
-    const idInput = document.getElementById('commonLoginId');
-    const passInput = document.getElementById('commonPassword');
-    if (idInput) idInput.value = '';
-    if (passInput) passInput.value = '';
+// Auto-restore session or ensure persistent login on page load
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', checkInitialAuthState);
+  } else {
+    checkInitialAuthState();
   }
-});
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('pageshow', () => {
+    if (!loggedUser && !sessionStorage.getItem('campusPassUser')) {
+      const idInput = document.getElementById('commonLoginId');
+      const passInput = document.getElementById('commonPassword');
+      if (idInput) idInput.value = '';
+      if (passInput) passInput.value = '';
+    }
+  });
+}
 
 /**
  * Handle Common Universal Login
@@ -56,6 +170,7 @@ async function handleCommonLogin(e) {
   const passInput = document.getElementById('commonPassword');
   const submitBtn = document.getElementById('commonLoginBtn');
   const errorAlert = document.getElementById('loginErrorAlert');
+  const rememberCheckbox = document.getElementById('rememberMe');
 
   if (errorAlert) errorAlert.classList.add('hidden');
 
@@ -66,7 +181,7 @@ async function handleCommonLogin(e) {
     if (errorAlert) {
       errorAlert.innerText = 'Please enter both your Login ID / Register Number and Password.';
       errorAlert.classList.remove('hidden');
-    } else {
+    } else if (typeof showToast === 'function') {
       showToast('Please enter both Login ID and Password.', 'warning', 3000);
     }
     return;
@@ -97,12 +212,13 @@ async function handleCommonLogin(e) {
       if (errorAlert) {
         errorAlert.innerText = errMsg;
         errorAlert.classList.remove('hidden');
-      } else {
+      } else if (typeof showToast === 'function') {
         showToast(errMsg, 'error', 3500);
       }
+      setAuthState(AuthState.UNAUTHENTICATED);
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = `<span>Sign In to Dashboard</span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>`;
+        submitBtn.innerHTML = `<span>Sign In to Institutional Portal</span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>`;
       }
       return;
     }
@@ -110,35 +226,34 @@ async function handleCommonLogin(e) {
     const user = data.user;
     loggedUser = user;
     window.loggedUser = user;
+
     sessionStorage.setItem('campusPassUser', JSON.stringify(user));
-    localStorage.setItem('campusPassUser', JSON.stringify(user));
-
-    showToast(`Welcome back, ${user.name}!`, 'success', 2500);
-
-    // If Admin logged in from common screen, redirect to Admin Portal
-    if (user.role === 'admin') {
-      window.location.href = '/admin.html';
-      return;
+    if (rememberCheckbox && rememberCheckbox.checked) {
+      localStorage.setItem('campusPassUser', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('campusPassUser');
     }
 
-    // Hide common login and open respective dashboard
-    const loginPortal = document.getElementById('singleLoginPortalScreen');
-    if (loginPortal) loginPortal.classList.add('hidden');
+    if (typeof showToast === 'function') {
+      showToast(`Welcome back, ${user.name}!`, 'success', 2500);
+    }
 
-    openDashboard(user);
+    // Transition to authenticated state
+    setAuthState(AuthState.AUTHENTICATED, user);
 
   } catch (err) {
     console.error('Login error:', err);
     if (errorAlert) {
       errorAlert.innerText = 'Unable to connect to the authentication server. Please check your network connection.';
       errorAlert.classList.remove('hidden');
-    } else {
+    } else if (typeof showToast === 'function') {
       showToast('Authentication server error. Please try again.', 'error', 3500);
     }
+    setAuthState(AuthState.UNAUTHENTICATED);
   } finally {
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.innerHTML = `<span>Sign In to Dashboard</span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>`;
+      submitBtn.innerHTML = `<span>Sign In to Institutional Portal</span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>`;
     }
   }
 }
@@ -174,15 +289,14 @@ function logout() {
   localStorage.removeItem('campusPassUser');
   sessionStorage.clear();
 
-  // Clear inputs
+  // Reset inputs
   const idInput = document.getElementById('commonLoginId');
   const passInput = document.getElementById('commonPassword');
   if (idInput) idInput.value = '';
   if (passInput) passInput.value = '';
 
-  // Switch display
-  document.getElementById('dashScreen')?.classList.add('hidden');
-  document.getElementById('singleLoginPortalScreen')?.classList.remove('hidden');
+  // Transition to UNAUTHENTICATED
+  setAuthState(AuthState.UNAUTHENTICATED);
 
   if (window.history && window.history.replaceState) {
     window.history.replaceState(null, '', '/');
@@ -191,6 +305,9 @@ function logout() {
 }
 
 // Global window bindings
+window.AuthState = AuthState;
+window.setAuthState = setAuthState;
+window.checkInitialAuthState = checkInitialAuthState;
 window.handleCommonLogin = handleCommonLogin;
 window.togglePasswordVisibility = togglePasswordVisibility;
 window.logout = logout;
