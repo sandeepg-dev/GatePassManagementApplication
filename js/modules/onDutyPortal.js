@@ -19,10 +19,10 @@ function switchStudentPortalTab(tabName) {
 
   if (tabName === 'pass') {
     if (btnPass) {
-      btnPass.className = 'px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-md shadow-red-900/40 transition flex items-center gap-2 border border-red-500/50';
+      btnPass.className = 'px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold bg-red-700 text-white shadow-sm transition flex items-center gap-2 border border-red-800';
     }
     if (btnOD) {
-      btnOD.className = 'px-4 py-2.5 rounded-xl text-xs md:text-sm font-semibold bg-slate-950/80 hover:bg-slate-800 text-slate-400 hover:text-white transition flex items-center gap-2 border border-slate-800';
+      btnOD.className = 'px-4 py-2.5 rounded-xl text-xs md:text-sm font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-2 border border-slate-200';
     }
     if (viewPass) viewPass.classList.remove('hidden');
     if (viewOD) viewOD.classList.add('hidden');
@@ -34,10 +34,10 @@ function switchStudentPortalTab(tabName) {
     }
   } else {
     if (btnPass) {
-      btnPass.className = 'px-4 py-2.5 rounded-xl text-xs md:text-sm font-semibold bg-slate-950/80 hover:bg-slate-800 text-slate-400 hover:text-white transition flex items-center gap-2 border border-slate-800';
+      btnPass.className = 'px-4 py-2.5 rounded-xl text-xs md:text-sm font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-2 border border-slate-200';
     }
     if (btnOD) {
-      btnOD.className = 'px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-900/40 transition flex items-center gap-2 border border-indigo-500/50';
+      btnOD.className = 'px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold bg-indigo-700 text-white shadow-sm transition flex items-center gap-2 border border-indigo-800';
     }
     if (viewPass) viewPass.classList.add('hidden');
     if (viewOD) viewOD.classList.remove('hidden');
@@ -146,14 +146,14 @@ async function loadStudentOnDutyStatus() {
     if (!requests || requests.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="5" class="p-12 text-center bg-slate-900/60 border border-slate-800 space-y-3">
-            <div class="w-12 h-12 rounded-2xl bg-indigo-950 text-indigo-400 flex items-center justify-center mx-auto shadow-2xs border border-indigo-800">
+          <td colspan="5" class="p-12 text-center bg-white space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center mx-auto shadow-2xs">
               <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <div class="text-base font-bold text-white">No Active On-Duty Requests</div>
-            <p class="text-xs md:text-sm text-slate-400 max-w-sm mx-auto">You currently have no On-Duty requisitions on record.</p>
+            <div class="text-base font-bold text-slate-800">No Active On-Duty Requests</div>
+            <p class="text-xs md:text-sm text-slate-500 max-w-sm mx-auto">You currently have no On-Duty requisitions on record.</p>
           </td>
         </tr>`;
       return;

@@ -13,13 +13,10 @@
   <script src="https://unpkg.com/@zxing/library@latest"></script>
 
   <!-- External Design System Stylesheet -->
-  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/styles.css?v=2.6.0">
 </head>
 
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between p-3 md:p-6 relative selection:bg-red-600 selection:text-white">
-
-  <!-- DARK ATMOSPHERIC BACKDROP OVERLAY (Exact match to Admin Portal) -->
-  <div class="fixed inset-0 bg-slate-950/92 backdrop-blur-[2px] pointer-events-none -z-10"></div>
+<body class="text-slate-800 min-h-screen flex flex-col justify-between p-3 md:p-6 relative" style="background: #0f172a linear-gradient(rgba(15, 23, 42, 0.40), rgba(15, 23, 42, 0.40)), url('/public/campus-bg.jpg') center/cover no-repeat fixed;">
 
   <!-- TOAST NOTIFICATION CONTAINER -->
   <div id="toastContainer"></div>
@@ -65,33 +62,31 @@
   </script>
 
   <!-- OFFICIAL HEADER -->
-  <header class="max-w-7xl w-full mx-auto bg-slate-900/95 border border-slate-800 rounded-3xl p-4 sm:p-5 backdrop-blur-xl shadow-2xl mb-6">
+  <header class="max-w-7xl w-full mx-auto glass-panel p-4 sm:p-5 rounded-3xl border border-white/60 shadow-md mb-6">
     <div class="flex flex-col md:flex-row items-center justify-between gap-4">
       <div class="flex items-center gap-4 text-center md:text-left">
-        <div class="w-16 h-16 rounded-2xl bg-white p-2 shadow-md border border-slate-700/50 flex items-center justify-center shrink-0">
-          <img src="/public/grt-logo.png" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='/grt-logo.png';}else if(this.dataset.retry==='1'){this.dataset.retry=2;this.src='/assets/grt-logo.png';}" alt="GRTIET Official Emblem" class="w-12 h-12 object-contain">
-        </div>
+        <img src="/public/grt-logo.png" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='/grt-logo.png';}else if(this.dataset.retry==='1'){this.dataset.retry=2;this.src='/assets/grt-logo.png';}" alt="GRTIET Official Emblem" class="w-16 h-16 object-contain drop-shadow-sm">
         <div>
-          <h1 class="text-xl sm:text-2xl font-black text-white tracking-tight leading-snug uppercase">
+          <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug uppercase">
             GRT Institute of Engineering and Technology
           </h1>
-          <p class="text-xs sm:text-sm font-bold text-red-500 tracking-wide uppercase">
+          <p class="text-xs sm:text-sm font-bold text-red-700 tracking-wide uppercase">
             Tiruttani • (An Autonomous Institution)
           </p>
-          <p class="text-xs font-semibold text-slate-400 mt-0.5">
+          <p class="text-xs font-semibold text-slate-600 mt-0.5">
             Campus PassPro • Institutional Outpass Clearance & Governance Engine
           </p>
         </div>
       </div>
 
       <div class="flex flex-wrap items-center justify-center gap-2">
-        <span class="px-3 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-lg text-xs font-extrabold tracking-wide">
+        <span class="px-3 py-1 bg-amber-50 border border-amber-300 text-amber-900 rounded-lg text-xs font-extrabold tracking-wide">
           NAAC A++ ACCREDITED
         </span>
-        <span class="px-3 py-1 bg-blue-500/10 border border-blue-500/30 text-blue-300 rounded-lg text-xs font-extrabold tracking-wide">
+        <span class="px-3 py-1 bg-blue-50 border border-blue-300 text-blue-900 rounded-lg text-xs font-extrabold tracking-wide">
           AICTE APPROVED
         </span>
-        <span class="px-3 py-1 bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 rounded-lg text-xs font-extrabold tracking-wide">
+        <span class="px-3 py-1 bg-indigo-50 border border-indigo-300 text-indigo-900 rounded-lg text-xs font-extrabold tracking-wide">
           ANNA UNIVERSITY AFFILIATED
         </span>
       </div>
@@ -101,49 +96,49 @@
   <!-- SCREEN 1: SINGLE COMMON LOGIN PORTAL -->
   <main id="singleLoginPortalScreen"
     class="max-w-xl w-full mx-auto my-auto py-8 px-4 sm:px-6 z-10">
-    <div class="bg-slate-900/95 border border-slate-800 rounded-3xl p-6 sm:p-10 backdrop-blur-xl shadow-2xl relative overflow-hidden space-y-6">
+    <div class="glass-panel p-6 sm:p-10 rounded-3xl border border-white/70 shadow-2xl relative overflow-hidden space-y-6">
       <!-- Decorative ambient glows -->
-      <div class="absolute -top-24 -right-24 w-48 h-48 bg-red-600/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -top-24 -right-24 w-48 h-48 bg-red-500/10 rounded-full blur-3xl pointer-events-none"></div>
       <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
       <!-- Header / Portal Identity -->
       <div class="text-center space-y-2 relative z-10">
-        <div class="w-16 h-16 mx-auto rounded-2xl bg-white p-2 shadow-lg border border-slate-700/60 flex items-center justify-center">
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-white p-2 shadow-lg border border-slate-200/80 flex items-center justify-center">
           <img src="/public/grt-logo.png" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='/grt-logo.png';}else if(this.dataset.retry==='1'){this.dataset.retry=2;this.src='/assets/grt-logo.png';}" alt="GRT College Logo" class="w-12 h-12 object-contain">
         </div>
-        <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight uppercase">Institutional Login</h2>
-        <p class="text-sm text-slate-400 font-medium">
+        <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Institutional Login</h2>
+        <p class="text-sm text-slate-600 font-medium">
           Campus PassPro • Unified Outpass & Governance Portal
         </p>
-        <div class="pt-1 flex flex-wrap items-center justify-center gap-1.5 text-[11px] font-mono font-bold">
-          <span class="px-2.5 py-0.5 bg-slate-950 border border-slate-800 text-slate-300 rounded-md">Students</span>
-          <span class="text-slate-600">•</span>
-          <span class="px-2.5 py-0.5 bg-slate-950 border border-slate-800 text-slate-300 rounded-md">Counselors</span>
-          <span class="text-slate-600">•</span>
-          <span class="px-2.5 py-0.5 bg-slate-950 border border-slate-800 text-slate-300 rounded-md">Advisors</span>
-          <span class="text-slate-600">•</span>
-          <span class="px-2.5 py-0.5 bg-slate-950 border border-slate-800 text-slate-300 rounded-md">HODs</span>
-          <span class="text-slate-600">•</span>
-          <span class="px-2.5 py-0.5 bg-slate-950 border border-slate-800 text-slate-300 rounded-md">Principal</span>
-          <span class="text-slate-600">•</span>
-          <span class="px-2.5 py-0.5 bg-slate-950 border border-slate-800 text-slate-300 rounded-md">Wardens</span>
+        <div class="pt-1 flex flex-wrap items-center justify-center gap-2">
+          <span class="px-2.5 py-0.5 bg-slate-100 border border-slate-200 text-slate-700 rounded-md text-xs font-bold">Students</span>
+          <span class="text-slate-300">•</span>
+          <span class="px-2.5 py-0.5 bg-slate-100 border border-slate-200 text-slate-700 rounded-md text-xs font-bold">Counselors</span>
+          <span class="text-slate-300">•</span>
+          <span class="px-2.5 py-0.5 bg-slate-100 border border-slate-200 text-slate-700 rounded-md text-xs font-bold">Advisors</span>
+          <span class="text-slate-300">•</span>
+          <span class="px-2.5 py-0.5 bg-slate-100 border border-slate-200 text-slate-700 rounded-md text-xs font-bold">HODs</span>
+          <span class="text-slate-300">•</span>
+          <span class="px-2.5 py-0.5 bg-slate-100 border border-slate-200 text-slate-700 rounded-md text-xs font-bold">Principal</span>
+          <span class="text-slate-300">•</span>
+          <span class="px-2.5 py-0.5 bg-slate-100 border border-slate-200 text-slate-700 rounded-md text-xs font-bold">Wardens</span>
         </div>
       </div>
 
       <!-- Error Alert Box -->
       <div id="loginErrorAlert"
-        class="hidden p-3.5 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-2xl text-xs sm:text-sm font-semibold leading-relaxed text-center">
+        class="hidden p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl text-xs sm:text-sm font-semibold leading-relaxed text-center">
       </div>
 
       <!-- Single Common Login Form -->
       <form id="commonLoginForm" autocomplete="off" onsubmit="event.preventDefault(); handleCommonLogin(event);" class="space-y-4 relative z-10">
         <div>
-          <label for="commonLoginId" class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+          <label for="commonLoginId" class="block text-sm font-bold text-slate-800 tracking-wide mb-1.5 flex items-center justify-between">
             <span>Login ID / Register Number</span>
-            <span class="text-[11px] text-slate-500 font-normal lowercase">roll no or staff id</span>
+            <span class="text-xs text-slate-500 font-normal">Roll No or Staff ID</span>
           </label>
           <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
               <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
             </div>
             <input
@@ -153,18 +148,18 @@
               placeholder="Enter Roll Number or Staff ID"
               autocomplete="off"
               value=""
-              class="w-full pl-11 pr-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-xs sm:text-sm text-white font-mono focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition shadow-inner"
+              class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-300 rounded-2xl text-sm font-semibold text-slate-900 focus:outline-none focus:border-red-600 focus:bg-white focus:ring-2 focus:ring-red-600/20 transition shadow-2xs font-mono"
             >
           </div>
         </div>
 
         <div>
-          <label for="commonPassword" class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+          <label for="commonPassword" class="block text-sm font-bold text-slate-800 tracking-wide mb-1.5 flex items-center justify-between">
             <span>Password</span>
-            <span class="text-[11px] text-slate-500 font-normal lowercase">account password</span>
+            <span class="text-xs text-slate-500 font-normal">Enter Account Password</span>
           </label>
           <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
               <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
             </div>
             <input
@@ -174,12 +169,12 @@
               placeholder="Enter Password"
               autocomplete="new-password"
               value=""
-              class="w-full pl-11 pr-12 py-3 bg-slate-950 border border-slate-700 rounded-xl text-xs sm:text-sm text-white focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition shadow-inner"
+              class="w-full pl-11 pr-12 py-3.5 bg-slate-50 border border-slate-300 rounded-2xl text-sm font-semibold text-slate-900 focus:outline-none focus:border-red-600 focus:bg-white focus:ring-2 focus:ring-red-600/20 transition shadow-2xs"
             >
             <button
               type="button"
               onclick="togglePasswordVisibility('commonPassword', 'passwordEyeIcon')"
-              class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-500 hover:text-white transition"
+              class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-700 transition"
               title="Toggle password visibility"
             >
               <span id="passwordEyeIcon">
@@ -192,7 +187,7 @@
         <button
           type="submit"
           id="commonLoginBtn"
-          class="w-full py-3.5 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white font-bold rounded-xl text-xs sm:text-sm shadow-lg shadow-red-900/40 transition active:scale-[0.99] flex items-center justify-center gap-2 mt-2 cursor-pointer"
+          class="w-full py-3.5 bg-red-700 hover:bg-red-800 text-white font-bold rounded-2xl text-sm shadow-md transition-all active:scale-[0.99] flex items-center justify-center gap-2 mt-2"
         >
           <span>Sign In to Dashboard</span>
           <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
@@ -200,8 +195,8 @@
       </form>
 
       <!-- Institutional Helper Links -->
-      <div class="pt-4 border-t border-slate-800 flex items-center justify-center text-xs text-slate-400 font-medium">
-        <a href="/admin.html" class="font-bold text-slate-300 hover:text-white flex items-center gap-1.5 transition">
+      <div class="pt-4 border-t border-slate-200/80 flex items-center justify-center text-sm text-slate-500 font-medium">
+        <a href="/admin.html" class="font-bold text-red-700 hover:text-red-900 flex items-center gap-1.5 transition">
           <span>Administrator Control Portal</span>
           <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
         </a>
@@ -211,61 +206,36 @@
 
   <!-- SCREEN 3: WORKING DASHBOARD -->
   <div id="dashScreen" class="hidden max-w-7xl w-full mx-auto my-auto space-y-6 z-10">
-    <div class="bg-slate-900/95 border border-slate-800 rounded-3xl p-5 md:p-6 backdrop-blur-xl shadow-2xl flex flex-wrap items-center justify-between gap-4">
+    <div class="glass-panel rounded-3xl p-6 shadow-sm flex flex-wrap items-center justify-between gap-4">
       <div class="space-y-1">
-        <h3 id="dashGreeting" class="text-lg md:text-xl font-black text-white tracking-tight">Welcome</h3>
-        <p id="dashRoleSubtitle" class="text-xs font-bold text-slate-400 tracking-wide uppercase font-mono"></p>
+        <h3 id="dashGreeting" class="text-lg md:text-xl font-bold text-slate-900 tracking-tight">Welcome</h3>
+        <p id="dashRoleSubtitle" class="text-xs font-bold text-red-800 tracking-wide uppercase font-mono"></p>
       </div>
 
-      <div class="flex items-center flex-wrap gap-2 sm:gap-2.5">
-        <!-- Interactive Header Triggers -->
-        <button type="button" onclick="openNotificationsDrawer()"
-          class="relative p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-xl transition flex items-center justify-center active:scale-95 shadow-sm cursor-pointer"
-          title="Live Notifications & Alerts">
-          <svg class="w-4 h-4 fill-current text-slate-300" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/></svg>
-          <span id="headerNotifBadge" class="hidden absolute -top-1 -right-1 px-1.5 py-0.2 bg-red-600 text-white rounded-full text-[10px] font-black border-2 border-slate-900 shadow-xs">0</span>
-        </button>
-
-        <button type="button" onclick="openSettingsDrawer()"
-          class="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-xl transition flex items-center justify-center active:scale-95 shadow-sm cursor-pointer"
-          title="System Preferences & Keyboard Shortcuts">
-          <svg class="w-4 h-4 fill-current text-slate-300" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
-        </button>
-
-        <button type="button" onclick="openProfileDrawer()"
-          class="user-chip-btn bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200"
-          title="Open Full Profile Panel">
-          <span id="headerAvatarInitials" class="w-6 h-6 rounded-full bg-red-600 text-white font-black text-xs flex items-center justify-center shadow-xs">U</span>
-          <span id="headerUserName" class="text-xs font-bold text-slate-200 max-w-[130px] truncate">Profile</span>
-          <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-        </button>
-
+      <div class="flex items-center flex-wrap gap-2.5">
         <button id="topBulkPdfBtn" onclick="downloadMasterPDF()"
-          class="hidden px-3.5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-emerald-900/30 transition flex items-center gap-2 active:scale-95 cursor-pointer"
+          class="hidden px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs md:text-sm font-bold shadow-2xs transition-all flex items-center gap-2 active:scale-95"
           title="Download Master Clearance & Pass Audit Dossier (PDF)">
           <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd"/></svg>
           <span>Master Auditing PDF</span>
         </button>
 
         <button id="topBulkLettersBtn" onclick="downloadAllCompleteLettersPDF()"
-          class="hidden px-3.5 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-indigo-900/30 transition flex items-center gap-2 active:scale-95 cursor-pointer"
+          class="hidden px-4 py-2.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded-xl text-xs md:text-sm font-bold shadow-2xs transition-all flex items-center gap-2 active:scale-95"
           title="Download All Gate Pass and OD Letters in One PDF">
           <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>
           <span>Download All PDF</span>
         </button>
 
         <button id="clearAllDataBtn" onclick="confirmAndClearAllData()"
-          class="hidden px-3.5 py-2.5 bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 rounded-xl text-xs sm:text-sm font-bold shadow-sm transition flex items-center gap-2 active:scale-95 cursor-pointer"
+          class="hidden px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/80 rounded-xl text-xs md:text-sm font-bold shadow-2xs transition-all flex items-center gap-2 active:scale-95"
           title="Clear all requests from current authority dashboard">
           <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
           <span>Clear All</span>
         </button>
-
         <button onclick="logout()"
-          class="px-3.5 py-2.5 bg-red-600/20 hover:bg-red-600/30 text-red-300 border border-red-500/30 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 active:scale-95 shadow-sm cursor-pointer"
-          title="Secure Sign Out">
-          <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/></svg>
-          <span>Exit</span>
+          class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 hover:text-slate-900 border border-slate-200 rounded-xl text-xs md:text-sm font-bold text-slate-700 shadow-2xs transition-all active:scale-95">
+          Exit Dashboard
         </button>
       </div>
     </div>
@@ -274,21 +244,21 @@
     <div id="roleDashboardContent"></div>
 
     <!-- STUDENT VIEW -->
-    <div id="studentPersonalView" class="hidden bg-slate-900/95 border border-slate-800 rounded-3xl p-6 md:p-8 backdrop-blur-xl shadow-2xl space-y-4">
+    <div id="studentPersonalView" class="hidden glass-panel rounded-3xl p-6 md:p-8 shadow-sm space-y-4">
       <!-- DYNAMIC FULLY-APPROVED OFFICIAL GATE PASS LETTER DISPLAY (HIDDEN UNTIL ALL APPROVALS COMPLETE) -->
       <div id="studentApprovedPassCardContainer" class="space-y-4"></div>
 
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+      <div class="flex items-center justify-between border-b border-slate-200/80 pb-3">
         <div>
-          <h4 class="font-bold text-white text-base">Your Leave Applications & Live Sign-Off Status</h4>
-          <p class="text-xs text-slate-400 mt-0.5">Real-time status tracking across institutional clearance tiers.</p>
+          <h4 class="font-bold text-slate-900 text-base">Your Leave Applications & Live Sign-Off Status</h4>
+          <p class="text-xs text-slate-500 mt-0.5">Real-time status tracking across institutional clearance tiers.</p>
         </div>
         <button onclick="loadStudentPersonalStatus()"
-          class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-bold text-slate-300 transition flex items-center gap-1.5 active:scale-95 shadow-sm cursor-pointer">
+          class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-bold text-slate-700 transition flex items-center gap-1.5 active:scale-95">
           <span>Refresh</span>
         </button>
       </div>
-      <div class="overflow-x-auto rounded-2xl border border-slate-800 shadow-inner bg-slate-900/40">
+      <div class="overflow-x-auto rounded-2xl border border-slate-200">
         <table class="enterprise-table min-w-[750px]">
           <thead>
             <tr>
@@ -302,7 +272,7 @@
           </thead>
           <tbody id="studentPersonalBody">
             <tr>
-              <td colspan="6" class="p-8 text-center text-slate-500 font-mono">Loading your passes...</td>
+              <td colspan="6" class="p-8 text-center text-slate-500 font-medium">Loading your passes...</td>
             </tr>
           </tbody>
         </table>
@@ -310,18 +280,18 @@
     </div>
 
     <!-- STUDENT ON-DUTY VIEW -->
-    <div id="studentOnDutyHistoryView" class="hidden bg-slate-900/95 border border-slate-800 rounded-3xl p-6 md:p-8 backdrop-blur-xl shadow-2xl space-y-4">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+    <div id="studentOnDutyHistoryView" class="hidden glass-panel rounded-3xl p-6 md:p-8 shadow-sm space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200/80 pb-3">
         <div>
-          <h4 class="font-bold text-white text-base">Your On-Duty Requests & Live Academic Approval Track</h4>
-          <p class="text-xs text-slate-400 mt-0.5">Academic hierarchy clearance: Counsellor &rarr; Class Advisor &rarr; HOD &rarr; Completed</p>
+          <h4 class="font-bold text-slate-900 text-base">Your On-Duty Requests & Live Academic Approval Track</h4>
+          <p class="text-xs text-slate-500 mt-0.5">Academic hierarchy clearance: Counsellor &rarr; Class Advisor &rarr; HOD &rarr; Completed</p>
         </div>
         <button onclick="loadStudentOnDutyStatus()"
-          class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-bold text-indigo-300 transition flex items-center gap-1.5 active:scale-95 shadow-sm cursor-pointer">
+          class="px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 rounded-xl text-xs font-bold text-indigo-700 transition flex items-center gap-1.5 active:scale-95">
           <span>Refresh OD</span>
         </button>
       </div>
-      <div class="overflow-x-auto rounded-2xl border border-slate-800 shadow-inner bg-slate-900/40">
+      <div class="overflow-x-auto rounded-2xl border border-slate-200">
         <table class="enterprise-table min-w-[750px]">
           <thead>
             <tr>
@@ -335,7 +305,7 @@
           </thead>
           <tbody id="studentOnDutyBody">
             <tr>
-              <td colspan="6" class="p-8 text-center text-slate-500 font-mono">Loading your On-Duty requests...</td>
+              <td colspan="6" class="p-8 text-center text-slate-500 font-medium">Loading your On-Duty requests...</td>
             </tr>
           </tbody>
         </table>
@@ -345,39 +315,37 @@
 
   <!-- FORMAL LETTER MODAL (OFFICIAL INSTITUTIONAL LETTERHEAD) -->
   <div id="letterModal"
-    class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+    class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4">
     <div
-      class="bg-slate-900 rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-2xl border border-slate-800 space-y-5 max-h-[90vh] overflow-y-auto text-slate-100">
+      class="bg-white rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-2xl border border-slate-100 space-y-5 max-h-[90vh] overflow-y-auto">
       
       <!-- LETTERHEAD HEADER -->
-      <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-4">
         <div class="flex items-center gap-3">
-          <div class="w-12 h-12 rounded-xl bg-white p-1 border border-slate-700 flex items-center justify-center">
-            <img src="/public/grt-logo.png"
-              onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='/grt-logo.png';}else if(this.dataset.retry==='1'){this.dataset.retry=2;this.src='/assets/grt-logo.png';}"
-              alt="GRT" class="w-10 h-10 object-contain">
-          </div>
+          <img src="/public/grt-logo.png"
+            onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='/grt-logo.png';}else if(this.dataset.retry==='1'){this.dataset.retry=2;this.src='/assets/grt-logo.png';}"
+            alt="GRT" class="w-12 h-12 object-contain bg-white rounded-xl p-0.5 border border-slate-200">
           <div>
-            <h3 class="text-sm font-bold text-white uppercase tracking-tight">GRT Institute of Engineering and Technology</h3>
-            <p id="letterModalSubtitle" class="text-xs font-semibold text-red-500 uppercase font-mono">Tiruttani • Formal Leave Requisition</p>
+            <h3 class="text-sm font-bold text-slate-900 uppercase">GRT Institute of Engineering and Technology</h3>
+            <p id="letterModalSubtitle" class="text-xs font-semibold text-red-700 uppercase">Tiruttani • Formal Leave Requisition</p>
           </div>
         </div>
-        <button onclick="closeLetterModal()" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700 flex items-center justify-center transition cursor-pointer" aria-label="Close dialog"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+        <button onclick="closeLetterModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition" aria-label="Close dialog"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
       </div>
 
       <!-- DOCUMENT PREVIEW BODY -->
-      <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-inner">
+      <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 shadow-inner">
         <pre id="letterModalContent"
-          class="whitespace-pre-wrap font-mono text-xs md:text-sm text-slate-200 leading-relaxed"></pre>
+          class="whitespace-pre-wrap font-mono text-xs md:text-sm text-slate-800 leading-relaxed"></pre>
       </div>
 
-      <div class="flex flex-wrap justify-end gap-2.5 pt-2 border-t border-slate-800">
+      <div class="flex flex-wrap justify-end gap-2.5 pt-2 border-t border-slate-100">
         <button id="modalDownloadLetterBtn"
-          class="px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white rounded-xl text-xs md:text-sm font-bold shadow-md shadow-indigo-900/30 transition active:scale-95 flex items-center gap-2 cursor-pointer">
+          class="px-4 py-2.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded-xl text-xs md:text-sm font-bold shadow-xs transition active:scale-95 flex items-center gap-2">
           <span>Download Official Letter (PDF)</span>
         </button>
         <button onclick="closeLetterModal()"
-          class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs md:text-sm font-bold shadow-sm transition active:scale-95 cursor-pointer">
+          class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs md:text-sm font-bold shadow-xs transition active:scale-95">
           Done
         </button>
       </div>
@@ -386,36 +354,36 @@
 
   <!-- REJECTION REASON MODAL -->
   <div id="rejectModal"
-    class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+    class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4">
     <div
-      class="bg-slate-900 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border border-slate-800 space-y-4 text-slate-100">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+      class="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border border-slate-100 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
         <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center">
+          <div class="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
             <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
           </div>
-          <h3 id="rejectModalTitle" class="text-base font-bold text-white">Reject Leave Application</h3>
+          <h3 id="rejectModalTitle" class="text-base font-bold text-slate-900">Reject Leave Application</h3>
         </div>
-        <button onclick="closeRejectModal()" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700 flex items-center justify-center transition cursor-pointer" aria-label="Close dialog"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+        <button onclick="closeRejectModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition" aria-label="Close dialog"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
       </div>
-      <p class="text-xs text-slate-400 leading-relaxed">Please select or type the official institutional reason for rejecting this requisition.</p>
+      <p class="text-xs text-slate-600 leading-relaxed">Please select or type the official institutional reason for rejecting this requisition.</p>
       
       <!-- PRESET REASON CHIPS -->
       <div id="presetChipsContainer" class="flex flex-wrap gap-1.5">
         <button type="button" onclick="setRejectReason('Parent disclaimed permission during verification call')"
-          class="px-2.5 py-1 bg-slate-950 hover:bg-rose-950/50 hover:text-rose-300 border border-slate-800 hover:border-rose-500/40 rounded-lg text-xs font-semibold text-slate-300 transition cursor-pointer">
+          class="px-2.5 py-1 bg-slate-100 hover:bg-rose-50 hover:text-rose-700 rounded-lg text-xs font-semibold text-slate-700 transition">
           Parent Disclaimed
         </button>
         <button type="button" onclick="setRejectReason('Inadequate academic attendance (<75%)')"
-          class="px-2.5 py-1 bg-slate-950 hover:bg-rose-950/50 hover:text-rose-300 border border-slate-800 hover:border-rose-500/40 rounded-lg text-xs font-semibold text-slate-300 transition cursor-pointer">
+          class="px-2.5 py-1 bg-slate-100 hover:bg-rose-50 hover:text-rose-700 rounded-lg text-xs font-semibold text-slate-700 transition">
           Inadequate Attendance
         </button>
         <button type="button" onclick="setRejectReason('Scheduled internal examination / lab assessment')"
-          class="px-2.5 py-1 bg-slate-950 hover:bg-rose-950/50 hover:text-rose-300 border border-slate-800 hover:border-rose-500/40 rounded-lg text-xs font-semibold text-slate-300 transition cursor-pointer">
+          class="px-2.5 py-1 bg-slate-100 hover:bg-rose-50 hover:text-rose-700 rounded-lg text-xs font-semibold text-slate-700 transition">
           Exam Scheduled
         </button>
         <button type="button" onclick="setRejectReason('Disciplinary hold by department authority')"
-          class="px-2.5 py-1 bg-slate-950 hover:bg-rose-950/50 hover:text-rose-300 border border-slate-800 hover:border-rose-500/40 rounded-lg text-xs font-semibold text-slate-300 transition cursor-pointer">
+          class="px-2.5 py-1 bg-slate-100 hover:bg-rose-50 hover:text-rose-700 rounded-lg text-xs font-semibold text-slate-700 transition">
           Disciplinary Hold
         </button>
       </div>
@@ -424,16 +392,16 @@
       <input type="hidden" id="rejectRoleLabel" value="" />
       <input type="hidden" id="rejectIsOD" value="false" />
       <div>
-        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Official Rejection Statement <span class="text-rose-400">*</span></label>
+        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Official Rejection Statement <span class="text-rose-600">*</span></label>
         <textarea id="rejectReasonInput" rows="3"
           placeholder="State reason clearly..."
-          class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-rose-500 transition text-white placeholder-slate-500 shadow-inner"></textarea>
+          class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs md:text-sm focus:outline-none focus:border-rose-500 focus:bg-white transition text-slate-800"></textarea>
       </div>
-      <div class="flex justify-end gap-2.5 pt-2 border-t border-slate-800">
+      <div class="flex justify-end gap-2.5 pt-2">
         <button onclick="closeRejectModal()"
-          class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-xl text-xs sm:text-sm font-semibold transition active:scale-95 cursor-pointer">Cancel</button>
+          class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs md:text-sm font-semibold transition active:scale-95">Cancel</button>
         <button onclick="submitRejectPass()"
-          class="px-5 py-2.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white rounded-xl text-xs sm:text-sm font-semibold shadow-md shadow-red-900/40 transition active:scale-95 cursor-pointer">Confirm Rejection</button>
+          class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs md:text-sm font-semibold shadow-xs transition active:scale-95">Confirm Rejection</button>
       </div>
     </div>
   </div>
@@ -445,145 +413,6 @@
     }
   </script>
 
-  <!-- USER PROFILE SLIDE-OVER DRAWER -->
-  <div id="profileDrawerBackdrop" class="hidden drawer-backdrop" onclick="closeProfileDrawer()"></div>
-  <aside id="profileDrawer" class="drawer-panel drawer-closed" aria-label="User Profile Drawer">
-    <div class="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
-      <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 rounded-xl bg-red-500/15 text-red-400 border border-red-500/30 flex items-center justify-center font-bold text-xs">
-          <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
-        </div>
-        <div>
-          <h3 class="text-sm font-bold text-white uppercase tracking-wide">Institutional Profile</h3>
-          <p class="text-[11px] text-slate-400 font-mono">Authenticated Credentials</p>
-        </div>
-      </div>
-      <button onclick="closeProfileDrawer()" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center border border-slate-700 transition active:scale-95 cursor-pointer" aria-label="Close Profile">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-      </button>
-    </div>
-
-    <div class="flex-1 overflow-y-auto p-6 space-y-6">
-      <div class="p-5 rounded-3xl bg-slate-950 text-white shadow-2xl relative overflow-hidden border border-slate-800">
-        <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-red-600/20 rounded-full blur-2xl"></div>
-        <div class="relative z-10 flex items-center gap-4">
-          <div id="drawerAvatarInitials" class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-red-600 to-rose-600 text-white font-black text-xl flex items-center justify-center shadow-lg border-2 border-red-400 shrink-0">
-            U
-          </div>
-          <div class="space-y-1.5 min-w-0">
-            <h4 id="drawerUserName" class="text-lg font-black tracking-tight text-white leading-snug truncate">User Name</h4>
-            <span id="drawerUserRoleBadge" class="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-extrabold uppercase tracking-wider bg-red-500/20 text-red-300 border border-red-500/30">Role</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="space-y-3" id="drawerProfileDetailsContainer">
-        <!-- Dynamically populated by JS based on user details -->
-      </div>
-    </div>
-
-    <div class="p-4 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between gap-3">
-      <button onclick="logout()" class="px-4 py-2.5 bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 rounded-xl text-xs font-bold transition flex items-center gap-2 active:scale-95 cursor-pointer">
-        <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/></svg>
-        <span>Sign Out</span>
-      </button>
-      <button onclick="closeProfileDrawer()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer">
-        Close
-      </button>
-    </div>
-  </aside>
-
-  <!-- NOTIFICATIONS SLIDE-OVER DRAWER -->
-  <div id="notificationsDrawerBackdrop" class="hidden drawer-backdrop" onclick="closeNotificationsDrawer()"></div>
-  <aside id="notificationsDrawer" class="drawer-panel drawer-closed" aria-label="Notifications Drawer">
-    <div class="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
-      <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center justify-center font-bold text-xs">
-          <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/></svg>
-        </div>
-        <div>
-          <h3 class="text-sm font-bold text-white uppercase tracking-wide">Notifications & Alerts</h3>
-          <p class="text-[11px] text-slate-400 font-medium">Real-time status updates & pending actions</p>
-        </div>
-      </div>
-      <button onclick="closeNotificationsDrawer()" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center border border-slate-700 transition active:scale-95 cursor-pointer" aria-label="Close Notifications">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-      </button>
-    </div>
-
-    <div class="flex-1 overflow-y-auto p-5 space-y-3" id="notificationsListContainer">
-      <!-- Populated dynamically by JS -->
-    </div>
-
-    <div class="p-4 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between">
-      <span class="text-[11px] text-slate-400 font-mono">Real-time sync active</span>
-      <button onclick="closeNotificationsDrawer()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer">Done</button>
-    </div>
-  </aside>
-
-  <!-- SETTINGS SLIDE-OVER DRAWER -->
-  <div id="settingsDrawerBackdrop" class="hidden drawer-backdrop" onclick="closeSettingsDrawer()"></div>
-  <aside id="settingsDrawer" class="drawer-panel drawer-closed" aria-label="Settings Drawer">
-    <div class="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
-      <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 rounded-xl bg-slate-800 text-slate-300 border border-slate-700 flex items-center justify-center font-bold text-xs">
-          <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
-        </div>
-        <div>
-          <h3 class="text-sm font-bold text-white uppercase tracking-wide">System Preferences</h3>
-          <p class="text-[11px] text-slate-400 font-medium">Display mode & keyboard shortcuts</p>
-        </div>
-      </div>
-      <button onclick="closeSettingsDrawer()" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center border border-slate-700 transition active:scale-95 cursor-pointer" aria-label="Close Settings">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-      </button>
-    </div>
-
-    <div class="flex-1 overflow-y-auto p-6 space-y-6">
-      <div class="space-y-3">
-        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Interface Display</h4>
-        <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between">
-          <div>
-            <div class="text-sm font-bold text-white">Compact Queue Density</div>
-            <div class="text-xs text-slate-400">Tighter row padding for large data tables</div>
-          </div>
-          <label class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="compactModeToggle" onchange="toggleCompactTableMode(this.checked)" class="sr-only peer">
-            <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
-          </label>
-        </div>
-      </div>
-
-      <div class="space-y-3">
-        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Keyboard Shortcuts</h4>
-        <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2.5 text-xs font-semibold text-slate-300">
-          <div class="flex items-center justify-between">
-            <span>Approve Selected Passes</span>
-            <kbd class="px-2.5 py-1 bg-slate-800 border border-slate-700 rounded-md font-mono text-[11px] text-slate-200 shadow-sm">A</kbd>
-          </div>
-          <div class="flex items-center justify-between">
-            <span>Close Active Modal / Drawer</span>
-            <kbd class="px-2.5 py-1 bg-slate-800 border border-slate-700 rounded-md font-mono text-[11px] text-slate-200 shadow-sm">Esc</kbd>
-          </div>
-          <div class="flex items-center justify-between">
-            <span>Open Profile Drawer</span>
-            <kbd class="px-2.5 py-1 bg-slate-800 border border-slate-700 rounded-md font-mono text-[11px] text-slate-200 shadow-sm">Alt + P</kbd>
-          </div>
-        </div>
-      </div>
-
-      <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs text-slate-400 space-y-1">
-        <div class="font-bold text-white">GRT Institute of Engineering and Technology</div>
-        <div>Campus PassPro Engine • Version 2.4.0 Institutional Edition</div>
-        <div class="text-[11px] text-slate-500 font-mono">Autonomous Governance • AICTE & Anna University Affiliated</div>
-      </div>
-    </div>
-
-    <div class="p-4 border-t border-slate-800 bg-slate-950/80 text-right">
-      <button onclick="closeSettingsDrawer()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer">Close</button>
-    </div>
-  </aside>
-
   <!-- FOOTER -->
   <footer
     class="max-w-7xl w-full mx-auto text-center pt-6 pb-2 border-t border-slate-800/40 text-xs font-semibold text-slate-400 space-y-1 z-10">
@@ -592,20 +421,20 @@
   </footer>
 
   <!-- Application Modular Components -->
-  <script src="/js/utils.js"></script>
-  <script src="/js/api.js"></script>
-  <script src="/js/auth.js"></script>
-  <script src="/js/services/pdfService.js"></script>
-  <script src="/js/modules/studentPortal.js"></script>
-  <script src="/js/modules/onDutyPortal.js"></script>
-  <script src="/js/modules/counselorQueue.js"></script>
-  <script src="/js/modules/advisorQueue.js"></script>
-  <script src="/js/modules/hodQueue.js"></script>
-  <script src="/js/modules/principalQueue.js"></script>
-  <script src="/js/modules/wardenQueue.js"></script>
-  <script src="/js/modules/auditLogs.js"></script>
-  <script src="/js/dashboard.js"></script>
-  <script src="/js/main.js"></script>
+  <script src="/js/utils.js?v=2.6.0"></script>
+  <script src="/js/api.js?v=2.6.0"></script>
+  <script src="/js/auth.js?v=2.6.0"></script>
+  <script src="/js/services/pdfService.js?v=2.6.0"></script>
+  <script src="/js/modules/studentPortal.js?v=2.6.0"></script>
+  <script src="/js/modules/onDutyPortal.js?v=2.6.0"></script>
+  <script src="/js/modules/counselorQueue.js?v=2.6.0"></script>
+  <script src="/js/modules/advisorQueue.js?v=2.6.0"></script>
+  <script src="/js/modules/hodQueue.js?v=2.6.0"></script>
+  <script src="/js/modules/principalQueue.js?v=2.6.0"></script>
+  <script src="/js/modules/wardenQueue.js?v=2.6.0"></script>
+  <script src="/js/modules/auditLogs.js?v=2.6.0"></script>
+  <script src="/js/dashboard.js?v=2.6.0"></script>
+  <script src="/js/main.js?v=2.6.0"></script>
 </body>
 
 </html>
