@@ -112,11 +112,107 @@ function filterExtODAll() {
 window.filterExtODAll = filterExtODAll;
 
 function getAuthorityDashboardHTML(user, config) {
+  const role = user?.role || '';
+
   // ── Extended unified layout for Counselor, Advisor, HOD ──
   if (config.hasOnDutyQueue) {
+    let kpi1Title = 'Pending Action';
+    let kpi1Badge = 'Action Needed';
+    let kpi2Title = 'Approved by You';
+    let kpi2Badge = 'Approved';
+    let kpi3Title = 'Declined';
+    let kpi3Badge = 'Declined';
+
+    let tab1Label = 'Pending';
+    let tab2Label = 'Approved';
+    let tab3Label = 'Declined';
+    let tab4Label = 'All Gate Passes';
+    let tab5Label = 'All OD Requests';
+    let tab6Label = 'Overall Records';
+
+    let roleGuidanceHTML = '';
+
+    if (role === 'counselor') {
+      kpi1Title = 'Pending Ward Review';
+      kpi1Badge = 'Review Desk';
+      kpi2Title = 'Verified by You';
+      kpi2Badge = 'Pre-Screened';
+      kpi3Title = 'Declined Passes';
+      kpi3Badge = 'Declined';
+
+      tab1Label = 'Ward Review Queue';
+      tab2Label = 'Verified Clearances';
+      tab3Label = 'Declined Passes';
+      tab4Label = 'Ward Gate Passes';
+      tab5Label = 'Ward OD Requests';
+      tab6Label = 'Ward Master Archive';
+
+      roleGuidanceHTML = `
+        <div class="p-3.5 bg-slate-950/80 rounded-2xl border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-2 text-slate-300">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span class="font-bold text-white uppercase tracking-wider font-mono">Counselor Verification Desk:</span>
+            <span class="text-slate-400 hidden md:inline">1. Call Parent to confirm &bull; 2. Check Attached Proofs &bull; 3. Confirm Checkbox &bull; 4. Endorse to Advisor</span>
+          </div>
+          <span class="text-[11px] font-mono font-bold text-emerald-400 bg-emerald-950/60 px-2.5 py-0.5 rounded border border-emerald-500/30">Ward: ${user.startRoll || 'Start'} &rarr; ${user.endRoll || 'End'}</span>
+        </div>
+      `;
+    } else if (role === 'advisor') {
+      kpi1Title = 'Awaiting Class Review';
+      kpi1Badge = 'Pre-Screened';
+      kpi2Title = 'Endorsed to HOD';
+      kpi2Badge = 'Advisor Cleared';
+      kpi3Title = 'Declined Passes';
+      kpi3Badge = 'Returned';
+
+      tab1Label = 'Class Review Queue';
+      tab2Label = 'Endorsed Clearances';
+      tab3Label = 'Declined Passes';
+      tab4Label = 'Class Gate Passes';
+      tab5Label = 'Class OD Requests';
+      tab6Label = 'Class Roster Archive';
+
+      roleGuidanceHTML = `
+        <div class="p-3.5 bg-slate-950/80 rounded-2xl border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-2 text-slate-300">
+            <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+            <span class="font-bold text-white uppercase tracking-wider font-mono">Advisory Pipeline:</span>
+            <span class="text-slate-400 hidden md:inline">Step 1: Counselor Verified &rarr; Step 2: Advisor Review (Current Queue) &rarr; Step 3: Forward to HOD</span>
+          </div>
+          <span class="text-[11px] font-mono font-bold text-blue-400 bg-blue-950/60 px-2.5 py-0.5 rounded border border-blue-500/30">Class: ${user.dept || 'Engineering'} - Sec ${user.yearSec || 'A'}</span>
+        </div>
+      `;
+    } else if (role === 'hod') {
+      kpi1Title = 'Department Action Queue';
+      kpi1Badge = 'Sanction Required';
+      kpi2Title = 'Department Authorized';
+      kpi2Badge = 'Final Sanction';
+      kpi3Title = 'Department Declined';
+      kpi3Badge = 'Declined';
+
+      tab1Label = 'Department Clearance Queue';
+      tab2Label = 'Authorized Passes';
+      tab3Label = 'Declined Records';
+      tab4Label = 'Department Gate Passes';
+      tab5Label = 'OD Authorizations';
+      tab6Label = 'Department Master Archive';
+
+      roleGuidanceHTML = `
+        <div class="p-3.5 bg-slate-950/80 rounded-2xl border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-2 text-slate-300">
+            <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+            <span class="font-bold text-white uppercase tracking-wider font-mono">Department Authority:</span>
+            <span class="text-slate-400 hidden md:inline">Final Approval Authority for Academic On-Duty (OD) &bull; Departmental Outpass Clearance Engine</span>
+          </div>
+          <span class="text-[11px] font-mono font-bold text-indigo-400 bg-indigo-950/60 px-2.5 py-0.5 rounded border border-indigo-500/30">Dept: ${user.dept || 'Engineering'}</span>
+        </div>
+      `;
+    }
+
     return `
     <div class="space-y-6">
       ${config.extraHeaderHTML || ''}
+      ${roleGuidanceHTML}
 
       <!-- 3 COMBINED KPI STAT CARDS (Pending / Approved / Rejected) -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
@@ -128,14 +224,14 @@ function getAuthorityDashboardHTML(user, config) {
               <svg class="w-6 h-6 fill-none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
             </div>
             <div>
-              <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Pending Action</div>
+              <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">${kpi1Title}</div>
               <div id="kpi_pending" class="text-2xl font-black text-white mt-0.5 font-mono">0</div>
               <div class="text-[11px] text-slate-400 mt-0.5 font-mono">
                 GP: <span id="kpi_sub_gp_pending" class="font-bold text-amber-400">0</span> &nbsp;|&nbsp; OD: <span id="kpi_sub_od_pending" class="font-bold text-blue-400">0</span>
               </div>
             </div>
           </div>
-          <span id="authBadge_requests" class="text-xs font-bold text-amber-300 bg-amber-950/80 px-2.5 py-1 rounded-lg border border-amber-500/40">Action Needed</span>
+          <span id="authBadge_requests" class="text-xs font-bold text-amber-300 bg-amber-950/80 px-2.5 py-1 rounded-lg border border-amber-500/40">${kpi1Badge}</span>
         </div>
 
         <!-- Approved (GP + OD combined) -->
@@ -145,14 +241,14 @@ function getAuthorityDashboardHTML(user, config) {
               <svg class="w-6 h-6 fill-none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
             <div>
-              <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Approved by You</div>
+              <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">${kpi2Title}</div>
               <div id="kpi_approved" class="text-2xl font-black text-emerald-400 mt-0.5 font-mono">0</div>
               <div class="text-[11px] text-slate-400 mt-0.5 font-mono">
                 GP: <span id="kpi_sub_gp_approved" class="font-bold text-emerald-400">0</span> &nbsp;|&nbsp; OD: <span id="kpi_sub_od_approved" class="font-bold text-blue-400">0</span>
               </div>
             </div>
           </div>
-          <span id="authBadge_approved" class="text-xs font-bold text-emerald-300 bg-emerald-950/80 px-2.5 py-1 rounded-lg border border-emerald-500/40">Approved</span>
+          <span id="authBadge_approved" class="text-xs font-bold text-emerald-300 bg-emerald-950/80 px-2.5 py-1 rounded-lg border border-emerald-500/40">${kpi2Badge}</span>
         </div>
 
         <!-- Rejected (GP + OD combined) -->
@@ -162,14 +258,14 @@ function getAuthorityDashboardHTML(user, config) {
               <svg class="w-6 h-6 fill-none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
             <div>
-              <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Declined</div>
+              <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">${kpi3Title}</div>
               <div id="kpi_rejected" class="text-2xl font-black text-rose-400 mt-0.5 font-mono">0</div>
               <div class="text-[11px] text-slate-400 mt-0.5 font-mono">
                 GP: <span id="kpi_sub_gp_rejected" class="font-bold text-rose-400">0</span> &nbsp;|&nbsp; OD: <span id="kpi_sub_od_rejected" class="font-bold text-rose-300">0</span>
               </div>
             </div>
           </div>
-          <span id="authBadge_rejected" class="text-xs font-bold text-rose-300 bg-rose-950/80 px-2.5 py-1 rounded-lg border border-rose-500/40">Declined</span>
+          <span id="authBadge_rejected" class="text-xs font-bold text-rose-300 bg-rose-950/80 px-2.5 py-1 rounded-lg border border-rose-500/40">${kpi3Badge}</span>
         </div>
 
       </div>
@@ -177,43 +273,43 @@ function getAuthorityDashboardHTML(user, config) {
       <!-- MASTER SECTION CARD -->
       <div class="bg-slate-900/95 border border-slate-800 rounded-3xl p-5 md:p-7 space-y-6 shadow-2xl">
 
-        <!-- TAB NAVIGATION BAR: 6 unified tabs -->
+        <!-- TAB NAVIGATION BAR: 6 unified tabs with role-tailored labels -->
         <nav class="flex flex-wrap items-center gap-1.5 p-1.5 bg-slate-950/80 rounded-2xl border border-slate-800">
           <button id="extTab_btn_requests" onclick="switchExtendedAuthorityTab('requests')"
             class="flex-1 min-w-[110px] px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 bg-blue-600 text-white shadow-md shadow-blue-900/40 border border-blue-500/50">
             <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-            <span>Pending</span>
+            <span>${tab1Label}</span>
             <span id="extBadge_requests" class="px-1.5 py-0.5 rounded-full text-[10px] bg-red-500 text-white font-extrabold leading-none">0</span>
           </button>
 
           <button id="extTab_btn_approved" onclick="switchExtendedAuthorityTab('approved')"
             class="flex-1 min-w-[110px] px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/80">
             <svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-            <span>Approved</span>
+            <span>${tab2Label}</span>
           </button>
 
           <button id="extTab_btn_rejected" onclick="switchExtendedAuthorityTab('rejected')"
             class="flex-1 min-w-[110px] px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/80">
             <svg class="w-3.5 h-3.5 text-rose-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
-            <span>Declined</span>
+            <span>${tab3Label}</span>
           </button>
 
           <button id="extTab_btn_gp_all" onclick="switchExtendedAuthorityTab('gp_all')"
             class="flex-1 min-w-[120px] px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/80">
             <svg class="w-3.5 h-3.5 shrink-0 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
-            <span>All Gate Passes</span>
+            <span>${tab4Label}</span>
           </button>
 
           <button id="extTab_btn_od_all" onclick="switchExtendedAuthorityTab('od_all')"
             class="flex-1 min-w-[120px] px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/80">
             <svg class="w-3.5 h-3.5 shrink-0 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            <span>All OD Requests</span>
+            <span>${tab5Label}</span>
           </button>
 
           <button id="extTab_btn_all" onclick="switchExtendedAuthorityTab('all')"
             class="flex-1 min-w-[120px] px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/80">
             <svg class="w-3.5 h-3.5 shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
-            <span>Overall Records</span>
+            <span>${tab6Label}</span>
           </button>
         </nav>
 
@@ -385,9 +481,47 @@ function getAuthorityDashboardHTML(user, config) {
   }
 
   // ── Executive layout for Principal and Warden ──
+  const isFemale = role === 'girls_warden';
+  const isWarden = role === 'boys_warden' || role === 'girls_warden';
+
+  let kpi1Title = isWarden ? 'Active Departure Passes' : 'College Outpasses Pending';
+  let kpi1Badge = isWarden ? 'Gate Clearance' : 'Executive Action';
+  let kpi2Title = isWarden ? 'Cleared Hosteller Departures' : 'Executive Approvals';
+  let kpi2Badge = isWarden ? 'Movement Cleared' : 'Authorized';
+  let kpi3Title = isWarden ? 'Revoked / Denied Passes' : 'Declined Outpasses';
+  let kpi3Badge = isWarden ? 'Revoked' : 'Declined';
+  let kpi4Title = isWarden ? 'Hostel Movement Register' : 'College Outpass Volume';
+  let kpi4Badge = isWarden ? 'Movement Log' : 'Master Registry';
+
+  let tab1Label = isWarden ? 'Gate Clearance Queue' : 'College Outpass Queue';
+  let tab2Label = isWarden ? 'Cleared Departures' : 'Executive Approvals';
+  let tab3Label = isWarden ? 'Revoked Passes' : 'Declined Outpasses';
+  let tab4Label = isWarden ? 'Hostel Movement Register' : 'College Master Archive';
+
+  let guidanceBannerHTML = isWarden ? `
+    <div class="p-3.5 bg-slate-950/80 rounded-2xl border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div class="flex items-center gap-2 text-slate-300">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="font-bold text-white uppercase tracking-wider font-mono">Gate Verification Desk:</span>
+        <span class="text-slate-400 hidden md:inline">1. Verify Principal Approval Stamp &bull; 2. Check Hosteller Curfew & Expected Return Date/Time &bull; 3. Confirm Departure</span>
+      </div>
+      <span class="text-[11px] font-mono font-bold text-emerald-400 bg-emerald-950/60 px-2.5 py-0.5 rounded border border-emerald-500/30">Live 3.5s Sync Active</span>
+    </div>
+  ` : `
+    <div class="p-3.5 bg-slate-950/80 rounded-2xl border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div class="flex items-center gap-2 text-slate-300">
+        <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+        <span class="font-bold text-white uppercase tracking-wider font-mono">Institutional Governance:</span>
+        <span class="text-slate-400 hidden md:inline">College-Wide Outpass Final Clearance Engine &bull; Oversight across all academic engineering departments</span>
+      </div>
+      <span class="text-[11px] font-mono font-bold text-blue-400 bg-blue-950/60 px-2.5 py-0.5 rounded border border-blue-500/30">Institution-Wide Scope</span>
+    </div>
+  `;
+
   return `
     <div class="space-y-6">
       ${config.extraHeaderHTML || ''}
+      ${guidanceBannerHTML}
 
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div id="kpiCard_requests" class="kpi-card active-kpi-card flex items-center justify-between p-4 md:p-5 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-lg cursor-pointer transition-all hover:scale-[1.01] active:scale-95" onclick="switchAuthorityTab('requests')">
@@ -396,11 +530,11 @@ function getAuthorityDashboardHTML(user, config) {
               <svg class="w-6 h-6 fill-none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
             </div>
             <div>
-              <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Pending Action</div>
+              <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">${kpi1Title}</div>
               <div id="kpi_pending" class="text-2xl font-black text-white mt-0.5 font-mono">0</div>
             </div>
           </div>
-          <span id="authBadge_requests" class="text-xs font-bold text-amber-300 bg-amber-950/80 px-2.5 py-1 rounded-lg border border-amber-500/40">Action Needed</span>
+          <span id="authBadge_requests" class="text-xs font-bold text-amber-300 bg-amber-950/80 px-2.5 py-1 rounded-lg border border-amber-500/40">${kpi1Badge}</span>
         </div>
 
         <div id="kpiCard_approved" class="kpi-card flex items-center justify-between p-4 md:p-5 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-lg cursor-pointer transition-all hover:scale-[1.01] opacity-90 hover:opacity-100 active:scale-95" onclick="switchAuthorityTab('approved')">
@@ -409,11 +543,11 @@ function getAuthorityDashboardHTML(user, config) {
               <svg class="w-6 h-6 fill-none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
             <div>
-              <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Approved by You</div>
+              <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">${kpi2Title}</div>
               <div id="kpi_approved" class="text-2xl font-black text-emerald-400 mt-0.5 font-mono">0</div>
             </div>
           </div>
-          <span id="authBadge_approved" class="text-xs font-bold text-emerald-300 bg-emerald-950/80 px-2.5 py-1 rounded-lg border border-emerald-500/40">Approved</span>
+          <span id="authBadge_approved" class="text-xs font-bold text-emerald-300 bg-emerald-950/80 px-2.5 py-1 rounded-lg border border-emerald-500/40">${kpi2Badge}</span>
         </div>
 
         <div id="kpiCard_rejected" class="kpi-card flex items-center justify-between p-4 md:p-5 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-lg cursor-pointer transition-all hover:scale-[1.01] opacity-90 hover:opacity-100 active:scale-95" onclick="switchAuthorityTab('rejected')">
@@ -422,11 +556,11 @@ function getAuthorityDashboardHTML(user, config) {
               <svg class="w-6 h-6 fill-none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
             <div>
-              <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Declined</div>
+              <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">${kpi3Title}</div>
               <div id="kpi_rejected" class="text-2xl font-black text-rose-400 mt-0.5 font-mono">0</div>
             </div>
           </div>
-          <span id="authBadge_rejected" class="text-xs font-bold text-rose-300 bg-rose-950/80 px-2.5 py-1 rounded-lg border border-rose-500/40">Declined</span>
+          <span id="authBadge_rejected" class="text-xs font-bold text-rose-300 bg-rose-950/80 px-2.5 py-1 rounded-lg border border-rose-500/40">${kpi3Badge}</span>
         </div>
 
         <div id="kpiCard_all" class="kpi-card flex items-center justify-between p-4 md:p-5 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-lg cursor-pointer transition-all hover:scale-[1.01] opacity-90 hover:opacity-100 active:scale-95" onclick="switchAuthorityTab('all')">
@@ -435,15 +569,39 @@ function getAuthorityDashboardHTML(user, config) {
               <svg class="w-6 h-6 fill-none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
             </div>
             <div>
-              <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Records</div>
+              <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">${kpi4Title}</div>
               <div id="kpi_total" class="text-2xl font-black text-white mt-0.5 font-mono">0</div>
             </div>
           </div>
-          <span id="authBadge_all" class="text-xs font-bold text-blue-300 bg-blue-950/80 px-2.5 py-1 rounded-lg border border-blue-500/40">All Records</span>
+          <span id="authBadge_all" class="text-xs font-bold text-blue-300 bg-blue-950/80 px-2.5 py-1 rounded-lg border border-blue-500/40">${kpi4Badge}</span>
         </div>
       </div>
 
       <div class="bg-slate-900/95 border border-slate-800 rounded-3xl p-5 md:p-7 space-y-6 shadow-2xl">
+
+        <!-- 4-TAB NAVIGATION BAR -->
+        <nav class="flex flex-wrap items-center gap-1.5 p-1.5 bg-slate-950/80 rounded-2xl border border-slate-800">
+          <button id="tab_btn_requests" onclick="switchAuthorityTab('requests')"
+            class="flex-1 min-w-[120px] px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 bg-blue-600 text-white shadow-md shadow-blue-900/40 border border-blue-500/50">
+            <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            <span>${tab1Label}</span>
+          </button>
+          <button id="tab_btn_approved" onclick="switchAuthorityTab('approved')"
+            class="flex-1 min-w-[120px] px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/80">
+            <svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+            <span>${tab2Label}</span>
+          </button>
+          <button id="tab_btn_rejected" onclick="switchAuthorityTab('rejected')"
+            class="flex-1 min-w-[120px] px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/80">
+            <svg class="w-3.5 h-3.5 text-rose-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+            <span>${tab3Label}</span>
+          </button>
+          <button id="tab_btn_all" onclick="switchAuthorityTab('all')"
+            class="flex-1 min-w-[120px] px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/80">
+            <svg class="w-3.5 h-3.5 shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+            <span>${tab4Label}</span>
+          </button>
+        </nav>
 
         <div id="authSec_requests" class="space-y-4">
           <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
@@ -715,22 +873,39 @@ function openDashboard(user) {
 
     if (user.role === 'counselor') {
       const counselorConfig = {
-        requestsTitle: 'Counselor Verification Queue (Parent Call Verification)',
-        requestsSubtitle: 'Call parent to verify leave passes, and review On-Duty requests before forwarding to Class Advisor.',
+        requestsTitle: 'Counselor Review & Verification Queue',
+        requestsSubtitle: 'Verify student leave reasons via parent phone call and endorse legitimate requests to Class Advisor.',
         queueContainerId: 'counselorQueue',
         hasOnDutyQueue: true,
         onDutyQueueContainerId: 'counselorODQueue',
         extraHeaderHTML: `
-          <div class="bg-slate-900/95 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-wrap justify-between items-center gap-4">
-            <div class="space-y-1">
-              <h3 class="font-bold text-white text-base flex items-center gap-2">
-                <span>Counseling Ward Jurisdiction</span>
-                <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-mono font-bold rounded">Review Authority</span>
-              </h3>
-              <p class="text-xs text-slate-400">Assigned Ward: <span class="font-mono font-bold bg-emerald-950/80 px-2.5 py-1 rounded-md border border-emerald-500/40 text-emerald-300">${user.startRoll || 'Start'}</span> to <span class="font-mono font-bold bg-emerald-950/80 px-2.5 py-1 rounded-md border border-emerald-500/40 text-emerald-300">${user.endRoll || 'End'}</span></p>
+          <div class="bg-slate-900/95 border border-slate-800 rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <h3 class="font-bold text-white text-base md:text-lg">Class Counselor Verification Desk</h3>
+                  <span class="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-400 text-xs font-mono font-bold rounded-md border border-emerald-500/30">Review Authority</span>
+                </div>
+                <p class="text-xs text-slate-400">Assigned Ward Jurisdiction: <span class="font-mono font-bold bg-slate-950 px-2.5 py-1 rounded-md border border-emerald-500/40 text-emerald-300">${user.startRoll || 'Start'} &rarr; ${user.endRoll || 'End'}</span></p>
+              </div>
+              <div class="flex items-center gap-2 text-xs text-slate-300 font-mono bg-slate-950/90 px-3.5 py-2 rounded-xl border border-slate-800">
+                <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                <span>Parent Call Verification Required</span>
+              </div>
             </div>
-            <div class="text-xs text-slate-400 font-mono bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
-              Mandatory Parent Call & Verification Required
+            <div class="pt-3 border-t border-slate-800/80 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-800/60 flex items-center gap-2.5 text-slate-300">
+                <span class="w-5 h-5 rounded-full bg-blue-600/30 text-blue-400 font-mono font-bold flex items-center justify-center shrink-0 text-[11px]">1</span>
+                <span>Call parent via listed contact to verify reason</span>
+              </div>
+              <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-800/60 flex items-center gap-2.5 text-slate-300">
+                <span class="w-5 h-5 rounded-full bg-blue-600/30 text-blue-400 font-mono font-bold flex items-center justify-center shrink-0 text-[11px]">2</span>
+                <span>Check supporting documents / medical proof</span>
+              </div>
+              <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-800/60 flex items-center gap-2.5 text-slate-300">
+                <span class="w-5 h-5 rounded-full bg-emerald-600/30 text-emerald-400 font-mono font-bold flex items-center justify-center shrink-0 text-[11px]">3</span>
+                <span>Confirm parent check & endorse to Advisor</span>
+              </div>
             </div>
           </div>
         `
@@ -739,18 +914,34 @@ function openDashboard(user) {
     } else if (user.role === 'advisor') {
       const advisorConfig = {
         requestsTitle: `Class Advisor Review Queue (${user.dept} - Section ${user.yearSec})`,
-        requestsSubtitle: 'Students pre-verified by counselors awaiting Class Advisor review and forwarding to HOD.',
+        requestsSubtitle: 'Students pre-screened by counselors awaiting Class Advisor endorsement to Head of Department.',
         queueContainerId: 'advisorQueue',
         hasOnDutyQueue: true,
         onDutyQueueContainerId: 'advisorODQueue',
         extraHeaderHTML: `
-          <div class="bg-slate-900/95 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-wrap items-center justify-between gap-4">
-            <div class="space-y-1">
-              <h3 class="font-bold text-white text-base flex items-center gap-2">
-                <span>Class Advisory Jurisdiction</span>
-                <span class="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-[10px] font-mono font-bold rounded">Academic Governance</span>
-              </h3>
-              <p class="text-xs text-slate-400 font-mono">Department: <span class="font-bold text-blue-400">${user.dept}</span> • Section: <span class="font-bold text-blue-400">${user.yearSec}</span> • Academic Year: <span class="font-bold text-blue-400">${user.academicYear || '3 Year'}</span></p>
+          <div class="bg-slate-900/95 border border-slate-800 rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <h3 class="font-bold text-white text-base md:text-lg">Class Advisor • Academic Roster Management</h3>
+                  <span class="px-2.5 py-0.5 bg-blue-500/20 text-blue-400 text-xs font-mono font-bold rounded-md border border-blue-500/30">Class Governance</span>
+                </div>
+                <p class="text-xs text-slate-400 font-mono">Department: <span class="font-bold text-blue-400">${user.dept}</span> &bull; Section: <span class="font-bold text-blue-400">${user.yearSec}</span> &bull; Standing: <span class="font-bold text-blue-400">${user.academicYear || '3 Year'}</span></p>
+              </div>
+              <div class="flex items-center gap-2 text-xs text-slate-300 font-mono bg-slate-950/90 px-3.5 py-2 rounded-xl border border-slate-800">
+                <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+                <span>Pre-Screened by Counselors</span>
+              </div>
+            </div>
+            <div class="pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-300">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-white font-mono uppercase tracking-wider">Workflow Pipeline:</span>
+                <span class="px-2 py-0.5 bg-emerald-950/60 text-emerald-400 rounded border border-emerald-500/30 font-semibold">1. Counselor Verified &check;</span>
+                <span class="text-slate-600">&rarr;</span>
+                <span class="px-2 py-0.5 bg-blue-950/60 text-blue-300 rounded border border-blue-500/30 font-bold">2. Advisor Endorsement (Current)</span>
+                <span class="text-slate-600">&rarr;</span>
+                <span class="px-2 py-0.5 bg-slate-950/80 text-slate-400 rounded border border-slate-800 font-semibold">3. HOD Approval</span>
+              </div>
             </div>
           </div>
         `
@@ -759,18 +950,34 @@ function openDashboard(user) {
     } else if (user.role === 'hod') {
       const hodConfig = {
         requestsTitle: `Head of Department Queue (${user.dept} Department)`,
-        requestsSubtitle: 'Requests endorsed by Class Advisors awaiting Department Head authorization (Final Approval for On-Duty).',
+        requestsSubtitle: 'Department-level pass endorsements and final authorization for Academic On-Duty (OD) applications.',
         queueContainerId: 'hodQueue',
         hasOnDutyQueue: true,
         onDutyQueueContainerId: 'hodODQueue',
         extraHeaderHTML: `
-          <div class="bg-slate-900/95 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-wrap items-center justify-between gap-4">
-            <div class="space-y-1">
-              <h3 class="font-bold text-white text-base flex items-center gap-2">
-                <span>Department Head Authority</span>
-                <span class="px-2 py-0.5 bg-indigo-500/20 text-indigo-400 text-[10px] font-mono font-bold rounded">Executive Endorsement</span>
-              </h3>
-              <p class="text-xs text-slate-400 font-mono">Department: <span class="font-bold text-blue-400">${user.dept} Engineering</span> • Final Approval Authority for Academic OD</p>
+          <div class="bg-slate-900/95 border border-slate-800 rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <h3 class="font-bold text-white text-base md:text-lg">Department Directorate &bull; ${user.dept} Engineering</h3>
+                  <span class="px-2.5 py-0.5 bg-indigo-500/20 text-indigo-400 text-xs font-mono font-bold rounded-md border border-indigo-500/30">Executive Sanction</span>
+                </div>
+                <p class="text-xs text-slate-400">Final Sanction Authority for Academic On-Duty (OD) &bull; Department Gate Pass Clearance</p>
+              </div>
+              <div class="flex items-center gap-2 text-xs text-slate-300 font-mono bg-slate-950/90 px-3.5 py-2 rounded-xl border border-slate-800">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span>Department Clearance Active</span>
+              </div>
+            </div>
+            <div class="pt-3 border-t border-slate-800/80 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-800/60 flex items-center justify-between text-slate-300 font-mono">
+                <span class="text-slate-400">Academic OD Sanctions:</span>
+                <span class="font-bold text-indigo-400">Final Approval Tier</span>
+              </div>
+              <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-800/60 flex items-center justify-between text-slate-300 font-mono">
+                <span class="text-slate-400">Gate Pass Endorsements:</span>
+                <span class="font-bold text-blue-400">Forward to Principal</span>
+              </div>
             </div>
           </div>
         `
@@ -778,17 +985,27 @@ function openDashboard(user) {
       if (content) content.innerHTML = getAuthorityDashboardHTML(user, hodConfig);
     } else if (user.role === 'principal') {
       const principalConfig = {
-        requestsTitle: 'Principal Directorate Final Clearance',
-        requestsSubtitle: 'College-wide outpass requisitions for Executive Directorate approval.',
+        requestsTitle: 'Executive Directorate Outpass Clearance Queue',
+        requestsSubtitle: 'College-wide outpass requisitions endorsed across all departments for final Institutional clearance.',
         queueContainerId: 'principalQueue',
         extraHeaderHTML: `
-          <div class="bg-slate-900/95 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-wrap items-center justify-between gap-4">
-            <div class="space-y-1">
-              <h3 class="font-bold text-white text-base flex items-center gap-2">
-                <span>Executive Directorate Authority</span>
-                <span class="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-[10px] font-mono font-bold rounded">Institution-Wide Governance</span>
-              </h3>
-              <p class="text-xs text-slate-400 font-mono">College-Wide Outpass Approval • Final Clearance Engine</p>
+          <div class="bg-slate-900/95 border border-slate-800 rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <h3 class="font-bold text-white text-base md:text-lg">Principal Executive Directorate</h3>
+                  <span class="px-2.5 py-0.5 bg-blue-500/20 text-blue-400 text-xs font-mono font-bold rounded-md border border-blue-500/30">Institutional Governance</span>
+                </div>
+                <p class="text-xs text-slate-400">GRT Institute of Engineering and Technology &bull; College-Wide Outpass Clearance Engine</p>
+              </div>
+              <div class="flex items-center gap-2 text-xs text-slate-300 font-mono bg-slate-950/90 px-3.5 py-2 rounded-xl border border-slate-800">
+                <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+                <span>Institution-Wide Governance</span>
+              </div>
+            </div>
+            <div class="pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400 font-mono">
+              <div>Jurisdiction: <span class="font-bold text-white">All Engineering Departments (CSE, ECE, EEE, MECH, CIVIL, IT, BME, AIDS, MBA)</span></div>
+              <div class="text-emerald-400 font-bold">Autonomous Institutional Authority</div>
             </div>
           </div>
         `
@@ -801,13 +1018,33 @@ function openDashboard(user) {
         requestsSubtitle: `Approved leave requests received after Principal approval for ${isFemale ? 'Girls' : 'Boys'} Hostel clearance.`,
         queueContainerId: 'wardenRequestsTableContainer',
         extraHeaderHTML: `
-          <div class="bg-slate-900/95 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-wrap items-center justify-between gap-4">
-            <div class="space-y-1">
-              <h3 class="font-bold text-white text-base flex items-center gap-2">
-                <span>${isFemale ? 'Girls' : 'Boys'} Hostel Warden Governance</span>
-                <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-mono font-bold rounded">Movement Clearance</span>
-              </h3>
-              <p class="text-xs text-slate-400 font-mono">${isFemale ? 'Female' : 'Male'} Hostellers Only • Gate Window & Movement Verification</p>
+          <div class="bg-slate-900/95 border border-slate-800 rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <h3 class="font-bold text-white text-base md:text-lg">${isFemale ? 'Girls' : 'Boys'} Hostel Movement & Gate Desk</h3>
+                  <span class="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-400 text-xs font-mono font-bold rounded-md border border-emerald-500/30">Gate Clearance</span>
+                </div>
+                <p class="text-xs text-slate-400 font-mono">${isFemale ? 'Female' : 'Male'} Hostellers Only &bull; Gate Window & Movement Verification</p>
+              </div>
+              <div class="flex items-center gap-2 text-xs text-slate-300 font-mono bg-slate-950/90 px-3.5 py-2 rounded-xl border border-slate-800">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Real-Time 3.5s Movement Sync</span>
+              </div>
+            </div>
+            <div class="pt-3 border-t border-slate-800/80 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-slate-300">
+              <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-800/60 flex items-center gap-2">
+                <span class="font-bold text-blue-400 font-mono">1.</span>
+                <span>Verify Principal Approval Stamp</span>
+              </div>
+              <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-800/60 flex items-center gap-2">
+                <span class="font-bold text-blue-400 font-mono">2.</span>
+                <span>Check Curfew & Return Date/Time</span>
+              </div>
+              <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-800/60 flex items-center gap-2">
+                <span class="font-bold text-emerald-400 font-mono">3.</span>
+                <span>Log Gate Exit & Physical Departure</span>
+              </div>
             </div>
           </div>
         `

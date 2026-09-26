@@ -26,6 +26,7 @@ function switchAuthorityTab(tabName) {
   tabs.forEach(t => {
     const secEl = document.getElementById(`authSec_${t}`);
     const cardEl = document.getElementById(`kpiCard_${t}`);
+    const btnEl = document.getElementById(`tab_btn_${t}`);
 
     if (secEl) {
       if (t === tabName) secEl.classList.remove('hidden');
@@ -33,8 +34,21 @@ function switchAuthorityTab(tabName) {
     }
 
     if (cardEl) {
-      if (t === tabName) cardEl.classList.add('active-kpi-card');
-      else cardEl.classList.remove('active-kpi-card');
+      if (t === tabName) {
+        cardEl.classList.add('active-kpi-card');
+        cardEl.classList.remove('opacity-90');
+      } else {
+        cardEl.classList.remove('active-kpi-card');
+        cardEl.classList.add('opacity-90');
+      }
+    }
+
+    if (btnEl) {
+      if (t === tabName) {
+        btnEl.className = 'flex-1 min-w-[120px] px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 bg-blue-600 text-white shadow-md shadow-blue-900/40 border border-blue-500/50';
+      } else {
+        btnEl.className = 'flex-1 min-w-[120px] px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800/80';
+      }
     }
   });
 }
