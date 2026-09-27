@@ -1,0 +1,52 @@
+<!-- POPUP MODAL 4: STUDENT PROFILE MODAL -->
+<div id="studentProfileModal" class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto modal-backdrop-animate">
+  <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full p-6 sm:p-7 space-y-5 modal-content-animate my-auto">
+    <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold font-mono text-sm border border-blue-100">
+          ID
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-slate-900">Student Profile</h3>
+          <p class="text-[11px] text-slate-400">Institutional record information</p>
+        </div>
+      </div>
+      <button type="button" onclick="closeStudentProfileModal()" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition" aria-label="Close dialog">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+      <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+        <span class="text-slate-400 block text-[10px]">Student Name</span>
+        <span id="profName" class="font-bold text-slate-900 text-sm">-</span>
+      </div>
+      <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+        <span class="text-slate-400 block text-[10px]">Roll / Register Number</span>
+        <span id="profRoll" class="font-bold font-mono text-slate-900 text-sm">-</span>
+      </div>
+      <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+        <span class="text-slate-400 block text-[10px]">Department &amp; Section</span>
+        <span id="profDeptSec" class="font-bold text-slate-900">-</span>
+      </div>
+      <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+        <span class="text-slate-400 block text-[10px]">Accommodation</span>
+        <span id="profAccom" class="font-bold text-slate-900">-</span>
+      </div>
+      <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+        <span class="text-slate-400 block text-[10px]">Assigned Counselor</span>
+        <span id="profCounselor" class="font-bold text-slate-900">-</span>
+      </div>
+      <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+        <span class="text-slate-400 block text-[10px]">Parent / Guardian Contact</span>
+        <span id="profParent" class="font-bold font-mono text-slate-900">-</span>
+      </div>
+    </div>
+
+    <div class="flex justify-end pt-2">
+      <button type="button" onclick="closeStudentProfileModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition">
+        Close
+      </button>
+    </div>
+  </div>
+</div>

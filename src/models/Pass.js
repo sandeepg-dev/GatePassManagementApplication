@@ -99,25 +99,62 @@ const PassSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  requestCategory: {
+    type: String,
+    enum: ['gate_pass', 'leave'],
+    default: 'gate_pass',
+    index: true
+  },
+  leaveType: {
+    type: String,
+    default: 'Personal Leave'
+  },
+  placeOrEvent: {
+    type: String,
+    default: ''
+  },
+  destination: {
+    type: String,
+    default: ''
+  },
+  hostelRoom: {
+    type: String,
+    default: ''
+  },
+  hostelBlock: {
+    type: String,
+    default: ''
+  },
+  hostelDepartureInfo: {
+    type: String,
+    default: ''
+  },
+  hostelReturnInfo: {
+    type: String,
+    default: ''
+  },
+  contactNumber: {
+    type: String,
+    default: ''
+  },
+  fromDate: {
+    type: String,
+    default: ''
+  },
+  toDate: {
+    type: String,
+    default: ''
+  },
+  additionalDetails: {
+    type: String,
+    default: ''
+  },
   formalLetter: {
     type: String,
     default: ''
   },
   status: {
     type: String,
-    enum: [
-      'Pending Counselor',
-      'Pending Advisor',
-      'Pending HOD',
-      'Pending Principal',
-      'Pending Boys Warden',
-      'Pending Girls Warden',
-      'Approved',
-      'Exited',
-      'Returned',
-      'Expired',
-      'Rejected'
-    ],
     default: 'Pending Counselor',
     index: true
   },
@@ -154,10 +191,12 @@ const PassSchema = new mongoose.Schema({
     time: String
   },
   principalApproval: {
+    principalName: String,
     approved: { type: Boolean, default: false },
     time: String
   },
   wardenApproval: {
+    wardenName: String,
     approved: { type: Boolean, default: false },
     time: String
   },

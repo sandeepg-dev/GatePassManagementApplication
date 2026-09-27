@@ -33,9 +33,9 @@ function switchWardenSection(sectionName) {
 
     if (tabBtn) {
       if (sec === sectionName) {
-        tabBtn.className = 'warden-nav-tab active-warden-tab px-5 py-2.5 rounded-2xl text-xs font-black shadow-sm flex items-center gap-2 transition-all bg-white text-slate-900 border border-slate-200';
+        tabBtn.className = 'warden-nav-tab active-warden-tab px-4 py-2 rounded-lg text-xs font-semibold shadow-xs flex items-center gap-2 transition bg-blue-600 text-white border border-blue-500';
       } else {
-        tabBtn.className = 'warden-nav-tab px-5 py-2.5 rounded-2xl text-xs font-bold text-slate-500 hover:text-slate-800 hover:bg-white/60 transition-all flex items-center gap-2 border border-transparent';
+        tabBtn.className = 'warden-nav-tab px-4 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition flex items-center gap-2 border border-transparent';
       }
     }
   });

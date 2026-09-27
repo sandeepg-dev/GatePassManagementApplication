@@ -7,7 +7,7 @@ const OnDuty = require('../models/OnDuty');
 const Student = require('../models/Student');
 const User = require('../models/User');
 const { getISTTimeString } = require('../utils/formatters');
-const { generateOnDutyLetter } = require('../utils/letterGenerator');
+const { generateFormalLetter, generateOnDutyLetter } = require('../utils/letterGenerator');
 
 /**
  * Tier 1: Class Counselor Phone Verification & Clearance
@@ -34,11 +34,15 @@ async function approveCounselor(req, res) {
       approved: true,
       time: now
     };
+    if (typeof generateFormalLetter === 'function') {
+      pass.formalLetter = generateFormalLetter(pass, pass.reason, pass.appliedTime, pass);
+    }
 
     await pass.save();
     res.json({
       success: true,
-      message: `Verified by Counselor (${cName}) & forwarded to Class Advisor.`
+      message: `Verified by Counselor (${cName}) & forwarded to Class Advisor.`,
+      pass
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message || 'Counselor verification failed', error: err.message });
@@ -80,11 +84,15 @@ async function approveAdvisor(req, res) {
       approved: true,
       time: now
     };
+    if (typeof generateFormalLetter === 'function') {
+      pass.formalLetter = generateFormalLetter(pass, pass.reason, pass.appliedTime, pass);
+    }
 
     await pass.save();
     res.json({
       success: true,
-      message: `Approved by Class Advisor (${aName}) & routed to HOD.`
+      message: `Approved by Class Advisor (${aName}) & routed to HOD.`,
+      pass
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message || 'Advisor approval failed', error: err.message });
@@ -93,6 +101,9 @@ async function approveAdvisor(req, res) {
 
 /**
  * Tier 3: Department Head (HOD) Authorization
+ * Workflow Rules:
+ * 1. Leave Request: Student -> Counselor -> Class Advisor -> HOD -> CLOSED
+ * 2. Gate Pass (Both Day Scholar & Hosteller): Student -> Counselor -> Class Advisor -> HOD -> Principal -> (Warden if Hosteller) -> Final Approval
  */
 async function approveHod(req, res) {
   try {
@@ -105,17 +116,39 @@ async function approveHod(req, res) {
     if (!pass) return res.status(404).json({ success: false, message: 'Pass not found' });
 
     const hName = hodName || 'Department HOD';
-    pass.status = 'Pending Principal';
+    const now = getISTTimeString();
     pass.hodApproval = {
       hodName: hName,
       approved: true,
-      time: getISTTimeString()
+      time: now
     };
 
+    // 1. Leave Request: Ends at HOD -> CLOSED
+    if (pass.requestCategory === 'leave') {
+      pass.status = 'Approved';
+      pass.approvalTime = now;
+      if (typeof generateFormalLetter === 'function') {
+        pass.formalLetter = generateFormalLetter(pass, pass.reason, pass.appliedTime, pass);
+      }
+      await pass.save();
+      return res.json({
+        success: true,
+        message: `Leave Request authorized by HOD (${hName}) and successfully closed.`,
+        pass
+      });
+    }
+
+    // 2. Gate Pass:
+    // ALL Gate Passes (Day Scholar and Hosteller) route to Principal for Institutional Directorate Clearance
+    pass.status = 'Pending Principal';
+    if (typeof generateFormalLetter === 'function') {
+      pass.formalLetter = generateFormalLetter(pass, pass.reason, pass.appliedTime, pass);
+    }
     await pass.save();
-    res.json({
+    return res.json({
       success: true,
-      message: `HOD (${hName}) authorized! Forwarded to Principal.`
+      message: `Gate Pass authorized by HOD (${hName}) & routed to Principal.`,
+      pass
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message || 'HOD authorization failed', error: err.message });
@@ -123,11 +156,13 @@ async function approveHod(req, res) {
 }
 
 /**
- * Tier 4: Principal Directorate Clearance & Window Activation
+ * Tier 4: Principal Directorate Clearance
+ * Day Scholar: Student -> Counselor -> Advisor -> HOD -> Principal -> FINAL APPROVAL (Gate Pass Ready)
+ * Hosteller  : Student -> Counselor -> Advisor -> HOD -> Principal -> Warden -> FINAL APPROVAL (Gate Pass Ready)
  */
 async function approvePrincipal(req, res) {
   try {
-    const { passId } = req.body;
+    const { passId, principalName } = req.body;
     if (!mongoose.Types.ObjectId.isValid(passId)) {
       return res.status(400).json({ success: false, message: 'Invalid pass ID' });
     }
@@ -136,43 +171,39 @@ async function approvePrincipal(req, res) {
     if (!pass) return res.status(404).json({ success: false, message: 'Pass not found' });
 
     const now = new Date();
-    pass.principalApproval = { approved: true, time: getISTTimeString(now) };
+    const expiry = new Date(now.getTime() + 20 * 60 * 1000);
+    const pName = principalName || 'Principal';
 
-    const cleanRoll = (pass.rollNo || '').trim().toUpperCase();
-    const student = await Student.findOne({ rollNo: cleanRoll });
-    const studentUser = await User.findOne({
-      userId: cleanRoll.toLowerCase(),
-      role: 'student'
-    });
+    pass.principalApproval = { principalName: pName, approved: true, time: getISTTimeString(now) };
 
-    const isHostel =
-      (/hoste?l|^h$/i.test(pass.accommodation || '') && !/day/i.test(pass.accommodation || '')) ||
-      (/hoste?l|^h$/i.test(student?.accommodation || '') && !/day/i.test(student?.accommodation || '')) ||
-      (/hoste?l|^h$/i.test(studentUser?.accommodation || '') && !/day/i.test(studentUser?.accommodation || ''));
-
+    const isHostel = (/hoste?l|^h$/i.test(pass.accommodation || '') && !/day/i.test(pass.accommodation || ''));
     if (isHostel) {
-      const rawGender = student?.gender || studentUser?.gender || pass.gender || 'Male';
-      const isFemale = /^female$/i.test(String(rawGender).trim());
-
-      pass.accommodation = 'Hosteller';
-      pass.gender = isFemale ? 'Female' : 'Male';
+      // Hosteller Gate Pass routes to Warden for hostel clearance
+      const isFemale = /^female$/i.test(String(pass.gender || '').trim());
       pass.status = isFemale ? 'Pending Girls Warden' : 'Pending Boys Warden';
+      if (typeof generateFormalLetter === 'function') {
+        pass.formalLetter = generateFormalLetter(pass, pass.reason, pass.appliedTime, pass);
+      }
       await pass.save();
       return res.json({
         success: true,
-        message: `Principal clearance approved! Forwarded directly to ${isFemale ? 'Girls Warden' : 'Boys Warden'}.`
+        message: `Gate Pass approved by Principal (${pName}) & forwarded to ${isFemale ? 'Girls' : 'Boys'} Hostel Warden.`,
+        pass
       });
     } else {
-      const expiry = new Date(now.getTime() + 20 * 60 * 1000);
-      pass.accommodation = 'Day Scholar';
+      // Day Scholar: Principal is Final Clearance -> Gate Pass Ready
       pass.status = 'Approved';
       pass.approvalTime = getISTTimeString(now);
       pass.validUntil = getISTTimeString(expiry);
       pass.expiresAt = expiry;
+      if (typeof generateFormalLetter === 'function') {
+        pass.formalLetter = generateFormalLetter(pass, pass.reason, pass.appliedTime, pass);
+      }
       await pass.save();
       return res.json({
         success: true,
-        message: 'Principal final approval granted! 20-minute departure gate window active.'
+        message: 'Principal final authorization granted! Gate Pass is ready.',
+        pass
       });
     }
   } catch (err) {
@@ -185,7 +216,7 @@ async function approvePrincipal(req, res) {
  */
 async function approveWarden(req, res) {
   try {
-    const { passId } = req.body;
+    const { passId, wardenName } = req.body;
     if (!mongoose.Types.ObjectId.isValid(passId)) {
       return res.status(400).json({ success: false, message: 'Invalid pass ID' });
     }
@@ -195,17 +226,22 @@ async function approveWarden(req, res) {
 
     const now = new Date();
     const expiry = new Date(now.getTime() + 20 * 60 * 1000);
+    const wName = wardenName || 'Hostel Warden';
 
-    pass.wardenApproval = { approved: true, time: getISTTimeString(now) };
+    pass.wardenApproval = { wardenName: wName, approved: true, time: getISTTimeString(now) };
     pass.status = 'Approved';
     pass.approvalTime = getISTTimeString(now);
     pass.validUntil = getISTTimeString(expiry);
     pass.expiresAt = expiry;
+    if (typeof generateFormalLetter === 'function') {
+      pass.formalLetter = generateFormalLetter(pass, pass.reason, pass.appliedTime, pass);
+    }
 
     await pass.save();
     return res.json({
       success: true,
-      message: 'Hostel Warden clearance granted! 20-minute departure gate window active.'
+      message: `Hostel Warden clearance granted by ${wName}! Gate Pass is ready.`,
+      pass
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message || 'Hostel Warden clearance failed', error: err.message });
@@ -217,7 +253,7 @@ async function approveWarden(req, res) {
  */
 async function approveBoysWarden(req, res) {
   try {
-    const { passId } = req.body;
+    const { passId, wardenName } = req.body;
     if (!mongoose.Types.ObjectId.isValid(passId)) {
       return res.status(400).json({ success: false, message: 'Invalid pass ID' });
     }
@@ -227,17 +263,22 @@ async function approveBoysWarden(req, res) {
 
     const now = new Date();
     const expiry = new Date(now.getTime() + 20 * 60 * 1000);
+    const wName = wardenName || 'Boys Hostel Warden';
 
-    pass.wardenApproval = { approved: true, time: getISTTimeString(now) };
+    pass.wardenApproval = { wardenName: wName, approved: true, time: getISTTimeString(now) };
     pass.status = 'Approved';
     pass.approvalTime = getISTTimeString(now);
     pass.validUntil = getISTTimeString(expiry);
     pass.expiresAt = expiry;
+    if (typeof generateFormalLetter === 'function') {
+      pass.formalLetter = generateFormalLetter(pass, pass.reason, pass.appliedTime, pass);
+    }
 
     await pass.save();
     return res.json({
       success: true,
-      message: 'Boys Hostel Warden final approval granted! 20-minute departure gate window active.'
+      message: 'Boys Hostel Warden final approval granted! Gate Pass is ready.',
+      pass
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message || 'Boys Hostel Warden approval failed', error: err.message });
@@ -249,7 +290,7 @@ async function approveBoysWarden(req, res) {
  */
 async function approveGirlsWarden(req, res) {
   try {
-    const { passId } = req.body;
+    const { passId, wardenName } = req.body;
     if (!mongoose.Types.ObjectId.isValid(passId)) {
       return res.status(400).json({ success: false, message: 'Invalid pass ID' });
     }
@@ -259,17 +300,22 @@ async function approveGirlsWarden(req, res) {
 
     const now = new Date();
     const expiry = new Date(now.getTime() + 20 * 60 * 1000);
+    const wName = wardenName || 'Girls Hostel Warden';
 
-    pass.wardenApproval = { approved: true, time: getISTTimeString(now) };
+    pass.wardenApproval = { wardenName: wName, approved: true, time: getISTTimeString(now) };
     pass.status = 'Approved';
     pass.approvalTime = getISTTimeString(now);
     pass.validUntil = getISTTimeString(expiry);
     pass.expiresAt = expiry;
+    if (typeof generateFormalLetter === 'function') {
+      pass.formalLetter = generateFormalLetter(pass, pass.reason, pass.appliedTime, pass);
+    }
 
     await pass.save();
     return res.json({
       success: true,
-      message: 'Girls Hostel Warden final approval granted! 20-minute departure gate window active.'
+      message: 'Girls Hostel Warden final approval granted! Gate Pass is ready.',
+      pass
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message || 'Girls Hostel Warden approval failed', error: err.message });
@@ -277,7 +323,7 @@ async function approveGirlsWarden(req, res) {
 }
 
 /**
- * Universal Leave Application Rejection Handler across all authority levels
+ * Universal Gate Pass / Leave Application Rejection Handler across all authority levels
  * (Counselor, Class Advisor, HOD, Principal, Warden)
  */
 async function rejectPass(req, res) {
@@ -299,7 +345,7 @@ async function rejectPass(req, res) {
       counselor: 'Class Counselor',
       advisor: 'Class Advisor',
       hod: 'Head of Department (HOD)',
-      principal: 'Executive Directorate / Principal',
+      principal: 'Principal',
       boys_warden: 'Boys Hostel Warden',
       girls_warden: 'Girls Hostel Warden',
       warden: 'Hostel Warden'
@@ -319,11 +365,15 @@ async function rejectPass(req, res) {
       reason: reason.trim(),
       time: now
     };
+    if (typeof generateFormalLetter === 'function') {
+      pass.formalLetter = generateFormalLetter(pass, pass.reason, pass.appliedTime, pass);
+    }
 
     await pass.save();
     return res.json({
       success: true,
-      message: `Leave application rejected by ${roleTitle}.`
+      message: `Requisition rejected by ${roleTitle}. Rejection reason recorded and returned to student.`,
+      pass
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message || 'Failed to reject pass', error: err.message });
@@ -426,19 +476,21 @@ async function bulkApprovePasses(req, res) {
             pass.parentCallTime = now;
           }
         } else if (role === 'hod') {
-          const isHosteller = (/hoste?l|^h$/i.test(pass.accommodation || '') && !/day/i.test(pass.accommodation || ''));
-          pass.status = isHosteller ? 'Pending Principal' : 'Approved';
           pass.hodApproval = { hodName: authName, approved: true, time: now };
-          if (!isHosteller) {
+          if (pass.requestCategory === 'leave') {
+            pass.status = 'Approved';
             pass.approvalTime = now;
-            pass.validUntil = getISTTimeString(expiry);
-            pass.expiresAt = expiry;
+          } else {
+            pass.status = 'Pending Principal';
           }
         } else if (role === 'principal') {
-          const isHosteller = (/hoste?l|^h$/i.test(pass.accommodation || '') && !/day/i.test(pass.accommodation || ''));
-          pass.status = isHosteller ? 'Pending Warden' : 'Approved';
           pass.principalApproval = { principalName: authName, approved: true, time: now };
-          if (!isHosteller) {
+          const isHosteller = (/hoste?l|^h$/i.test(pass.accommodation || '') && !/day/i.test(pass.accommodation || ''));
+          if (isHosteller) {
+            const isFemale = /^female$/i.test(String(pass.gender || '').trim());
+            pass.status = isFemale ? 'Pending Girls Warden' : 'Pending Boys Warden';
+          } else {
+            pass.status = 'Approved';
             pass.approvalTime = now;
             pass.validUntil = getISTTimeString(expiry);
             pass.expiresAt = expiry;

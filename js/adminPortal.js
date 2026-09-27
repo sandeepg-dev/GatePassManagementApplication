@@ -6,23 +6,37 @@
 let activeAdmin = null;
 let currentAdminTab = 'students';
 
-// Initialize session state on load & ensure inputs start empty
+// Initialize session state on load & enforce Common Login redirect if unauthenticated
 window.addEventListener('DOMContentLoaded', () => {
-  const userIdInput = document.getElementById('adminUserId');
-  const passInput = document.getElementById('adminPassword');
-  if (userIdInput) userIdInput.value = '';
-  if (passInput) passInput.value = '';
+  const savedAdmin = sessionStorage.getItem('campusAdminUser') || localStorage.getItem('campusAdminUser');
+  if (savedAdmin) {
+    try {
+      const parsed = JSON.parse(savedAdmin);
+      if (parsed && (parsed.userId || parsed.name)) {
+        activeAdmin = parsed;
+        showAdminDashboard();
+        return;
+      }
+    } catch (e) {
+      sessionStorage.removeItem('campusAdminUser');
+      localStorage.removeItem('campusAdminUser');
+    }
+  }
 
-  // Ensure Administrator Control Portal always presents the separate login page on entry
-  document.getElementById('adminLoginScreen')?.classList.remove('hidden');
-  document.getElementById('adminDashboardScreen')?.classList.add('hidden');
-});
+  // If a non-admin authenticated user (e.g. Student) tries to access /admin:
+  const passUserRaw = sessionStorage.getItem('campusPassUser') || localStorage.getItem('campusPassUser');
+  if (passUserRaw) {
+    try {
+      const passUser = JSON.parse(passUserRaw);
+      if (passUser && passUser.role && passUser.role !== 'admin') {
+        window.location.replace('/');
+        return;
+      }
+    } catch (e) {}
+  }
 
-window.addEventListener('pageshow', () => {
-  const userIdInput = document.getElementById('adminUserId');
-  const passInput = document.getElementById('adminPassword');
-  if (userIdInput) userIdInput.value = '';
-  if (passInput) passInput.value = '';
+  // Not authenticated as Admin -> redirect to Common Login Page
+  window.location.replace('/');
 });
 
 /**
@@ -93,19 +107,22 @@ async function handleAdminLogin() {
  * Display Dashboard and Load Initial Collections
  */
 function showAdminDashboard() {
-  document.getElementById('adminLoginScreen')?.classList.add('hidden');
-  document.getElementById('adminDashboardScreen')?.classList.remove('hidden');
+  const dash = document.getElementById('adminDashboardScreen');
+  if (dash) dash.classList.remove('hidden');
   refreshAdminData();
 }
 
 /**
- * Admin Logout
+ * Admin Logout -> Always redirects to Common Login Page
  */
 function adminLogout() {
   sessionStorage.removeItem('campusAdminUser');
   localStorage.removeItem('campusAdminUser');
+  sessionStorage.removeItem('campusPassUser');
+  localStorage.removeItem('campusPassUser');
+  sessionStorage.clear();
   activeAdmin = null;
-  location.reload();
+  window.location.replace('/');
 }
 
 /**
@@ -144,9 +161,9 @@ function switchAdminTab(tabName) {
       const isStaffDir = t === 'staffDirectory';
       const mlClass = isStaffDir ? 'ml-auto' : '';
       if (t === targetTab) {
-        btn.className = `admin-nav-tab active-admin-tab px-3.5 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-md shadow-red-900/40 border border-red-500/50 transition-all flex items-center gap-2 ${mlClass}`;
+        btn.className = `admin-nav-tab active-admin-tab px-3.5 py-2 rounded-lg text-xs md:text-sm font-semibold bg-blue-600 text-white shadow-sm border border-blue-500 transition-all flex items-center gap-2 ${mlClass}`;
       } else {
-        btn.className = `admin-nav-tab px-3.5 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-slate-950/80 border border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800/90 hover:border-slate-700 transition-all flex items-center gap-2 ${mlClass}`;
+        btn.className = `admin-nav-tab px-3.5 py-2 rounded-lg text-xs md:text-sm font-medium bg-slate-950/60 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800 transition-all flex items-center gap-2 ${mlClass}`;
       }
     }
   });
@@ -630,8 +647,8 @@ function openAddStudentModal() {
       </div>
 
       <div class="pt-3 border-t border-slate-800 flex justify-end gap-2">
-        <button type="button" onclick="closeAdminModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold transition">Cancel</button>
-        <button type="submit" class="px-5 py-2 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white rounded-xl font-bold transition shadow-md shadow-red-900/30">Save Student</button>
+        <button type="button" onclick="closeAdminModal()" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs md:text-sm font-medium transition">Cancel</button>
+        <button type="submit" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs md:text-sm font-semibold transition active:scale-98">Save Student</button>
       </div>
     </form>
   `);

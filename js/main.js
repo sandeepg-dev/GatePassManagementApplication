@@ -36,7 +36,7 @@ function openRejectModal(passId, roleLabel, isOD = false) {
   if (roleLabelInput) roleLabelInput.value = roleLabel || (typeof loggedUser !== 'undefined' && loggedUser ? loggedUser.role : 'Authority');
   if (isODInput) isODInput.value = isOD ? 'true' : 'false';
   if (reasonInput) reasonInput.value = '';
-  if (title) title.innerText = isOD ? `Reject On-Duty Request (${roleLabel || 'Authority'})` : `Reject Leave Application (${roleLabel || 'Authority'})`;
+  if (title) title.innerText = isOD ? `Reject On-Duty Request (${roleLabel || 'Authority'})` : `Reject Gate Pass / Leave Request (${roleLabel || 'Authority'})`;
   if (presetChips) {
     if (isOD) presetChips.classList.add('hidden');
     else presetChips.classList.remove('hidden');
@@ -59,7 +59,7 @@ async function submitRejectPass() {
   const reason = document.getElementById('rejectReasonInput')?.value?.trim();
 
   if (!reason) {
-    return showToast(isOD ? 'Please enter a specific reason for rejecting this On-Duty request.' : 'Please enter a specific reason for rejecting this leave requisition.', 'warning', 3000);
+    return showToast(isOD ? 'Please enter a specific reason for rejecting this On-Duty request.' : 'Please enter a specific reason for rejecting this requisition.', 'warning', 3000);
   }
   if (!passId) return;
 
@@ -86,10 +86,13 @@ async function submitRejectPass() {
       return;
     }
 
-    showToast(data.message || (isOD ? 'On-Duty request rejected successfully.' : 'Leave application rejected successfully.'), 'success', 3000);
+    showToast(data.message || (isOD ? 'On-Duty request rejected successfully.' : 'Requisition rejected successfully.'), 'success', 3000);
     closeRejectModal();
     if (typeof refreshAllAuthorityViews === 'function') {
       refreshAllAuthorityViews();
+    }
+    if (typeof fetchAuthorityData === 'function') {
+      fetchAuthorityData();
     }
     if (isOD && typeof loadStudentOnDutyStatus === 'function') {
       loadStudentOnDutyStatus();

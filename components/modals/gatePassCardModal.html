@@ -1,0 +1,76 @@
+<!-- DIGITAL GATE PASS CARD MODAL (FOR APPROVED GATE PASS READY) -->
+<div id="gatePassCardModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-6 text-slate-800 space-y-4 max-h-[92vh] overflow-y-auto">
+    <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+          ✓
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-slate-900">Official Campus Gate Pass</h3>
+          <p class="text-[10px] text-emerald-700 font-bold uppercase font-mono">Approved • Gate Clearance Ready</p>
+        </div>
+      </div>
+      <button onclick="closeGatePassCardModal()" class="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- Gate Pass Card Preview -->
+    <div class="border-2 border-slate-900 rounded-2xl p-4 bg-gradient-to-b from-white to-slate-50 space-y-3 relative overflow-hidden shadow-sm">
+      <div class="text-center pb-2 border-b border-slate-200">
+        <div class="text-xs font-black text-slate-900 tracking-wide font-serif">GRT INSTITUTE OF ENGINEERING &amp; TECHNOLOGY</div>
+        <div class="text-[9px] font-bold text-slate-600">AUTONOMOUS • TIRUTTANI - 631 209</div>
+        <div class="text-[10px] font-black text-blue-800 uppercase tracking-widest mt-1">OFFICIAL OUTPASS CREDENTIAL</div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <div>
+          <span class="text-[10px] text-slate-500 font-medium block">Student Name:</span>
+          <span id="gpCardName" class="font-bold text-slate-900">-</span>
+        </div>
+        <div>
+          <span class="text-[10px] text-slate-500 font-medium block">Registration No:</span>
+          <span id="gpCardRoll" class="font-bold font-mono text-slate-900">-</span>
+        </div>
+        <div>
+          <span class="text-[10px] text-slate-500 font-medium block">Class &amp; Dept:</span>
+          <span id="gpCardDept" class="font-semibold text-slate-800">-</span>
+        </div>
+        <div>
+          <span class="text-[10px] text-slate-500 font-medium block">Accommodation:</span>
+          <span id="gpCardAccom" class="font-semibold text-blue-700">-</span>
+        </div>
+        <div>
+          <span class="text-[10px] text-slate-500 font-medium block">Departure:</span>
+          <span id="gpCardDep" class="font-semibold text-slate-900">-</span>
+        </div>
+        <div>
+          <span class="text-[10px] text-slate-500 font-medium block">Expected Return:</span>
+          <span id="gpCardRet" class="font-semibold text-slate-900">-</span>
+        </div>
+      </div>
+
+      <div class="p-2 bg-slate-100 rounded-lg text-xs space-y-0.5">
+        <span class="text-[10px] text-slate-500 font-medium block">Outpass Reason &amp; Destination:</span>
+        <div id="gpCardReason" class="font-medium text-slate-900 text-xs">-</div>
+      </div>
+
+      <div class="text-center pt-2 border-t border-slate-200">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full text-xs font-bold font-mono">
+          <span>VALIDATED AT GATE</span> • <span>AUTHENTICATED</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+      <button id="gpCardDownloadBtn" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        <span>Download Gate Pass (PDF)</span>
+      </button>
+      <button onclick="closeGatePassCardModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition">
+        Close
+      </button>
+    </div>
+  </div>
+</div>

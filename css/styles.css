@@ -1,52 +1,45 @@
 /**
- * Campus PassPro Enterprise Institutional Design System
- * Unified Professional Blue & Slate Architecture
+ * Campus PassPro Unified Enterprise Design System
+ * Clean • Professional • Cohesive • Modern Academic SaaS Architecture
  * GRT Institute of Engineering and Technology
  */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-  --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  /* Primary Institutional Blue Palette (Matches Admin Portal) */
-  --color-primary-950: #081229;
-  --color-primary-900: #0f2766;
-  --color-primary-800: #1d40a8;
-  --color-primary-700: #1d4ed8;
-  --color-primary-600: #2563eb;
-  --color-primary-500: #3b82f6;
-  --color-primary-400: #60a5fa;
-  --color-primary-50:  #eff6ff;
+  /* Cohesive Enterprise Slate & Blue Palette */
+  --bg-canvas: #090d16;
+  --bg-surface: #0f172a;
+  --bg-surface-elevated: #151f34;
+  --bg-surface-subtle: #0c1322;
+  --border-subtle: #1e293b;
+  --border-medium: #334155;
+  --border-focus: #2563eb;
 
-  /* Slate & Dark Canvas Foundation */
-  --color-slate-950: #020617;
-  --color-slate-900: #0f172a;
-  --color-slate-850: #141f36;
-  --color-slate-800: #1e293b;
-  --color-slate-700: #334155;
-  --color-slate-600: #475569;
-  --color-slate-500: #64748b;
-  --color-slate-400: #94a3b8;
-  --color-slate-300: #cbd5e1;
-  --color-slate-200: #e2e8f0;
-  --color-slate-100: #f1f5f9;
-  --color-slate-50:  #f8fafc;
+  /* Brand Blue Accent */
+  --color-brand-600: #2563eb;
+  --color-brand-500: #3b82f6;
+  --color-brand-400: #60a5fa;
 
-  /* High-Contrast Semantic Tokens */
-  --color-emerald-500: #10b981;
-  --color-emerald-400: #34d399;
-  --color-emerald-300: #6ee7b7;
-  --color-amber-500:   #f59e0b;
-  --color-amber-400:   #fbbf24;
-  --color-amber-300:   #fde68a;
-  --color-rose-500:    #f43f5e;
-  --color-rose-400:    #fb7185;
-  --color-rose-300:    #fecdd3;
-  --color-indigo-400:  #818cf8;
-  --color-sky-400:     #38bdf8;
+  /* Functional Semantic Status (Clean, not neon) */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger:  #ef4444;
+
+  /* Typography Colors */
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  /* Standard Radii */
+  --radius-sm: 0.375rem; /* 6px */
+  --radius-md: 0.5rem;   /* 8px */
+  --radius-lg: 0.75rem;  /* 12px */
+  --radius-xl: 1rem;     /* 16px */
 }
 
 * {
@@ -55,8 +48,8 @@
 
 body {
   font-family: var(--font-sans);
-  background-color: #020617;
-  background-image: radial-gradient(circle at 50% -10%, #0d1e48 0%, #020617 75%);
+  background-color: var(--bg-canvas);
+  background-image: linear-gradient(180deg, #0d1424 0%, #090d16 280px);
   background-attachment: fixed;
   background-repeat: no-repeat;
   color: #e2e8f0;
@@ -64,174 +57,72 @@ body {
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.5;
   min-height: 100vh;
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
 }
 
-/* Typography Enhancements */
+/* Typography Hierarchy */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-sans);
-  letter-spacing: -0.02em;
-  color: #ffffff;
-  font-weight: 800;
+  letter-spacing: -0.015em;
+  color: var(--text-primary);
+  font-weight: 700;
 }
 
 .font-mono {
   font-family: var(--font-mono);
 }
 
-/* Professional Badge Design Tokens (Zero Emojis, Crisp Dark-Mode High-Contrast) */
-.badge-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  padding: 0.25rem 0.625rem;
-  border-radius: 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.025em;
-  line-height: 1.25;
-  text-transform: uppercase;
+/* Unified Surface Cards */
+.card,
+.panel,
+.glass-panel,
+.glass-panel-dark {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  color: var(--text-primary);
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.4);
 }
 
-.badge-hosteller {
-  background-color: rgba(49, 46, 129, 0.7);
-  color: #c7d2fe;
-  border: 1px solid rgba(129, 140, 248, 0.4);
+.card-elevated {
+  background-color: var(--bg-surface-elevated);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-lg);
 }
 
-.badge-dayscholar {
-  background-color: rgba(12, 74, 110, 0.7);
-  color: #bae6fd;
-  border: 1px solid rgba(56, 189, 248, 0.4);
-}
-
-.badge-approved {
-  background-color: rgba(6, 78, 59, 0.7);
-  color: #a7f3d0;
-  border: 1px solid rgba(52, 211, 153, 0.4);
-}
-
-.badge-pending {
-  background-color: rgba(120, 53, 15, 0.7);
-  color: #fde68a;
-  border: 1px solid rgba(251, 191, 36, 0.4);
-}
-
-.badge-rejected {
-  background-color: rgba(136, 19, 55, 0.7);
-  color: #fecdd3;
-  border: 1px solid rgba(251, 113, 133, 0.4);
-}
-
-.badge-neutral {
-  background-color: rgba(30, 41, 59, 0.8);
-  color: #cbd5e1;
-  border: 1px solid #334155;
-}
-
-/* Micro SVG Icon Utilities */
-.ui-icon {
-  display: inline-block;
-  width: 1rem;
-  height: 1rem;
-  vertical-align: middle;
-  fill: currentColor;
-  flex-shrink: 0;
-}
-.ui-icon-lg {
-  width: 1.25rem;
-  height: 1.25rem;
-}
-.ui-icon-xl {
-  width: 1.5rem;
-  height: 1.5rem;
-}
-
-/* Glassmorphic Cards & Elevated Panels - Blue Slate Enterprise */
-.glass-panel {
-  background: rgba(15, 23, 42, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid #1e293b;
-  border-radius: 1.5rem;
-  box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.5), 0 4px 12px -2px rgba(0, 0, 0, 0.3);
-  color: #f8fafc;
-}
-
+/* Unified Metric KPI Cards */
 .kpi-card {
-  background: rgba(15, 23, 42, 0.92);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid #1e293b;
-  border-radius: 1rem;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
   user-select: none;
-  color: #f8fafc;
 }
 
 .kpi-card:hover {
-  border-color: #3b82f6;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px -4px rgba(37, 99, 235, 0.25);
+  border-color: var(--border-medium);
+  background-color: var(--bg-surface-elevated);
 }
 
 .kpi-card.active-kpi-card {
-  border-color: #2563eb !important;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.35), 0 8px 24px -4px rgba(37, 99, 235, 0.3) !important;
-  background: rgba(30, 41, 59, 0.95) !important;
+  border-color: var(--color-brand-600) !important;
+  background-color: var(--bg-surface-elevated) !important;
 }
 
-.glass-panel-dark {
-  background: rgba(15, 23, 42, 0.95);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid #1e293b;
-  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6);
-}
-
-.glass-panel-subtle {
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid #1e293b;
-}
-
-/* Custom Scrollbars */
-.overflow-x-auto::-webkit-scrollbar,
-.overflow-y-auto::-webkit-scrollbar,
-.custom-scrollbar::-webkit-scrollbar {
-  height: 6px;
-  width: 6px;
-}
-.overflow-x-auto::-webkit-scrollbar-track,
-.overflow-y-auto::-webkit-scrollbar-track,
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(2, 6, 23, 0.5);
-  border-radius: 9999px;
-}
-.overflow-x-auto::-webkit-scrollbar-thumb,
-.overflow-y-auto::-webkit-scrollbar-thumb,
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 9999px;
-}
-.overflow-x-auto::-webkit-scrollbar-thumb:hover,
-.overflow-y-auto::-webkit-scrollbar-thumb:hover,
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #2563eb;
-}
-
-/* Form Controls & Institutional Inputs */
+/* Form Controls & Inputs */
 input[type="text"],
 input[type="password"],
 input[type="date"],
 input[type="time"],
 select,
 textarea {
-  background-color: #020617;
-  border: 1px solid #334155;
+  background-color: var(--bg-surface-subtle);
+  border: 1px solid var(--border-medium);
   color: #ffffff;
-  border-radius: 0.75rem;
+  border-radius: var(--radius-md);
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -241,10 +132,137 @@ input[type="date"]:focus,
 input[type="time"]:focus,
 select:focus,
 textarea:focus {
-  border-color: #2563eb;
+  border-color: var(--color-brand-500);
   outline: none;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
-  background-color: #020617;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* Unified Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.875rem;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn:active {
+  transform: scale(0.99);
+}
+
+.btn-primary {
+  background-color: var(--color-brand-600);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
+}
+
+.btn-primary:hover {
+  background-color: #1d4ed8;
+}
+
+.btn-secondary {
+  background-color: #1e293b;
+  color: #e2e8f0;
+  border: 1px solid #334155;
+}
+
+.btn-secondary:hover {
+  background-color: #283548;
+  color: #ffffff;
+  border-color: #475569;
+}
+
+.btn-danger {
+  background-color: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.btn-danger:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* Navigation Tabs */
+.nav-tab {
+  padding: 0.5rem 0.875rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.nav-tab:hover {
+  color: #ffffff;
+  background-color: rgba(30, 41, 59, 0.5);
+}
+
+.nav-tab.active-tab {
+  background-color: var(--color-brand-600);
+  color: #ffffff;
+  font-weight: 600;
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Status Badges */
+.badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+  line-height: 1.25;
+}
+
+.badge-approved {
+  background-color: rgba(16, 185, 129, 0.12);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-pending {
+  background-color: rgba(245, 158, 11, 0.12);
+  color: #fde68a;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-rejected {
+  background-color: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.badge-neutral {
+  background-color: rgba(30, 41, 59, 0.8);
+  color: #cbd5e1;
+  border: 1px solid #334155;
+}
+
+.badge-hosteller {
+  background-color: rgba(37, 99, 235, 0.12);
+  color: #93c5fd;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.badge-dayscholar {
+  background-color: rgba(148, 163, 184, 0.12);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.3);
 }
 
 /* Enterprise Data Table */
@@ -258,13 +276,13 @@ textarea:focus {
 }
 
 .enterprise-table thead th {
-  background-color: #0b1329;
+  background-color: #0b1120;
   color: #94a3b8;
   font-family: var(--font-mono);
   font-size: 0.6875rem;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   padding: 0.75rem 1rem;
   border-bottom: 1px solid #1e293b;
   white-space: nowrap;
@@ -273,7 +291,7 @@ textarea:focus {
 .enterprise-table tbody tr {
   border-bottom: 1px solid #1e293b;
   transition: background-color 0.15s ease;
-  background-color: rgba(15, 23, 42, 0.65);
+  background-color: rgba(15, 23, 42, 0.6);
 }
 
 .enterprise-table tbody tr:hover {
@@ -281,13 +299,33 @@ textarea:focus {
 }
 
 .enterprise-table tbody td {
-  padding: 0.875rem 1rem;
+  padding: 0.75rem 1rem;
   border-bottom: 1px solid rgba(30, 41, 59, 0.6);
   vertical-align: middle;
   color: #e2e8f0;
 }
 
-/* Toast Feedback Elements */
+/* Custom Scrollbars */
+.overflow-x-auto::-webkit-scrollbar,
+.overflow-y-auto::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+.overflow-x-auto::-webkit-scrollbar-track,
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: rgba(2, 6, 23, 0.4);
+}
+.overflow-x-auto::-webkit-scrollbar-thumb,
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: var(--radius-sm);
+}
+.overflow-x-auto::-webkit-scrollbar-thumb:hover,
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Toast Notifications */
 #toastContainer {
   position: fixed;
   top: 1.25rem;
@@ -297,7 +335,7 @@ textarea:focus {
   flex-direction: column;
   gap: 0.5rem;
   pointer-events: none;
-  max-width: 24rem;
+  max-width: 22rem;
   width: 100%;
 }
 
@@ -305,92 +343,620 @@ textarea:focus {
   pointer-events: auto;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.875rem 1rem;
-  border-radius: 0.875rem;
-  background: rgba(15, 23, 42, 0.98);
+  gap: 0.625rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  background: #0f172a;
   border: 1px solid #1e293b;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6);
-  animation: toastSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  font-size: 0.8125rem;
   color: #ffffff;
 }
 
-@keyframes toastSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-8px) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+/* Login Card White Theme Inputs */
+#loginCard input[type="text"],
+#loginCard input[type="password"] {
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+  border-radius: 0.75rem !important;
 }
 
-.toast-success {
-  border-left: 4px solid #10b981;
-}
-.toast-error {
-  border-left: 4px solid #f43f5e;
-}
-.toast-info {
-  border-left: 4px solid #2563eb;
-}
-.toast-warning {
-  border-left: 4px solid #f59e0b;
-}
-
-/* Universal Dashboard Theme Adaptations */
-#dashScreen .bg-white:not(img),
-#roleDashboardContent .bg-white:not(img) {
-  background-color: rgba(15, 23, 42, 0.9) !important;
-  border-color: #1e293b !important;
-  color: #f8fafc !important;
-}
-
-#dashScreen .text-slate-900,
-#roleDashboardContent .text-slate-900 {
-  color: #ffffff !important;
-}
-
-#dashScreen .text-slate-800,
-#roleDashboardContent .text-slate-800 {
-  color: #f1f5f9 !important;
-}
-
-#dashScreen .text-slate-700,
-#roleDashboardContent .text-slate-700 {
-  color: #e2e8f0 !important;
-}
-
-#dashScreen .text-slate-600,
-#roleDashboardContent .text-slate-600 {
-  color: #cbd5e1 !important;
-}
-
-#dashScreen .text-slate-500,
-#roleDashboardContent .text-slate-500 {
+#loginCard input[type="text"]::placeholder,
+#loginCard input[type="password"]::placeholder {
   color: #94a3b8 !important;
 }
 
-#dashScreen .bg-slate-50,
-#roleDashboardContent .bg-slate-50 {
-  background-color: #0b1329 !important;
-  border-color: #1e293b !important;
+#loginCard input[type="text"]:focus,
+#loginCard input[type="password"]:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
 }
 
-#dashScreen .bg-slate-100,
-#roleDashboardContent .bg-slate-100 {
-  background-color: #1e293b !important;
-  border-color: #334155 !important;
+/* Login Button & Card Animations */
+#singleLoginPortalScreen {
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
-#dashScreen .border-slate-200,
-#roleDashboardContent .border-slate-200 {
-  border-color: #1e293b !important;
+.login-btn {
+  position: relative;
+  transition: all 0.2s ease;
 }
 
-/* Batch Action Bar */
-#batchActionBar {
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+.login-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.88;
 }
+
+.login-btn.is-loading {
+  background-color: var(--color-brand-600) !important;
+  opacity: 0.9;
+}
+
+.login-btn.is-success {
+  background-color: #059669 !important;
+  border-color: #10b981 !important;
+}
+
+@keyframes checkmarkScale {
+  0% { transform: scale(0.6); opacity: 0; }
+  60% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-scale-check {
+  animation: checkmarkScale 0.25s ease-out forwards;
+}
+
+@keyframes shakeError {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-3px); }
+  40%, 80% { transform: translateX(3px); }
+}
+
+.animate-shake {
+  animation: shakeError 0.35s ease-in-out;
+}
+
+/* ==========================================================================
+   STUDENT PORTAL REFERENCE STYLING (Clean Academic White/Slate Aesthetic)
+   ========================================================================== */
+body.theme-student {
+  background-color: #f8fafc !important;
+  background-image: none !important;
+  color: #0f172a !important;
+  padding: 0 !important;
+  overflow-x: hidden !important;
+}
+
+body.theme-student #dashScreen {
+  min-height: 100vh !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background-color: #f8fafc !important;
+}
+
+body.theme-student #studentPortalContainer {
+  display: flex !important;
+  min-height: 100vh !important;
+  width: 100% !important;
+}
+
+/* ==========================================================================
+   STRICT ISOLATION: Zero Authority/Staff elements visible during Student Login
+   ========================================================================== */
+body.theme-student #loginCampusBg,
+body.theme-student #authorityDashboardLayout,
+body.theme-student #authorityDashboardLayout *,
+body.theme-student .authority-container,
+body.theme-student .authority-dashboard,
+body.theme-student #authScreen,
+body.theme-student #roleDashboardContent,
+body.theme-student #topBulkPdfBtn,
+body.theme-student #topBulkLettersBtn,
+body.theme-student #clearAllDataBtn,
+body.theme-student [data-role="authority"],
+body.theme-student [data-role="staff"] {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  top: -99999px !important;
+  left: -99999px !important;
+}
+
+body.theme-authority #loginCampusBg,
+body.theme-authority #studentPortalContainer,
+body.theme-authority #studentPortalContainer * {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.stu-nav-active {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+  border-bottom: 2px solid #0f172a !important;
+}
+
+.stu-side-active {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+.stu-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+}
+
+.stu-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: left;
+}
+
+.stu-table th {
+  background-color: #f8fafc;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.stu-table td {
+  padding: 0.875rem 1rem;
+  font-size: 0.8125rem;
+  color: #334155;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.stu-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.badge-pending-clean {
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  display: inline-block;
+}
+
+.badge-approved-clean {
+  background-color: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  display: inline-block;
+}
+
+.badge-rejected-clean {
+  background-color: #fff1f2;
+  color: #be123c;
+  border: 1px solid #fecdd3;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  display: inline-block;
+}
+
+/* ==========================================================================
+   AUTHORITY PORTAL REFERENCE STYLING (Counselor, Advisor, HOD, Principal, Warden)
+   Clean, modern, production-grade academic light theme with professional blue accents
+   ========================================================================== */
+body.theme-authority {
+  background-color: #f8fafc !important;
+  background-image: none !important;
+  color: #0f172a !important;
+  padding: 0 !important;
+}
+
+body.theme-authority #dashScreen {
+  max-width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background-color: #f8fafc;
+}
+
+body.theme-authority .bg-dark-backdrop,
+body.theme-authority > .fixed.inset-0.bg-slate-950 {
+  display: none !important;
+}
+
+/* Active Top Navigation Link */
+.auth-top-active {
+  color: #1d4ed8 !important;
+  font-weight: 700 !important;
+  border-bottom: 2px solid #1d4ed8 !important;
+}
+
+/* Active Sidebar Navigation Item */
+.auth-side-active {
+  background-color: #eff6ff !important;
+  color: #1d4ed8 !important;
+  font-weight: 600 !important;
+  border-left: 3px solid #2563eb !important;
+}
+
+/* Active Filter Tab */
+.auth-tab-active {
+  background-color: #1e40af !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+.auth-tab-inactive {
+  background-color: #ffffff;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+.auth-tab-inactive:hover {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+/* Request Type Badges */
+.badge-req-leave {
+  background-color: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.badge-req-gatepass {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.badge-req-od {
+  background-color: #faf5ff;
+  color: #7e22ce;
+  border: 1px solid #e9d5ff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* Status Badges */
+.badge-status-pending {
+  background-color: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.badge-status-approved {
+  background-color: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.badge-status-rejected {
+  background-color: #fff1f2;
+  color: #be123c;
+  border: 1px solid #fecdd3;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* Authority Card & Table Styles */
+.auth-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.875rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+}
+
+.auth-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: left;
+}
+
+.auth-table th {
+  background-color: #f8fafc;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.auth-table td {
+  padding: 0.875rem 1rem;
+  font-size: 0.8125rem;
+  color: #334155;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.auth-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+/* ====================================================================
+   STUDENT PORTAL MODAL POPUP & HOVER ANIMATION SYSTEM
+   ==================================================================== */
+
+@keyframes modalBackdropFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalContentPopIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.94) translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-backdrop-animate {
+  animation: modalBackdropFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.modal-content-animate {
+  animation: modalContentPopIn 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Premium 3-Card Hover Micro-interactions */
+.stu-request-card {
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.stu-request-card:hover {
+  transform: translateY(-4px) scale(1.015);
+  box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 10px 10px -5px rgba(15, 23, 42, 0.04);
+}
+
+.stu-request-card:active {
+  transform: translateY(-1px) scale(0.995);
+}
+
+.stu-request-card .card-icon-container {
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.stu-request-card:hover .card-icon-container {
+  transform: scale(1.08) rotate(-2deg);
+}
+
+/* Unified Requests Table Badges */
+.badge-type-gatepass {
+  background-color: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-mono);
+}
+
+.badge-type-leave {
+  background-color: #f5f3ff;
+  color: #6b21a8;
+  border: 1px solid #ddd6fe;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-mono);
+}
+
+.badge-type-od {
+  background-color: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-mono);
+}
+
+/* Student Portal Page Transition */
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-view-animate {
+  animation: pageFadeIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Left-Side Navigation Menu */
+.stu-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.85rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #475569;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  user-select: none;
+  width: 100%;
+  text-align: left;
+}
+
+.stu-nav-item:hover {
+  transform: translateX(4px);
+  background-color: #f1f5f9;
+  color: #0f172a;
+  border-color: #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.stu-nav-item.active {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.08);
+}
+
+.stu-nav-item.active svg {
+  color: #2563eb;
+}
+
+.stu-nav-item:active {
+  transform: scale(0.98) translateX(2px);
+}
+
+/* ==========================================================================
+   INSTITUTIONAL PAGE TRANSITION LOADER (COLLEGE LOGO & 1.5S PROGRESS ANIMATION)
+   ========================================================================== */
+
+#grtPageTransitionLoader {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s 0.28s;
+}
+
+#grtPageTransitionLoader.active {
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+  transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s 0s;
+}
+
+#grtPageTransitionLoader.active #grtLoaderCard {
+  transform: scale(1);
+  opacity: 1;
+}
+
+#grtPageTransitionLoader:not(.active) #grtLoaderCard {
+  transform: scale(0.94);
+  opacity: 0;
+}
+
+@keyframes grtSpinSlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.grt-spin-orbital {
+  animation: grtSpinSlow 1.4s linear infinite;
+}
+
+@keyframes grtPulseLogo {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.grt-loader-logo-pulse {
+  animation: grtPulseLogo 1.6s ease-in-out infinite;
+}
+
+.grt-progress-bar-glow {
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.5);
+}
+
+
+
+

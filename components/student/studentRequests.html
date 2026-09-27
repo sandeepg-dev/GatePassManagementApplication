@@ -1,0 +1,87 @@
+<!-- PAGE 2: MY REQUESTS / REQUEST STATUS VIEW -->
+<div id="stuPage_requests" class="hidden page-view-animate space-y-6">
+  <section id="unifiedRequestsSection" class="stu-card p-6 sm:p-7 space-y-5">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-100">
+      <div>
+        <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">My Requests &amp; Approval Status</h2>
+        <p class="text-xs text-slate-500">Track all your submitted Gate Pass, Leave, and On-Duty requests with real-time review stages.</p>
+      </div>
+
+      <!-- Search and Filter Controls -->
+      <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+        <!-- Filter Tabs -->
+        <div class="flex items-center gap-1 p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs">
+          <button
+            type="button"
+            id="tabBtn_all"
+            onclick="setUnifiedRequestFilter('all')"
+            class="px-3 py-1.5 rounded-lg font-bold bg-white text-slate-900 shadow-2xs transition"
+          >
+            All <span id="unifiedCount_all" class="ml-1 text-[10px] text-slate-500 font-mono">(0)</span>
+          </button>
+          <button
+            type="button"
+            id="tabBtn_gatepass"
+            onclick="setUnifiedRequestFilter('gatepass')"
+            class="px-3 py-1.5 rounded-lg font-medium text-slate-600 hover:text-slate-900 transition"
+          >
+            Gate Pass <span id="unifiedCount_gatepass" class="ml-1 text-[10px] text-slate-500 font-mono">(0)</span>
+          </button>
+          <button
+            type="button"
+            id="tabBtn_leave"
+            onclick="setUnifiedRequestFilter('leave')"
+            class="px-3 py-1.5 rounded-lg font-medium text-slate-600 hover:text-slate-900 transition"
+          >
+            Leave <span id="unifiedCount_leave" class="ml-1 text-[10px] text-slate-500 font-mono">(0)</span>
+          </button>
+          <button
+            type="button"
+            id="tabBtn_onduty"
+            onclick="setUnifiedRequestFilter('onduty')"
+            class="px-3 py-1.5 rounded-lg font-medium text-slate-600 hover:text-slate-900 transition"
+          >
+            OD <span id="unifiedCount_onduty" class="ml-1 text-[10px] text-slate-500 font-mono">(0)</span>
+          </button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="relative">
+          <input
+            type="text"
+            id="unifiedSearchInput"
+            oninput="onUnifiedSearchInput(this.value)"
+            placeholder="Search requests..."
+            class="w-full sm:w-56 pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-blue-600 transition"
+          />
+          <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Unified Requests Table -->
+    <div class="overflow-x-auto rounded-xl border border-slate-200">
+      <table class="stu-table">
+        <thead>
+          <tr>
+            <th class="w-28">Request Type</th>
+            <th>Schedule &amp; Purpose</th>
+            <th class="w-36">Submitted Date</th>
+            <th>Current Status &amp; Stage</th>
+            <th class="text-right w-44">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="stuUnifiedRequestsTableBody">
+          <tr>
+            <td colspan="5" class="p-8 text-center text-slate-500 bg-white">
+              <div class="text-xs font-semibold text-slate-700">Loading your requests...</div>
+              <div class="text-[11px] text-slate-400 mt-1">Connecting to institutional database.</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

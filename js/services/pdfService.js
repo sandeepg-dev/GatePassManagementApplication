@@ -597,7 +597,7 @@ function renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64
   doc.setTextColor(15, 23, 42);
   doc.text(`Date: ${appliedDate}`, 194, curY, { align: 'right' });
 
-  // 4. From Section - Formal student letter (NO parent details included for Gate Pass Letter)
+  // 4. From Section - Formal student letter
   curY = 57.5;
   doc.setFont('times', 'bold');
   doc.setFontSize(10);
@@ -611,7 +611,9 @@ function renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64
   doc.setFont('times', 'normal');
   doc.setFontSize(9.5);
   doc.setTextColor(30, 41, 59);
-  doc.text(`${pass.name || 'Student'} (Register No: ${pass.rollNo}),`, 20, curY);
+  doc.text(`${pass.studentName || pass.name || 'Student'} (Register No: ${pass.rollNo || pass.registrationNumber || '-'}),`, 20, curY);
+  curY += 4.5;
+  doc.text(`Father's Name: ${pass.fatherName || pass.parentName || '-'}   |   Parent Phone: ${pass.parentPhone || pass.parentContact || '-'},`, 20, curY);
   curY += 4.5;
   doc.text(`${pass.academicYear || '3 Year'}, Department of ${pass.dept || 'Engineering'} (Section '${pass.yearSec || 'A'}'),`, 20, curY);
   curY += 4.5;
@@ -626,7 +628,7 @@ function renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64
   doc.setTextColor(71, 85, 105);
   doc.text('(Through: Respective Class Counselor, Class Advisor, and Head of Department)', 20, curY);
 
-  // 6. To Section - Strictly The Principal (NO Institutional Directorate)
+  // 6. To Section - Strictly The Principal
   curY += 5.5;
   doc.setFont('times', 'bold');
   doc.setFontSize(10);
@@ -651,15 +653,15 @@ function renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64
   doc.text('Respected Sir / Madam,', 16, curY);
 
   curY += 6;
-  doc.text('Subject: Requisition for Authorized Campus Gate Pass / Leave Clearance - Regarding.', 20, curY);
+  doc.text('Subject: Requisition for Authorized Campus Gate Pass Clearance - Regarding.', 20, curY);
 
-  // 8. Formal Letter Body (Shorter, universal, with Gate Pass Reason clearly displayed in the middle)
+  // 8. Formal Letter Body
   curY += 7;
   doc.setFont('times', 'normal');
   doc.setFontSize(10);
   doc.setTextColor(30, 41, 59);
 
-  const body1 = 'I am writing to request permission for a Gate Pass to leave the college campus due to the following reason:';
+  const body1 = 'I am writing to request permission for an official Gate Pass to leave the college campus due to the following purpose:';
   const body1Lines = doc.splitTextToSize(body1, 178);
   doc.text(body1Lines, 16, curY, { lineHeightFactor: 1.3 });
   curY += body1Lines.length * 4.6 + 4.4;
@@ -674,31 +676,25 @@ function renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64
   doc.text(reasonLines, 105, curY, { align: 'center', lineHeightFactor: 1.3 });
   curY += reasonLines.length * 5.2 + 3.8;
 
-  if (isHosteller) {
-    doc.setFont('times', 'bold');
-    doc.setFontSize(9.5);
-    doc.setTextColor(30, 41, 59);
-    const appDateStr = `Application Date: ${appliedDate}   |   Department: ${pass.dept || 'Engineering'} (${pass.academicYear || '3 Year'} - Sec ${pass.yearSec || 'A'})`;
-    const appLines = doc.splitTextToSize(appDateStr, 172);
-    doc.text(appLines, 105, curY, { align: 'center', lineHeightFactor: 1.25 });
-    curY += appLines.length * 4.6 + 1.2;
-    const depStr = `Departure: ${pass.departureDate || '-'}${pass.departureTime ? ' at ' + pass.departureTime : ''}`;
-    const retStr = `Return: ${pass.expectedReturnDate ? pass.expectedReturnDate + (pass.expectedReturnTime ? ' at ' + pass.expectedReturnTime : '') : (pass.expectedReturnDateTime || '-')}`;
-    const depRetLines = doc.splitTextToSize(`${depStr}   |   ${retStr}`, 172);
-    doc.text(depRetLines, 105, curY, { align: 'center', lineHeightFactor: 1.25 });
-    curY += depRetLines.length * 4.6 + 2;
-  } else {
-    doc.setFont('times', 'bold');
-    doc.setFontSize(9.5);
-    doc.setTextColor(30, 41, 59);
-    const leaveTimeStr = pass.leaveDate ? `${pass.leaveDate}${pass.leaveTime ? ' at ' + pass.leaveTime : ''}` : (pass.departureDate ? `${pass.departureDate}${pass.departureTime ? ' at ' + pass.departureTime : ''}` : (pass.approvalTime || pass.appliedTime || appliedDate));
-    doc.text(`Leave Date & Time: ${leaveTimeStr}`, 105, curY, { align: 'center' });
-    curY += 4.8;
-    doc.text(`Department: ${pass.dept || 'Engineering'}   |   Year & Section: ${pass.academicYear || '3 Year'} (Section '${pass.yearSec || 'A'}')`, 105, curY, { align: 'center' });
-    curY += 6;
+  const depStr = `Departure: ${pass.departureDate || '-'}${pass.departureTime ? ' at ' + pass.departureTime : ''}`;
+  const retStr = `Return: ${pass.expectedReturnDate || pass.returnDate || '-'}${pass.expectedReturnTime || pass.returnTime ? ' at ' + (pass.expectedReturnTime || pass.returnTime) : ''}`;
+  const destStr = pass.destination || pass.placeOrEvent ? `Destination: ${pass.destination || pass.placeOrEvent}` : '';
+  const hostelStr = isHosteller && (pass.hostelRoom || pass.hostelBlock) ? `Hostel: Block ${pass.hostelBlock || 'A'}, Room ${pass.hostelRoom || '-'}` : '';
+
+  doc.setFont('times', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(30, 41, 59);
+  const schedLine = `${depStr}   |   ${retStr}`;
+  doc.text(schedLine, 105, curY, { align: 'center' });
+  curY += 5;
+
+  if (destStr || hostelStr) {
+    const extraLine = [destStr, hostelStr].filter(Boolean).join('   |   ');
+    doc.text(extraLine, 105, curY, { align: 'center' });
+    curY += 5;
   }
 
-  // Short concluding declaration suitable for all reasons
+  // Short concluding declaration
   doc.setFont('times', 'normal');
   doc.setFontSize(10);
   doc.setTextColor(30, 41, 59);
@@ -719,11 +715,11 @@ function renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64
   doc.text('Yours faithfully,', 148, curY);
   curY += 7.5;
   doc.setFont('times', 'bold');
-  doc.text(`(${pass.name || 'Student'})`, 148, curY);
+  doc.text(`(${pass.studentName || pass.name || 'Student'})`, 148, curY);
   curY += 4.2;
   doc.setFont('times', 'normal');
   doc.setFontSize(9);
-  doc.text(`Roll No: ${pass.rollNo}`, 148, curY);
+  doc.text(`Roll No: ${pass.rollNo || pass.registrationNumber || '-'}`, 148, curY);
 
   // 12. Signature & Multi-Tier Institutional Clearance Section
   curY = Math.max(curY + 5, 202);
@@ -764,45 +760,53 @@ function renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64
   const wDate = pass.wardenApproval?.time ? formatLetterDate(pass.wardenApproval.time) : '-';
 
   const sigY = curY + 16;
-  const colWidth = 33.2;
-  const colGap = 3.0;
 
-  const cols = isHosteller
-    ? [
-        { title: 'Student Signature', name: pass.name || 'Student', status: 'Submitted', isApproved: true, date: appliedDate, x: 16 },
-        { title: 'Class Counselor', name: counselorName, status: counselorStatus, isApproved: cApp, date: cDate, x: 16 + (colWidth + colGap) },
-        { title: 'Class Advisor', name: advisorName, status: advisorStatus, isApproved: aApp, date: aDate, x: 16 + (colWidth + colGap) * 2 },
-        { title: 'Head of Dept', name: hodName, status: hodStatus, isApproved: hApp, date: hDate, x: 16 + (colWidth + colGap) * 3 },
-        { title: 'Principal / Warden', name: (wApp ? wardenName : principalName), status: (wApp ? wardenStatus : principalStatus), isApproved: (wApp || pApp), date: (wApp ? wDate : pDate), x: 16 + (colWidth + colGap) * 4 }
-      ]
-    : [
-        { title: 'Student Signature', name: pass.name || 'Student', status: 'Submitted', isApproved: true, date: appliedDate, x: 16 },
-        { title: 'Class Counselor', name: counselorName, status: counselorStatus, isApproved: cApp, date: cDate, x: 16 + (colWidth + colGap) },
-        { title: 'Class Advisor', name: advisorName, status: advisorStatus, isApproved: aApp, date: aDate, x: 16 + (colWidth + colGap) * 2 },
-        { title: 'Head of Dept', name: hodName, status: hodStatus, isApproved: hApp, date: hDate, x: 16 + (colWidth + colGap) * 3 },
-        { title: 'Principal Directorate', name: principalName, status: principalStatus, isApproved: pApp, date: pDate, x: 16 + (colWidth + colGap) * 4 }
-      ];
+  // Day Scholar = 5 columns, Hosteller = 6 columns (Warden NEVER rendered for Day Scholar!)
+  let cols = [];
+  if (isHosteller) {
+    const colWidth = 26.5;
+    const colGap = 3.5;
+    cols = [
+      { title: 'Student Signature', name: pass.studentName || pass.name || 'Student', status: 'Submitted', isApproved: true, date: appliedDate, x: 16 },
+      { title: 'Class Counselor', name: counselorName, status: counselorStatus, isApproved: cApp, date: cDate, x: 16 + (colWidth + colGap) },
+      { title: 'Class Advisor', name: advisorName, status: advisorStatus, isApproved: aApp, date: aDate, x: 16 + (colWidth + colGap) * 2 },
+      { title: 'Head of Dept', name: hodName, status: hodStatus, isApproved: hApp, date: hDate, x: 16 + (colWidth + colGap) * 3 },
+      { title: 'Principal Directorate', name: principalName, status: principalStatus, isApproved: pApp, date: pDate, x: 16 + (colWidth + colGap) * 4 },
+      { title: 'Hostel Warden', name: wardenName, status: wardenStatus, isApproved: wApp, date: wDate, x: 16 + (colWidth + colGap) * 5 }
+    ];
+  } else {
+    const colWidth = 33.2;
+    const colGap = 3.0;
+    cols = [
+      { title: 'Student Signature', name: pass.studentName || pass.name || 'Student', status: 'Submitted', isApproved: true, date: appliedDate, x: 16 },
+      { title: 'Class Counselor', name: counselorName, status: counselorStatus, isApproved: cApp, date: cDate, x: 16 + (colWidth + colGap) },
+      { title: 'Class Advisor', name: advisorName, status: advisorStatus, isApproved: aApp, date: aDate, x: 16 + (colWidth + colGap) * 2 },
+      { title: 'Head of Dept', name: hodName, status: hodStatus, isApproved: hApp, date: hDate, x: 16 + (colWidth + colGap) * 3 },
+      { title: 'Principal Directorate', name: principalName, status: principalStatus, isApproved: pApp, date: pDate, x: 16 + (colWidth + colGap) * 4 }
+    ];
+  }
 
   cols.forEach(col => {
+    const colW = isHosteller ? 26.5 : 33.2;
     doc.setDrawColor(148, 163, 184);
     doc.setLineWidth(0.3);
-    doc.line(col.x, sigY, col.x + colWidth, sigY);
+    doc.line(col.x, sigY, col.x + colW, sigY);
     doc.setFont('times', 'bold');
-    doc.setFontSize(8.2);
+    doc.setFontSize(7.8);
     doc.setTextColor(15, 23, 42);
     doc.text(col.title, col.x, sigY + 3.8);
 
     doc.setFont('times', 'bold');
-    doc.setFontSize(7.5);
+    doc.setFontSize(7.2);
     if (col.isApproved) doc.setTextColor(22, 101, 52);
     else if (col.status === 'REJECTED') doc.setTextColor(190, 18, 60);
     else doc.setTextColor(100, 116, 139);
     doc.text(col.status, col.x, sigY + 7.4);
 
     doc.setFont('times', 'normal');
-    doc.setFontSize(7.5);
+    doc.setFontSize(7.2);
     doc.setTextColor(71, 85, 105);
-    doc.text(col.name, col.x, sigY + 10.8, { maxWidth: colWidth });
+    doc.text(col.name, col.x, sigY + 10.8, { maxWidth: colW });
     if (col.isApproved && col.date !== '-') doc.text(`Date: ${col.date}`, col.x, sigY + 14.2);
   });
 

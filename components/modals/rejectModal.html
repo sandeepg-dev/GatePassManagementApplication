@@ -1,0 +1,56 @@
+<!-- REJECTION REASON MODAL -->
+<div id="rejectModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 md:p-6 max-w-md w-full shadow-xl text-white space-y-4">
+    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+      <div class="flex items-center gap-2.5">
+        <div class="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-400 flex items-center justify-center border border-rose-500/20">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </div>
+        <h3 id="rejectModalTitle" class="text-sm font-bold text-white">Reject Leave Application</h3>
+      </div>
+      <button onclick="closeRejectModal()" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition" aria-label="Close dialog">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+    <p class="text-xs text-slate-400 leading-relaxed">Select or type the official institutional reason for rejecting this requisition.</p>
+
+    <!-- Preset Reason Chips -->
+    <div id="presetChipsContainer" class="flex flex-wrap gap-1.5">
+      <button type="button" onclick="setRejectReason('Parent disclaimed permission during verification call')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 hover:text-rose-300 rounded-md text-xs font-medium text-slate-300 border border-slate-700 transition">
+        Parent Disclaimed
+      </button>
+      <button type="button" onclick="setRejectReason('Inadequate academic attendance (<75%)')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 hover:text-rose-300 rounded-md text-xs font-medium text-slate-300 border border-slate-700 transition">
+        Inadequate Attendance
+      </button>
+      <button type="button" onclick="setRejectReason('Scheduled internal examination / lab assessment')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 hover:text-rose-300 rounded-md text-xs font-medium text-slate-300 border border-slate-700 transition">
+        Exam Scheduled
+      </button>
+      <button type="button" onclick="setRejectReason('Disciplinary hold by department authority')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 hover:text-rose-300 rounded-md text-xs font-medium text-slate-300 border border-slate-700 transition">
+        Disciplinary Hold
+      </button>
+    </div>
+
+    <input type="hidden" id="rejectPassId" value="" />
+    <input type="hidden" id="rejectRoleLabel" value="" />
+    <input type="hidden" id="rejectIsOD" value="false" />
+    <div>
+      <label class="block text-xs font-semibold text-slate-300 mb-1.5">
+        Official Rejection Statement <span class="text-rose-400">*</span>
+      </label>
+      <textarea
+        id="rejectReasonInput"
+        rows="3"
+        placeholder="State reason clearly..."
+        class="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-lg text-xs md:text-sm text-white focus:outline-none focus:border-rose-500 transition"
+      ></textarea>
+    </div>
+    <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+      <button onclick="closeRejectModal()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs md:text-sm font-medium transition active:scale-98">
+        Cancel
+      </button>
+      <button onclick="submitRejectPass()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs md:text-sm font-semibold transition active:scale-98">
+        Confirm Rejection
+      </button>
+    </div>
+  </div>
+</div>

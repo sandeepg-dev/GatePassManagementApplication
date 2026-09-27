@@ -17,14 +17,23 @@ async function applyOnDuty(req, res) {
   try {
     const {
       rollNo,
-      mode = 'dates',
+      mode,
       fromDate,
       toDate,
       specificDate,
+      odDate,
+      date,
       fromTime,
       toTime,
+      startTime,
+      endTime,
       reason,
       placeEvent,
+      eventName,
+      event,
+      activityName,
+      place,
+      venue,
       expectedReturnTime
     } = req.body;
 
@@ -36,15 +45,22 @@ async function applyOnDuty(req, res) {
       return res.status(400).json({ success: false, message: 'Detailed Reason for On-Duty is required.' });
     }
 
-    const cleanMode = mode === 'time' ? 'time' : 'dates';
+    const cleanDate = specificDate || odDate || date || fromDate || '';
+    const cleanFromDate = fromDate || cleanDate;
+    const cleanToDate = toDate || cleanDate;
+    const cleanFromTime = fromTime || startTime || '';
+    const cleanToTime = toTime || endTime || '';
+    const cleanPlaceEvent = placeEvent || [eventName || event || activityName, place || venue].filter(Boolean).join(' - ') || '-';
+
+    const cleanMode = (mode === 'time' || (cleanFromTime && cleanToTime)) ? 'time' : 'dates';
 
     if (cleanMode === 'dates') {
-      if (!fromDate || !toDate) {
-        return res.status(400).json({ success: false, message: 'Both From Date and To Date are required for Date Range On-Duty.' });
+      if (!cleanFromDate || !cleanToDate) {
+        return res.status(400).json({ success: false, message: 'Date information is required for On-Duty requisition.' });
       }
     } else {
-      if (!fromTime || !toTime) {
-        return res.status(400).json({ success: false, message: 'Both From Time and To Time are required for specific time On-Duty.' });
+      if (!cleanFromTime || !cleanToTime) {
+        return res.status(400).json({ success: false, message: 'Both Start Time and End Time are required for On-Duty.' });
       }
     }
 
@@ -92,13 +108,13 @@ async function applyOnDuty(req, res) {
       parentName: parentName,
       parentContact: parentContact,
       mode: cleanMode,
-      fromDate: fromDate || '',
-      toDate: toDate || '',
-      specificDate: specificDate || fromDate || '',
-      fromTime: fromTime || '',
-      toTime: toTime || '',
+      fromDate: cleanFromDate || '',
+      toDate: cleanToDate || '',
+      specificDate: cleanDate || '',
+      fromTime: cleanFromTime || '',
+      toTime: cleanToTime || '',
       reason: reason.trim(),
-      placeEvent: (placeEvent || '').trim() || '-',
+      placeEvent: cleanPlaceEvent,
       expectedReturnTime: (expectedReturnTime || '').trim() || '-',
       status: 'Pending Counselor',
       appliedTime: getISTTimeString()

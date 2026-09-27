@@ -41,6 +41,12 @@ app.get('/admin', (req, res) => res.sendFile(path.join(rootDir, 'admin.html')));
 app.get('/security', (req, res) => res.sendFile(path.join(rootDir, 'security.html')));
 app.get('/apply', (req, res) => res.sendFile(path.join(rootDir, 'apply.html')));
 
+// Protected Dashboard Role Routes (Served by SPA entry index.html)
+const dashboardRoleRoutes = ['/student', '/counselor', '/advisor', '/hod', '/warden', '/principal'];
+dashboardRoleRoutes.forEach(route => {
+  app.get(route, (req, res) => res.sendFile(path.join(rootDir, 'index.html')));
+});
+
 // Fallback for stripped /api prefix in serverless environments
 app.use('/', apiRoutes);
 

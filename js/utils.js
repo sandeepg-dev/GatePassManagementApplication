@@ -139,19 +139,19 @@ function showConfirmModal({ title, message, confirmText = 'Confirm', cancelText 
   }
 
   modal.innerHTML = `
-    <div class="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl border border-slate-100 space-y-4 animate-in fade-in zoom-in duration-200">
-      <div class="w-12 h-12 rounded-2xl bg-${confirmColor === 'rose' ? 'rose' : 'blue'}-50 text-${confirmColor === 'rose' ? 'rose' : 'blue'}-600 flex items-center justify-center font-bold">
-        <svg class="w-6 h-6 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+    <div class="bg-slate-900 rounded-xl p-6 max-w-sm w-full shadow-2xl border border-slate-800 space-y-4 animate-in fade-in zoom-in duration-150">
+      <div class="w-10 h-10 rounded-lg bg-${confirmColor === 'rose' ? 'red' : 'blue'}-500/10 text-${confirmColor === 'rose' ? 'red' : 'blue'}-400 flex items-center justify-center font-bold">
+        <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
       </div>
       <div>
-        <h3 class="text-base font-bold text-slate-900">${escapeHtml(title)}</h3>
-        <p class="text-xs md:text-sm text-slate-600 mt-1 leading-relaxed">${escapeHtml(message)}</p>
+        <h3 class="text-sm font-semibold text-white">${escapeHtml(title)}</h3>
+        <p class="text-xs text-slate-400 mt-1 leading-relaxed">${escapeHtml(message)}</p>
       </div>
       <div class="flex gap-2.5 pt-2">
-        <button id="confirmCancelBtn" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs md:text-sm rounded-xl transition">
+        <button id="confirmCancelBtn" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs rounded-lg transition">
           ${escapeHtml(cancelText)}
         </button>
-        <button id="confirmActionBtn" class="flex-1 py-2.5 bg-${confirmColor === 'rose' ? 'rose-600 hover:bg-rose-700' : 'indigo-600 hover:bg-indigo-700'} text-white font-semibold text-xs md:text-sm rounded-xl shadow-xs transition active:scale-95">
+        <button id="confirmActionBtn" class="flex-1 py-2 ${confirmColor === 'rose' ? 'bg-red-600 hover:bg-red-500' : 'bg-blue-600 hover:bg-blue-500'} text-white font-medium text-xs rounded-lg transition active:scale-95">
           ${escapeHtml(confirmText)}
         </button>
       </div>

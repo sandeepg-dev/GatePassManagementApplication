@@ -12,6 +12,14 @@ const connectDB = require('./src/config/db');
 
 const PORT = process.env.PORT || 10000;
 
+// Ensure HTML component partials are assembled into index.html on launch
+try {
+  const assemble = require('./scripts/assembleHtml');
+  assemble();
+} catch (e) {
+  // Graceful fallback if standalone
+}
+
 async function startServer() {
   try {
     await connectDB();

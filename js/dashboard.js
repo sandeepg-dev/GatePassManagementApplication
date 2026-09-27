@@ -271,12 +271,12 @@ function getAuthorityDashboardHTML(user, config) {
       </div>
 
       <!-- MASTER SECTION CARD -->
-      <div class="bg-slate-900/95 border border-slate-800 rounded-3xl p-5 md:p-7 space-y-6 shadow-2xl">
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 md:p-6 space-y-5 shadow-lg">
 
         <!-- TAB NAVIGATION BAR: 6 unified tabs with role-tailored labels -->
-        <nav class="flex flex-wrap items-center gap-1.5 p-1.5 bg-slate-950/80 rounded-2xl border border-slate-800">
+        <nav class="flex flex-wrap items-center gap-1.5 p-1 bg-slate-950/80 rounded-lg border border-slate-800">
           <button id="extTab_btn_requests" onclick="switchExtendedAuthorityTab('requests')"
-            class="flex-1 min-w-[110px] px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 bg-blue-600 text-white shadow-md shadow-blue-900/40 border border-blue-500/50">
+            class="flex-1 min-w-[110px] px-3 py-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2 bg-blue-600 text-white shadow-sm border border-blue-500">
             <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
             <span>${tab1Label}</span>
             <span id="extBadge_requests" class="px-1.5 py-0.5 rounded-full text-[10px] bg-red-500 text-white font-extrabold leading-none">0</span>
@@ -577,12 +577,12 @@ function getAuthorityDashboardHTML(user, config) {
         </div>
       </div>
 
-      <div class="bg-slate-900/95 border border-slate-800 rounded-3xl p-5 md:p-7 space-y-6 shadow-2xl">
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 md:p-6 space-y-5 shadow-lg">
 
         <!-- 4-TAB NAVIGATION BAR -->
-        <nav class="flex flex-wrap items-center gap-1.5 p-1.5 bg-slate-950/80 rounded-2xl border border-slate-800">
+        <nav class="flex flex-wrap items-center gap-1.5 p-1 bg-slate-950/80 rounded-lg border border-slate-800">
           <button id="tab_btn_requests" onclick="switchAuthorityTab('requests')"
-            class="flex-1 min-w-[120px] px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 bg-blue-600 text-white shadow-md shadow-blue-900/40 border border-blue-500/50">
+            class="flex-1 min-w-[120px] px-3 py-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2 bg-blue-600 text-white shadow-sm border border-blue-500">
             <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
             <span>${tab1Label}</span>
           </button>
@@ -672,218 +672,188 @@ function getAuthorityDashboardHTML(user, config) {
 function openDashboard(user) {
   if (!user || !user.role) {
     console.error('Invalid user profile or role passed to openDashboard:', user);
-    return;
+    return false;
   }
 
-  const role = typeof normalizeRole === 'function' ? normalizeRole(user.role) : String(user.role).trim().toLowerCase().replace(/[\s-]+/g, '_');
-  user.role = role;
+  try {
+    const role = typeof normalizeRole === 'function' ? normalizeRole(user.role) : String(user.role).trim().toLowerCase().replace(/[\s-]+/g, '_');
+    user.role = role;
 
-  if (role === 'admin') {
-    window.location.replace('/admin.html');
-    return;
-  }
+    if (role === 'admin') {
+      window.location.replace('/admin.html');
+      return true;
+    }
 
-  loggedUser = user;
-  if (typeof window !== 'undefined') window.loggedUser = user;
+    loggedUser = user;
+    if (typeof window !== 'undefined') window.loggedUser = user;
 
-  // Immediately hide login screen and reveal dashboard screen
-  document.getElementById('singleLoginPortalScreen')?.classList.add('hidden');
-  document.getElementById('authScreen')?.classList.add('hidden');
-  document.getElementById('dashScreen')?.classList.remove('hidden');
-  document.getElementById('authCheckingOverlay')?.classList.add('hidden');
+    // Reveal dashboard screen and hide login portal
+    document.getElementById('singleLoginPortalScreen')?.classList.add('hidden');
+    document.getElementById('authScreen')?.classList.add('hidden');
+    document.getElementById('dashScreen')?.classList.remove('hidden');
+    document.getElementById('authCheckingOverlay')?.classList.add('hidden');
 
-  const greeting = document.getElementById('dashGreeting');
-  if (greeting) greeting.innerText = `Welcome, ${user.name}`;
+    const greeting = document.getElementById('dashGreeting');
+    if (greeting) greeting.innerText = `Welcome, ${user.name}`;
 
-  const subtitles = {
-    principal: 'EXECUTIVE DIRECTORATE • GRTIET Institution-Wide Clearance',
-    hod: `HEAD OF DEPARTMENT • Department of ${user.dept || 'Engineering'}`,
-    advisor: `CLASS ADVISOR • ${user.academicYear || '3 Year'} - ${user.dept || 'Department'} Sec ${user.yearSec || 'A'}`,
-    counselor: `CLASS COUNSELOR • Assigned Ward (${user.startRoll || 'Start'} to ${user.endRoll || 'End'})`,
-    student: `STUDENT • ${user.academicYear || '3 Year'} • Dept: ${user.dept || 'Engineering'} - Sec ${user.yearSec || 'A'}`,
-    boys_warden: 'HOSTEL WARDEN GOVERNANCE • Boys Hostel Clearance Portal',
-    girls_warden: 'HOSTEL WARDEN GOVERNANCE • Girls Hostel Clearance Portal'
-  };
+    const subtitles = {
+      principal: 'EXECUTIVE DIRECTORATE • GRTIET Institution-Wide Clearance',
+      hod: `HEAD OF DEPARTMENT • Department of ${user.dept || 'Engineering'}`,
+      advisor: `CLASS ADVISOR • ${user.academicYear || '3 Year'} - ${user.dept || 'Department'} Sec ${user.yearSec || 'A'}`,
+      counselor: `CLASS COUNSELOR • Assigned Ward (${user.startRoll || 'Start'} to ${user.endRoll || 'End'})`,
+      student: `STUDENT • ${user.academicYear || '3 Year'} • Dept: ${user.dept || 'Engineering'} - Sec ${user.yearSec || 'A'}`,
+      warden: 'HOSTEL WARDEN GOVERNANCE • Hostel Movement & Gate Clearance Portal',
+      boys_warden: 'HOSTEL WARDEN GOVERNANCE • Boys Hostel Clearance Portal',
+      girls_warden: 'HOSTEL WARDEN GOVERNANCE • Girls Hostel Clearance Portal'
+    };
 
-  const roleSubtitle = document.getElementById('dashRoleSubtitle');
-  if (roleSubtitle) roleSubtitle.innerText = subtitles[role] || '';
+    const roleSubtitle = document.getElementById('dashRoleSubtitle');
+    if (roleSubtitle) roleSubtitle.innerText = subtitles[role] || `${String(role).toUpperCase()} • Institutional Clearance Portal`;
 
-  const topPdfBtn = document.getElementById('topBulkPdfBtn');
-  const topBulkLettersBtn = document.getElementById('topBulkLettersBtn');
-  const clearDataBtn = document.getElementById('clearAllDataBtn');
-  const studentView = document.getElementById('studentPersonalView');
-  const content = document.getElementById('roleDashboardContent');
+    const topPdfBtn = document.getElementById('topBulkPdfBtn');
+    const topBulkLettersBtn = document.getElementById('topBulkLettersBtn');
+    const clearDataBtn = document.getElementById('clearAllDataBtn');
+    const studentView = document.getElementById('studentPersonalView');
+    const content = document.getElementById('roleDashboardContent');
 
   if (wardenAutoRefreshTimer) { clearInterval(wardenAutoRefreshTimer); wardenAutoRefreshTimer = null; }
   currentAuthorityTab = 'requests';
 
   if (user.role === 'student') {
-    if (topPdfBtn) topPdfBtn.classList.add('hidden');
-    if (topBulkLettersBtn) topBulkLettersBtn.classList.add('hidden');
-    if (clearDataBtn) clearDataBtn.classList.add('hidden');
-    if (studentView) studentView.classList.remove('hidden');
+    document.body.classList.add('theme-student');
+    document.body.classList.remove('theme-authority');
 
-    const nowD = new Date();
-    const todayISO = `${nowD.getFullYear()}-${String(nowD.getMonth() + 1).padStart(2, '0')}-${String(nowD.getDate()).padStart(2, '0')}`;
-
-    if (content) {
-      content.innerHTML = `
-        <div class="max-w-xl mx-auto space-y-5">
-          <!-- Segmented Tab Switcher (Gate Pass vs On-Duty) -->
-          <div class="flex items-center justify-center p-1.5 bg-slate-900/90 rounded-2xl border border-slate-800 shadow-lg gap-2">
-            <button id="stuTabBtn_pass" onclick="switchStudentPortalTab('pass')" class="flex-1 py-3 px-4 rounded-xl text-sm font-bold bg-blue-600 text-white shadow-md shadow-blue-900/40 transition flex items-center justify-center gap-2 border border-blue-500/50 active:scale-98">
-              <span>Gate Pass Application</span>
-            </button>
-            <button id="stuTabBtn_onduty" onclick="switchStudentPortalTab('onduty')" class="flex-1 py-3 px-4 rounded-xl text-sm font-semibold bg-slate-950/80 hover:bg-slate-800 text-slate-300 transition flex items-center justify-center gap-2 border border-slate-800 active:scale-98">
-              <span>On-Duty Application</span>
-            </button>
-          </div>
-
-          <!-- Section A: Institutional Gate Pass Form -->
-          <div id="studentPassSection" class="bg-slate-900/95 border border-slate-800 rounded-3xl p-6 md:p-8 space-y-5 shadow-2xl text-white">
-            <div class="border-b border-slate-800 pb-3">
-              <h3 class="font-bold text-white text-lg">Apply for Institutional Gate Pass</h3>
-              <p class="text-xs text-slate-400 mt-1">State your official reason for leaving campus during academic hours.</p>
-            </div>
-
-            <!-- Academic Standing Badge Bar -->
-            <div class="flex items-center flex-wrap gap-2 p-3 bg-slate-950/80 rounded-xl border border-slate-800 text-xs sm:text-sm font-semibold text-slate-300">
-              <span>Academic Standing:</span>
-              <span class="font-bold text-blue-400 font-mono">${user.academicYear || '3 Year'}</span>
-              <span class="text-slate-600">•</span>
-              <span>Dept:</span>
-              <span class="font-bold text-blue-400 font-mono">${user.dept || 'Engineering'}</span>
-              <span class="text-slate-600">•</span>
-              <span>Sec:</span>
-              <span class="font-bold text-blue-400 font-mono">${user.yearSec || 'A'}</span>
-              <span class="text-slate-600">•</span>
-              ${formatAccommodationBadge(user.accommodation)}
-            </div>
-
-            ${(/hoste?l|^h$/i.test(user.accommodation || '') && !/day/i.test(user.accommodation || ''))
-              ? `<div class="space-y-3.5 p-4 rounded-2xl bg-blue-950/20 border border-blue-900/40">
-                  <div class="flex items-center gap-2 text-xs font-bold text-blue-300 uppercase tracking-wider font-mono">
-                    <svg class="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    <span>Hosteller Gate Pass Schedule</span>
-                  </div>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Departure Date <span class="text-blue-400">*</span></label>
-                      <input type="date" id="departureDate" required class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-xs sm:text-sm font-mono text-white focus:outline-none focus:border-blue-500 transition" />
-                    </div>
-                    <div>
-                      <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Departure Time <span class="text-blue-400">*</span></label>
-                      <input type="time" id="departureTime" required class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-xs sm:text-sm font-mono text-white focus:outline-none focus:border-blue-500 transition" />
-                    </div>
-                  </div>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Expected Return Date <span class="text-blue-400">*</span></label>
-                      <input type="date" id="expectedReturnDate" required class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-xs sm:text-sm font-mono text-white focus:outline-none focus:border-blue-500 transition" />
-                    </div>
-                    <div>
-                      <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Expected Return Time <span class="text-blue-400">*</span></label>
-                      <input type="time" id="expectedReturnTime" required class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-xs sm:text-sm font-mono text-white focus:outline-none focus:border-blue-500 transition" />
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Official Reason <span class="text-blue-400">*</span></label>
-                  <textarea id="passReason" rows="3" placeholder="Enter reason manually..." class="w-full p-3.5 bg-slate-950 border border-slate-700 rounded-xl text-sm font-medium focus:outline-none focus:border-blue-500 transition text-white"></textarea>
-                </div>`
-              : `<div class="space-y-3.5 p-4 rounded-2xl bg-blue-950/20 border border-blue-900/40">
-                  <div class="flex items-center gap-2 text-xs font-bold text-blue-300 uppercase tracking-wider font-mono">
-                    <svg class="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <span>Day Scholar Gate Pass Timing</span>
-                  </div>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Date <span class="text-blue-400">*</span></label>
-                      <input type="date" id="dayScholarDate" value="${todayISO}" required class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-xs sm:text-sm font-mono text-white focus:outline-none focus:border-blue-500 transition" />
-                    </div>
-                    <div>
-                      <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Exit Time <span class="text-blue-400">*</span></label>
-                      <input type="time" id="dayScholarTime" required class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-xs sm:text-sm font-mono text-white focus:outline-none focus:border-blue-500 transition" />
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Official Reason <span class="text-blue-400">*</span></label>
-                  <textarea id="passReason" rows="3" placeholder="Enter reason manually..." class="w-full p-3.5 bg-slate-950 border border-slate-700 rounded-xl text-sm font-medium focus:outline-none focus:border-blue-500 transition text-white"></textarea>
-                </div>`
-            }
-            <button onclick="submitStudentPass('${user.userId}')" class="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-xl text-sm shadow-lg shadow-blue-900/40 border border-blue-500/50 transition active:scale-98 flex items-center justify-center gap-2">
-              <span>Submit Gate Pass Application</span>
-            </button>
-          </div>
-
-          <!-- Section B: Academic On-Duty (OD) Form -->
-          <div id="studentOnDutySection" class="hidden bg-slate-900/95 border border-slate-800 rounded-3xl p-6 md:p-8 space-y-5 shadow-2xl text-white">
-            <div class="border-b border-slate-800 pb-3">
-              <h3 class="font-bold text-white text-lg">Apply for Academic On-Duty (OD)</h3>
-              <p class="text-xs text-slate-400 mt-1">Approval pipeline: Counsellor &rarr; Class Advisor &rarr; HOD &rarr; Completed</p>
-            </div>
-            <div class="flex items-center flex-wrap gap-2 p-3 bg-slate-950/80 rounded-xl border border-slate-800 text-xs sm:text-sm font-semibold text-slate-300">
-              <span>Academic Standing:</span>
-              <span class="font-bold text-blue-400 font-mono">${user.academicYear || '3 Year'}</span>
-              <span class="text-slate-600">•</span>
-              <span>Dept:</span>
-              <span class="font-bold text-blue-400 font-mono">${user.dept || 'Engineering'}</span>
-              <span class="text-slate-600">•</span>
-              <span>Sec:</span>
-              <span class="font-bold text-blue-400 font-mono">${user.yearSec || 'A'}</span>
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Select On-Duty Duration Format</label>
-              <div class="flex gap-2 p-1 bg-slate-950/80 rounded-xl border border-slate-800">
-                <button type="button" id="odModeBtn_dates" onclick="setODTimingMode('dates')" class="flex-1 py-2 px-3 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition">Date Range (From - To Date)</button>
-                <button type="button" id="odModeBtn_time" onclick="setODTimingMode('time')" class="flex-1 py-2 px-3 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">Specific Time Duration</button>
-              </div>
-            </div>
-            <div id="odDateRangeFields" class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">From Date <span class="text-blue-400">*</span></label>
-                <input type="date" id="odFromDate" class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-sm font-mono text-white focus:outline-none focus:border-blue-500" />
-              </div>
-              <div>
-                <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">To Date <span class="text-blue-400">*</span></label>
-                <input type="date" id="odToDate" class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-sm font-mono text-white focus:outline-none focus:border-blue-500" />
-              </div>
-            </div>
-            <div id="odTimeFields" class="hidden space-y-3">
-              <div>
-                <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Date of On-Duty <span class="text-blue-400">*</span></label>
-                <input type="date" id="odSpecificDate" class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-sm font-mono text-white focus:outline-none focus:border-blue-500" />
-              </div>
-              <div class="grid grid-cols-2 gap-3">
-                <div>
-                  <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">From Time <span class="text-blue-400">*</span></label>
-                  <input type="time" id="odFromTime" class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-sm font-mono text-white focus:outline-none focus:border-blue-500" />
-                </div>
-                <div>
-                  <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">To Time <span class="text-blue-400">*</span></label>
-                  <input type="time" id="odToTime" class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-sm font-mono text-white focus:outline-none focus:border-blue-500" />
-                </div>
-              </div>
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Academic Event / Purpose <span class="text-blue-400">*</span></label>
-              <textarea id="odReason" rows="3" placeholder="Enter academic/institutional purpose..." class="w-full p-3.5 bg-slate-950 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-blue-500 transition text-white"></textarea>
-            </div>
-            <button onclick="submitStudentOnDuty('${user.userId}')" class="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm shadow-md shadow-blue-900/40 border border-blue-500/50 transition active:scale-98 flex items-center justify-center gap-2">
-              <span>Submit On-Duty Request</span>
-            </button>
-          </div>
-        </div>
-      `;
+    const stuPortal = document.getElementById('studentPortalContainer');
+    const authLayout = document.getElementById('authorityDashboardLayout');
+    if (stuPortal) {
+      stuPortal.classList.remove('hidden');
+      stuPortal.style.display = 'flex';
+      stuPortal.style.visibility = 'visible';
     }
-    if (typeof switchStudentPortalTab === 'function') switchStudentPortalTab('pass');
-    else loadStudentPersonalStatus();
+    if (authLayout) {
+      authLayout.classList.add('hidden');
+      authLayout.style.display = 'none';
+      authLayout.style.visibility = 'hidden';
+      authLayout.style.height = '0';
+      authLayout.style.overflow = 'hidden';
+    }
+
+    // Hide any authority-specific header action buttons
+    if (topPdfBtn) { topPdfBtn.classList.add('hidden'); topPdfBtn.style.display = 'none'; }
+    if (topBulkLettersBtn) { topBulkLettersBtn.classList.add('hidden'); topBulkLettersBtn.style.display = 'none'; }
+    if (clearDataBtn) { clearDataBtn.classList.add('hidden'); clearDataBtn.style.display = 'none'; }
+
+    // Dynamically display logged-in student's real name
+    const rawName = (user.name || '').trim();
+    const firstName = rawName.split(' ')[0] || 'Student';
+    const welcomeHeading = document.getElementById('stuWelcomeHeading');
+    if (welcomeHeading) {
+      welcomeHeading.innerText = `Welcome, ${firstName}`;
+    }
+
+    // Populate student header & profile
+    const initials = user.name ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'ST';
+    const stuAvatar = document.getElementById('stuAvatarInitials');
+    if (stuAvatar) stuAvatar.innerText = initials;
+    const stuName = document.getElementById('stuProfileName');
+    if (stuName) stuName.innerText = user.name || 'Student';
+    const stuMeta = document.getElementById('stuProfileMeta');
+    if (stuMeta) stuMeta.innerText = `${user.academicYear || 'III Year'} - ${user.dept || 'Engineering'} (Sec ${user.yearSec || 'A'})`;
+
+    const deptSecBadge = document.getElementById('stuDeptSecBadge');
+    if (deptSecBadge) {
+      deptSecBadge.innerText = `${user.academicYear || 'III Year'} - ${user.dept || 'Engineering'} (Sec ${user.yearSec || 'A'})`;
+    }
+
+    const accomBadge = document.getElementById('stuDetectedAccomBadge');
+    const mainAccomBadge = document.getElementById('stuAccomBadge');
+    const isH = (/hoste?l|^h$/i.test(user.accommodation || '') && !/day/i.test(user.accommodation || ''));
+    const accomText = isH ? 'Hosteller' : 'Day Scholar';
+    const accomClass = isH
+      ? 'px-3 py-1 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono'
+      : 'px-3 py-1 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 font-mono';
+
+    if (accomBadge) {
+      accomBadge.innerText = accomText;
+      accomBadge.className = isH
+        ? 'px-2.5 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono'
+        : 'px-2.5 py-0.5 rounded text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 font-mono';
+    }
+    if (mainAccomBadge) {
+      mainAccomBadge.innerText = accomText;
+      mainAccomBadge.className = accomClass;
+    }
+
+    // Populate left sidebar student card
+    const sideName = document.getElementById('sidebarStudentName');
+    const sideRoll = document.getElementById('sidebarStudentRoll');
+    const sideAccom = document.getElementById('sidebarAccomBadge');
+    if (sideName) sideName.innerText = user.name || 'Student';
+    if (sideRoll) sideRoll.innerText = user.userId || user.rollNo || '-';
+    if (sideAccom) {
+      sideAccom.innerText = accomText;
+      sideAccom.className = isH
+        ? 'px-2 py-0.5 text-[9px] font-bold rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200'
+        : 'px-2 py-0.5 text-[9px] font-bold rounded-md bg-blue-50 text-blue-700 border border-blue-200';
+    }
+
+    // Ensure form fields start empty (no automatic prefilling per requirements)
+    const fromEl = document.getElementById('leaveFromDate');
+    const toEl = document.getElementById('leaveToDate');
+    const reasonEl = document.getElementById('leaveReason');
+    if (fromEl) fromEl.value = '';
+    if (toEl) toEl.value = '';
+    if (reasonEl) reasonEl.value = '';
+
+    const gpDep = document.getElementById('gpDepDate');
+    const gpDepT = document.getElementById('gpDepTime');
+    const gpRet = document.getElementById('gpRetDate');
+    const gpRetT = document.getElementById('gpRetTime');
+    const gpReason = document.getElementById('gatePassReason');
+    if (gpDep) gpDep.value = '';
+    if (gpDepT) gpDepT.value = '';
+    if (gpRet) gpRet.value = '';
+    if (gpRetT) gpRetT.value = '';
+    if (gpReason) gpReason.value = '';
+
+    if (typeof switchStudentPage === 'function') {
+      switchStudentPage('dashboard', {
+        title: 'Welcome to Student Portal',
+        subtitle: 'Preparing institutional workspace & records...',
+        duration: 1500
+      });
+    } else if (typeof switchStudentTab === 'function') {
+      switchStudentTab('dashboard');
+    }
+    if (typeof loadStudentPersonalStatus === 'function') {
+      loadStudentPersonalStatus();
+    }
+    return true;
   } else {
+    document.body.classList.remove('theme-student');
+    document.body.classList.add('theme-authority');
+    const stuPortal = document.getElementById('studentPortalContainer');
+    const authLayout = document.getElementById('authorityDashboardLayout');
+    if (stuPortal) {
+      stuPortal.classList.add('hidden');
+      stuPortal.style.display = 'none';
+    }
+    if (authLayout) {
+      authLayout.classList.remove('hidden');
+      authLayout.style.display = 'flex';
+      authLayout.style.visibility = 'visible';
+    }
+
     if (studentView) studentView.classList.add('hidden');
     if (topPdfBtn) topPdfBtn.classList.remove('hidden');
     if (topBulkLettersBtn) topBulkLettersBtn.classList.remove('hidden');
     if (clearDataBtn) clearDataBtn.classList.remove('hidden');
+
+    // Delegate to dedicated role-aware production-grade Authority Portal module
+    if (typeof initAuthorityPortal === 'function') {
+      initAuthorityPortal(user);
+      return true;
+    }
 
     if (user.role === 'counselor') {
       const counselorConfig = {
@@ -893,14 +863,14 @@ function openDashboard(user) {
         hasOnDutyQueue: true,
         onDutyQueueContainerId: 'counselorODQueue',
         extraHeaderHTML: `
-          <div class="bg-slate-900/95 border border-slate-800 rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
-            <div class="flex flex-wrap items-center justify-between gap-4">
-              <div class="space-y-1">
+          <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 md:p-5 shadow-lg space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="space-y-0.5">
                 <div class="flex items-center gap-2">
-                  <h3 class="font-bold text-white text-base md:text-lg">Class Counselor Verification Desk</h3>
-                  <span class="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-400 text-xs font-mono font-bold rounded-md border border-emerald-500/30">Review Authority</span>
+                  <h3 class="font-bold text-white text-sm md:text-base">Class Counselor Verification Desk</h3>
+                  <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-xs font-mono font-medium rounded border border-emerald-500/20">Review Authority</span>
                 </div>
-                <p class="text-xs text-slate-400">Assigned Ward Jurisdiction: <span class="font-mono font-bold bg-slate-950 px-2.5 py-1 rounded-md border border-emerald-500/40 text-emerald-300">${user.startRoll || 'Start'} &rarr; ${user.endRoll || 'End'}</span></p>
+                <p class="text-xs text-slate-400">Assigned Ward Jurisdiction: <span class="font-mono font-semibold bg-slate-950 px-2 py-0.5 rounded border border-slate-700 text-slate-200">${user.startRoll || 'Start'} &rarr; ${user.endRoll || 'End'}</span></p>
               </div>
               <div class="flex items-center gap-2 text-xs text-slate-300 font-mono bg-slate-950/90 px-3.5 py-2 rounded-xl border border-slate-800">
                 <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
@@ -933,23 +903,23 @@ function openDashboard(user) {
         hasOnDutyQueue: true,
         onDutyQueueContainerId: 'advisorODQueue',
         extraHeaderHTML: `
-          <div class="bg-slate-900/95 border border-slate-800 rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
+          <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 md:p-6 shadow-sm space-y-4">
             <div class="flex flex-wrap items-center justify-between gap-4">
               <div class="space-y-1">
                 <div class="flex items-center gap-2">
                   <h3 class="font-bold text-white text-base md:text-lg">Class Advisor • Academic Roster Management</h3>
-                  <span class="px-2.5 py-0.5 bg-blue-500/20 text-blue-400 text-xs font-mono font-bold rounded-md border border-blue-500/30">Class Governance</span>
+                  <span class="px-2.5 py-0.5 bg-blue-500/10 text-blue-400 text-xs font-mono font-medium rounded-md border border-blue-500/20">Class Governance</span>
                 </div>
-                <p class="text-xs text-slate-400 font-mono">Department: <span class="font-bold text-blue-400">${user.dept}</span> &bull; Section: <span class="font-bold text-blue-400">${user.yearSec}</span> &bull; Standing: <span class="font-bold text-blue-400">${user.academicYear || '3 Year'}</span></p>
+                <p class="text-xs text-slate-400 font-mono">Department: <span class="font-semibold text-blue-400">${user.dept}</span> &bull; Section: <span class="font-semibold text-blue-400">${user.yearSec}</span> &bull; Standing: <span class="font-semibold text-blue-400">${user.academicYear || '3 Year'}</span></p>
               </div>
-              <div class="flex items-center gap-2 text-xs text-slate-300 font-mono bg-slate-950/90 px-3.5 py-2 rounded-xl border border-slate-800">
+              <div class="flex items-center gap-2 text-xs text-slate-300 font-mono bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
                 <span class="w-2 h-2 rounded-full bg-blue-400"></span>
                 <span>Pre-Screened by Counselors</span>
               </div>
             </div>
             <div class="pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-300">
               <div class="flex items-center gap-2">
-                <span class="font-bold text-white font-mono uppercase tracking-wider">Workflow Pipeline:</span>
+                <span class="font-semibold text-white font-mono uppercase tracking-wider">Workflow Pipeline:</span>
                 <span class="px-2 py-0.5 bg-emerald-950/60 text-emerald-400 rounded border border-emerald-500/30 font-semibold">1. Counselor Verified &check;</span>
                 <span class="text-slate-600">&rarr;</span>
                 <span class="px-2 py-0.5 bg-blue-950/60 text-blue-300 rounded border border-blue-500/30 font-bold">2. Advisor Endorsement (Current)</span>
@@ -969,28 +939,28 @@ function openDashboard(user) {
         hasOnDutyQueue: true,
         onDutyQueueContainerId: 'hodODQueue',
         extraHeaderHTML: `
-          <div class="bg-slate-900/95 border border-slate-800 rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
+          <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 md:p-6 shadow-sm space-y-4">
             <div class="flex flex-wrap items-center justify-between gap-4">
               <div class="space-y-1">
                 <div class="flex items-center gap-2">
                   <h3 class="font-bold text-white text-base md:text-lg">Department Directorate &bull; ${user.dept} Engineering</h3>
-                  <span class="px-2.5 py-0.5 bg-indigo-500/20 text-indigo-400 text-xs font-mono font-bold rounded-md border border-indigo-500/30">Executive Sanction</span>
+                  <span class="px-2.5 py-0.5 bg-blue-500/10 text-blue-400 text-xs font-mono font-medium rounded-md border border-blue-500/20">Executive Sanction</span>
                 </div>
                 <p class="text-xs text-slate-400">Final Sanction Authority for Academic On-Duty (OD) &bull; Department Gate Pass Clearance</p>
               </div>
-              <div class="flex items-center gap-2 text-xs text-slate-300 font-mono bg-slate-950/90 px-3.5 py-2 rounded-xl border border-slate-800">
+              <div class="flex items-center gap-2 text-xs text-slate-300 font-mono bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
                 <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
                 <span>Department Clearance Active</span>
               </div>
             </div>
             <div class="pt-3 border-t border-slate-800/80 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-              <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-800/60 flex items-center justify-between text-slate-300 font-mono">
+              <div class="p-2.5 bg-slate-950 rounded-lg border border-slate-800 flex items-center justify-between text-slate-300 font-mono">
                 <span class="text-slate-400">Academic OD Sanctions:</span>
-                <span class="font-bold text-indigo-400">Final Approval Tier</span>
+                <span class="font-semibold text-blue-400">Final Approval Tier</span>
               </div>
-              <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-800/60 flex items-center justify-between text-slate-300 font-mono">
+              <div class="p-2.5 bg-slate-950 rounded-lg border border-slate-800 flex items-center justify-between text-slate-300 font-mono">
                 <span class="text-slate-400">Gate Pass Endorsements:</span>
-                <span class="font-bold text-blue-400">Forward to Principal</span>
+                <span class="font-semibold text-blue-400">Forward to Principal</span>
               </div>
             </div>
           </div>
@@ -1003,60 +973,60 @@ function openDashboard(user) {
         requestsSubtitle: 'College-wide outpass requisitions endorsed across all departments for final Institutional clearance.',
         queueContainerId: 'principalQueue',
         extraHeaderHTML: `
-          <div class="bg-slate-900/95 border border-slate-800 rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
+          <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 md:p-6 shadow-sm space-y-4">
             <div class="flex flex-wrap items-center justify-between gap-4">
               <div class="space-y-1">
                 <div class="flex items-center gap-2">
                   <h3 class="font-bold text-white text-base md:text-lg">Principal Executive Directorate</h3>
-                  <span class="px-2.5 py-0.5 bg-blue-500/20 text-blue-400 text-xs font-mono font-bold rounded-md border border-blue-500/30">Institutional Governance</span>
+                  <span class="px-2.5 py-0.5 bg-blue-500/10 text-blue-400 text-xs font-mono font-medium rounded-md border border-blue-500/20">Institutional Governance</span>
                 </div>
                 <p class="text-xs text-slate-400">GRT Institute of Engineering and Technology &bull; College-Wide Outpass Clearance Engine</p>
               </div>
-              <div class="flex items-center gap-2 text-xs text-slate-300 font-mono bg-slate-950/90 px-3.5 py-2 rounded-xl border border-slate-800">
+              <div class="flex items-center gap-2 text-xs text-slate-300 font-mono bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
                 <span class="w-2 h-2 rounded-full bg-blue-400"></span>
                 <span>Institution-Wide Governance</span>
               </div>
             </div>
             <div class="pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400 font-mono">
-              <div>Jurisdiction: <span class="font-bold text-white">All Engineering Departments (CSE, ECE, EEE, MECH, CIVIL, IT, BME, AIDS, MBA)</span></div>
-              <div class="text-emerald-400 font-bold">Autonomous Institutional Authority</div>
+              <div>Jurisdiction: <span class="font-semibold text-white">All Engineering Departments (CSE, ECE, EEE, MECH, CIVIL, IT, BME, AIDS, MBA)</span></div>
+              <div class="text-emerald-400 font-semibold">Autonomous Institutional Authority</div>
             </div>
           </div>
         `
       };
       if (content) content.innerHTML = getAuthorityDashboardHTML(user, principalConfig);
-    } else if (user.role === 'boys_warden' || user.role === 'girls_warden') {
-      const isFemale = user.role === 'girls_warden';
+    } else if (user.role === 'boys_warden' || user.role === 'girls_warden' || user.role === 'warden') {
+      const isFemale = user.role === 'girls_warden' || (user.gender && String(user.gender).toLowerCase() === 'female');
       const wardenConfig = {
         requestsTitle: `${isFemale ? 'Girls' : 'Boys'} Hostel Student Leave Requests`,
         requestsSubtitle: `Approved leave requests received after Principal approval for ${isFemale ? 'Girls' : 'Boys'} Hostel clearance.`,
         queueContainerId: 'wardenRequestsTableContainer',
         extraHeaderHTML: `
-          <div class="bg-slate-900/95 border border-slate-800 rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
+          <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 md:p-6 shadow-sm space-y-4">
             <div class="flex flex-wrap items-center justify-between gap-4">
               <div class="space-y-1">
                 <div class="flex items-center gap-2">
                   <h3 class="font-bold text-white text-base md:text-lg">${isFemale ? 'Girls' : 'Boys'} Hostel Movement & Gate Desk</h3>
-                  <span class="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-400 text-xs font-mono font-bold rounded-md border border-emerald-500/30">Gate Clearance</span>
+                  <span class="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 text-xs font-mono font-medium rounded-md border border-emerald-500/20">Gate Clearance</span>
                 </div>
                 <p class="text-xs text-slate-400 font-mono">${isFemale ? 'Female' : 'Male'} Hostellers Only &bull; Gate Window & Movement Verification</p>
               </div>
-              <div class="flex items-center gap-2 text-xs text-slate-300 font-mono bg-slate-950/90 px-3.5 py-2 rounded-xl border border-slate-800">
+              <div class="flex items-center gap-2 text-xs text-slate-300 font-mono bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 <span>Real-Time 3.5s Movement Sync</span>
               </div>
             </div>
             <div class="pt-3 border-t border-slate-800/80 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-slate-300">
-              <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-800/60 flex items-center gap-2">
-                <span class="font-bold text-blue-400 font-mono">1.</span>
+              <div class="p-2.5 bg-slate-950 rounded-lg border border-slate-800 flex items-center gap-2">
+                <span class="font-semibold text-blue-400 font-mono">1.</span>
                 <span>Verify Principal Approval Stamp</span>
               </div>
-              <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-800/60 flex items-center gap-2">
-                <span class="font-bold text-blue-400 font-mono">2.</span>
+              <div class="p-2.5 bg-slate-950 rounded-lg border border-slate-800 flex items-center gap-2">
+                <span class="font-semibold text-blue-400 font-mono">2.</span>
                 <span>Check Curfew & Return Date/Time</span>
               </div>
-              <div class="p-2.5 bg-slate-950/60 rounded-xl border border-slate-800/60 flex items-center gap-2">
-                <span class="font-bold text-emerald-400 font-mono">3.</span>
+              <div class="p-2.5 bg-slate-950 rounded-lg border border-slate-800 flex items-center gap-2">
+                <span class="font-semibold text-emerald-400 font-mono">3.</span>
                 <span>Log Gate Exit & Physical Departure</span>
               </div>
             </div>
@@ -1065,8 +1035,16 @@ function openDashboard(user) {
       };
       if (content) content.innerHTML = getAuthorityDashboardHTML(user, wardenConfig);
       wardenAutoRefreshTimer = setInterval(() => {
-        if (loggedUser && (loggedUser.role === 'boys_warden' || loggedUser.role === 'girls_warden')) refreshAllAuthorityViews();
+        if (loggedUser && (loggedUser.role === 'boys_warden' || loggedUser.role === 'girls_warden' || loggedUser.role === 'warden')) refreshAllAuthorityViews();
       }, 3500);
+    } else {
+      // Robust authority view fallback to guarantee content is NEVER empty
+      const genericConfig = {
+        requestsTitle: `${user.name || 'Authority'} Clearance Queue`,
+        requestsSubtitle: 'Pending outpass requisitions in your institutional queue.',
+        queueContainerId: 'counselorQueue'
+      };
+      if (content) content.innerHTML = getAuthorityDashboardHTML(user, genericConfig);
     }
 
     try {
@@ -1074,6 +1052,11 @@ function openDashboard(user) {
     } catch (e) {
       console.warn('Background views refresh error:', e);
     }
+    }
+    return true;
+  } catch (err) {
+    console.error('Fatal error initializing authorized dashboard:', err);
+    return false;
   }
 }
 
@@ -1083,7 +1066,7 @@ function refreshAllAuthorityViews() {
   if (loggedUser.role === 'advisor') { fetchAdvisorQueue(); if (typeof fetchAdvisorODQueue === 'function') fetchAdvisorODQueue(); }
   if (loggedUser.role === 'hod') { fetchHODQueue(); if (typeof fetchHODODQueue === 'function') fetchHODODQueue(); }
   if (loggedUser.role === 'principal') fetchPrincipalQueue();
-  if (loggedUser.role === 'boys_warden' || loggedUser.role === 'girls_warden') fetchWardenLeaveRequests(loggedUser.role);
+  if (loggedUser.role === 'boys_warden' || loggedUser.role === 'girls_warden' || loggedUser.role === 'warden') fetchWardenLeaveRequests(loggedUser.role === 'girls_warden' ? 'girls_warden' : 'boys_warden');
   loadUniversalLogs();
 }
 
@@ -1091,8 +1074,12 @@ function logout() {
   if (wardenAutoRefreshTimer) { clearInterval(wardenAutoRefreshTimer); wardenAutoRefreshTimer = null; }
   loggedUser = null;
   sessionStorage.removeItem('campusPassUser');
+  sessionStorage.removeItem('campusAdminUser');
   localStorage.removeItem('campusPassUser');
+  localStorage.removeItem('campusAdminUser');
   sessionStorage.clear();
+  document.body.classList.remove('theme-student');
+  document.body.classList.remove('theme-authority');
   const idInput = document.getElementById('commonLoginId');
   const passInput = document.getElementById('commonPassword');
   if (idInput) idInput.value = '';

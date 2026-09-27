@@ -22,25 +22,120 @@ function generateFormalLetter(student, rawReason = '', appliedTimeStr = '', sche
   const retTime = student.expectedReturnTime || schedule?.expectedReturnTime;
   const retDateTime = student.expectedReturnDateTime || schedule?.expectedReturnDateTime || (retDate && retTime ? `${retDate} at ${retTime}` : (retDate || retTime));
 
-  let scheduleDetailsText = '';
-  if (isHosteller) {
-    scheduleDetailsText = `\nOFFICIAL HOSTELLER MOVEMENT SCHEDULE:
-- Application Date            : ${timeInfo}
-- Departure Date & Time       : ${depDate || '-'}${depTime ? ' at ' + depTime : ''}
-- Return Date & Time          : ${retDateTime || '-'}
-- Department, Year & Section  : Department of ${student.dept || 'Engineering'}, ${student.academicYear || '3 Year'} (Section '${student.yearSec || 'A'}')\n`;
-    const leaveDateStr = schedule?.leaveDate || schedule?.departureDate || student.leaveDate || student.departureDate || '';
-    const leaveTimeStr = schedule?.leaveTime || schedule?.departureTime || student.leaveTime || student.departureTime || '';
-    const leaveTime = leaveDateStr && leaveTimeStr ? `${leaveDateStr} at ${leaveTimeStr}` : (leaveDateStr || leaveTimeStr || schedule?.leaveDateTime || schedule?.approvalTime || student.approvalTime || timeInfo);
-    scheduleDetailsText = `\nOFFICIAL DAY SCHOLAR CLEARANCE DETAILS:
-- Leave Date & Time           : ${leaveTime}
-- Department, Year & Section  : Department of ${student.dept || 'Engineering'}, ${student.academicYear || '3 Year'} (Section '${student.yearSec || 'A'}')\n`;
+  if (schedule?.requestCategory === 'leave') {
+    const fromDateStr = schedule.fromDate || schedule.departureDate || '-';
+    const toDateStr = schedule.toDate || schedule.expectedReturnDate || '-';
+
+    return `GRT INSTITUTE OF ENGINEERING AND TECHNOLOGY
+(Approved by AICTE, New Delhi | Affiliated to Anna University, Chennai)
+(An Autonomous Institution | Accredited by NAAC with 'A++' Grade)
+GRT Mahalaksmi Nagar, Chennai-Tirupati Highway, Tiruttani - 631 209.
+DEPARTMENT OF ${deptUpper}
+
+Date: ${timeInfo}
+Ref: GRTIET/${deptUpper}/LEAVE/2026/${student.rollNo}
+
+From:
+${student.name || 'Student'} (Register No: ${student.rollNo}),
+${student.academicYear || '3 Year'}, Department of ${student.dept || 'Engineering'} (Section '${student.yearSec || 'A'}'),
+Accommodation: ${accommodationType} | Parent Phone: ${student.parentContact || '-'},
+GRT Institute of Engineering and Technology, Tiruttani - 631 209.
+
+Through:
+Respective Class Counselor and Class Advisor
+
+To:
+The Head of the Department,
+Department of ${student.dept || 'Engineering'},
+GRT Institute of Engineering and Technology,
+Tiruttani - 631 209.
+
+Respected Sir / Madam,
+
+Subject: Application for Leave of Absence - Regarding.
+
+I am writing to respectfully request permission to take leave of absence from college for the following period:
+
+- From Date : ${fromDateStr}
+- To Date   : ${toDateStr}
+
+Reason for Leave:
+"${String(rawReason).trim()}"
+
+I have informed my parents regarding this leave of absence and I will ensure that any academic classes or laboratory assignments missed during this period will be covered promptly. Kindly sanction my leave request.
+
+Thanking You,
+
+Yours faithfully,
+(${student.name || 'Student'})
+Roll No: ${student.rollNo}
+
+APPROVAL WORKFLOW (Counselor -> Class Advisor -> HOD -> CLOSED):
+--------------------------------------------------------------------------------
+[1] Class Counselor   : Verified & Recommended
+[2] Class Advisor     : Endorsed & Approved
+[3] Head of Department: Sanctioned & Closed
+--------------------------------------------------------------------------------
+Campus PassPro • Official Student Leave Requisition Letter`;
   }
+
+  let scheduleDetailsText = '';
+  const destination = schedule?.destination || schedule?.placeOrEvent || student.destination || student.placeOrEvent || '';
+  const hostelRoom = schedule?.hostelRoom || student.hostelRoom || '';
+  const hostelBlock = schedule?.hostelBlock || student.hostelBlock || '';
+  const hostelInfoText = isHosteller ? `\n- Hostel Particulars          : Block ${hostelBlock || 'A'}, Room ${hostelRoom || 'Resident'}` : '';
+
+  scheduleDetailsText = `
+OFFICIAL GATE OUTPASS SCHEDULE:
+- Departure Date & Time       : ${depDate || '-'}${depTime ? ' at ' + depTime : ''}
+- Expected Return Date & Time : ${retDateTime || '-'}${destination ? `\n- Place / Destination         : ${destination}` : ''}${hostelInfoText}
+- Department, Year & Section  : Department of ${student.dept || 'Engineering'}, ${student.academicYear || '3 Year'} (Section '${student.yearSec || 'A'}')
+`;
+
+  // Approval audit trail
+  const cApp = schedule?.counselorApproval?.approved || student.counselorApproval?.approved;
+  const aApp = schedule?.advisorApproval?.approved || student.advisorApproval?.approved;
+  const hApp = schedule?.hodApproval?.approved || student.hodApproval?.approved;
+  const pApp = schedule?.principalApproval?.approved || student.principalApproval?.approved;
+  const wApp = schedule?.wardenApproval?.approved || student.wardenApproval?.approved;
+
+  const cTime = schedule?.counselorApproval?.time || student.counselorApproval?.time || '';
+  const aTime = schedule?.advisorApproval?.time || student.advisorApproval?.time || '';
+  const hTime = schedule?.hodApproval?.time || student.hodApproval?.time || '';
+  const pTime = schedule?.principalApproval?.time || student.principalApproval?.time || '';
+  const wTime = schedule?.wardenApproval?.time || student.wardenApproval?.time || '';
+
+  const rej = schedule?.rejection || student.rejection || {};
+  const isRej = schedule?.status === 'Rejected' || student.status === 'Rejected' || !!rej.rejected;
+  const rejRole = rej.role || '';
+
+  const cStatus = cApp ? `Verified & Recommended (${cTime || 'Approved'})` : (isRej && /counselor/i.test(rejRole) ? `REJECTED (${rej.reason || 'Declined'})` : 'Pending Counselor Review');
+  const aStatus = aApp ? `Endorsed & Approved (${aTime || 'Approved'})` : (isRej && /advisor/i.test(rejRole) ? `REJECTED (${rej.reason || 'Declined'})` : (cApp ? 'Pending Class Advisor Review' : 'Queued'));
+  const hStatus = hApp ? `Authorized & Sanctioned (${hTime || 'Approved'})` : (isRej && /hod/i.test(rejRole) ? `REJECTED (${rej.reason || 'Declined'})` : (aApp ? 'Pending HOD Review' : 'Queued'));
+  const pStatus = pApp ? `Sanctioned & Approved (${pTime || 'Approved'})` : (isRej && /principal/i.test(rejRole) ? `REJECTED (${rej.reason || 'Declined'})` : (hApp ? 'Pending Principal Review' : 'Queued'));
+  const wStatus = wApp ? `Gate Cleared & Sanctioned (${wTime || 'Approved'})` : (isRej && /warden/i.test(rejRole) ? `REJECTED (${rej.reason || 'Declined'})` : (pApp ? 'Pending Warden Review' : 'Queued'));
+
+  const approvalBlock = isHosteller
+    ? `OFFICIAL MULTI-TIER CLEARANCE & APPROVAL ENDORSEMENT:
+[1] Class Counselor   : ${cStatus}
+[2] Class Advisor     : ${aStatus}
+[3] Head of Department: ${hStatus}
+[4] Principal         : ${pStatus}
+[5] Hostel Warden     : ${wStatus}`
+    : `OFFICIAL MULTI-TIER CLEARANCE & APPROVAL ENDORSEMENT:
+[1] Class Counselor   : ${cStatus}
+[2] Class Advisor     : ${aStatus}
+[3] Head of Department: ${hStatus}
+[4] Principal         : ${pStatus}`;
+
+  const rejectionBlock = isRej
+    ? `\n\n--------------------------------------------------------------------------------\nREJECTION NOTICE: Application was rejected by ${rej.roleTitle || rej.rejectedBy || 'Authority'}.\nReason: "${rej.reason || student.rejectionReason || 'Not approved'}"\n--------------------------------------------------------------------------------`
+    : '';
 
   return `GRT INSTITUTE OF ENGINEERING AND TECHNOLOGY
 (Approved by AICTE, New Delhi | Affiliated to Anna University, Chennai)
 (An Autonomous Institution | Accredited by NAAC with 'A++' Grade)
-GRT Mahalaksmi Nagar, Chennai-Tirupati Highway, Tiruttani - 631 209.
+GRT Mahalakshmi Nagar, Chennai-Tirupati Highway, Tiruttani - 631 209.
 DEPARTMENT OF ${deptUpper}
 
 Date: ${timeInfo}
@@ -48,21 +143,23 @@ Ref: GRTIET/${deptUpper}/GP/2026/${student.rollNo}
 
 From:
 ${student.name || 'Student'} (Register No: ${student.rollNo}),
-${student.academicYear || '3 Year'}, Department of ${student.dept || 'Engineering'} (Section '${student.yearSec || 'A'}'),
-Accommodation: ${accommodationType} | Father: ${student.fatherName || student.parentName || '-'} | Parent Phone: ${student.parentContact || '-'},
+Father's Name: ${student.fatherName || student.parentName || '-'},
+Parent's Phone: ${student.parentContact || '-'},
+Department of ${student.dept || 'Engineering'}, ${student.academicYear || '3 Year'} (Section '${student.yearSec || 'A'}'),
+Accommodation: ${accommodationType},
 GRT Institute of Engineering and Technology, Tiruttani - 631 209.
 
 Through:
 (Through: Respective Class Counselor, Class Advisor, and Head of Department)
 
 To:
-The Principal / Institutional Directorate,
+The Principal,
 GRT Institute of Engineering and Technology,
 Tiruttani - 631 209.
 
 Respected Sir / Madam,
 
-Subject: Requisition for Authorized Campus Gate Pass / Leave Clearance - Regarding.
+Subject: Requisition for Authorized Campus Gate Pass / Outpass Permission - Regarding.
 
 I am writing to request permission for a Gate Pass to leave the college campus due to the following reason:
 
@@ -76,12 +173,7 @@ Yours faithfully,
 (${student.name || 'Student'})
 Roll No: ${student.rollNo}
 
-OFFICIAL MULTI-TIER CLEARANCE & APPROVAL ENDORSEMENT:
-[1] Class Counselor: Verified & Recommended
-[2] Class Advisor: Endorsed & Approved
-[3] Head of Department: Authorized
-[4] Principal / Directorate: Sanctioned
-${isHosteller ? '[5] Hostel Warden: Gate Cleared & Sanctioned\n' : ''}
+${approvalBlock}${rejectionBlock}
 Campus PassPro • Official Gate Pass Requisition Record`;
 }
 

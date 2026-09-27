@@ -1,0 +1,82 @@
+<!-- PAGE 1: DASHBOARD VIEW -->
+<div id="stuPage_dashboard" class="page-view-animate space-y-6">
+
+  <!-- Dynamic Welcome Banner -->
+  <div class="stu-card p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-white via-slate-50/50 to-blue-50/30">
+    <div class="space-y-1">
+      <span id="stuHeroHeading" class="hidden">Student Dashboard</span>
+      <div class="flex items-center gap-2">
+        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 uppercase tracking-wider font-mono">Institutional Portal</span>
+        <span class="text-xs text-slate-400">&bull;</span>
+        <span class="text-xs font-medium text-slate-500">Autonomous Governance</span>
+      </div>
+      <h1 id="stuWelcomeHeading" class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Welcome, Student</h1>
+      <p id="stuWelcomeSubtitle" class="text-xs sm:text-sm text-slate-500 font-medium">Institutional Student Portal &bull; Campus PassPro</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <span id="stuDeptSecBadge" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 font-mono shadow-2xs">III Year - CSE (Sec B)</span>
+      <span id="stuAccomBadge" class="px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-semibold rounded-xl border border-blue-200 font-mono shadow-2xs">Day Scholar</span>
+    </div>
+  </div>
+
+  <!-- Key Status Metrics Overview Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="p-5 bg-white rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
+      <div>
+        <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 font-mono">Pending Review</div>
+        <div class="text-2xl font-black text-amber-600 mt-1" id="dashKpiPending">0</div>
+        <div class="text-[11px] text-slate-500 mt-0.5">Awaiting faculty approval</div>
+      </div>
+      <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center">
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+    </div>
+
+    <div class="p-5 bg-white rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
+      <div>
+        <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 font-mono">Approved Requests</div>
+        <div class="text-2xl font-black text-emerald-600 mt-1" id="dashKpiApproved">0</div>
+        <div class="text-[11px] text-slate-500 mt-0.5">Active / Cleared passes</div>
+      </div>
+      <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center">
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+    </div>
+
+    <div class="p-5 bg-white rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
+      <div>
+        <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 font-mono">Total Requisitions</div>
+        <div class="text-2xl font-black text-slate-800 mt-1" id="dashKpiTotal">0</div>
+        <div class="text-[11px] text-slate-500 mt-0.5">All academic categories</div>
+      </div>
+      <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center">
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Requisitions Overview Card -->
+  <div class="stu-card p-6 space-y-4">
+    <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+      <div>
+        <h3 class="text-base font-bold text-slate-900">Recent Requisitions</h3>
+        <p class="text-xs text-slate-500">Your latest request activity and approval stages</p>
+      </div>
+      <button
+        type="button"
+        onclick="switchStudentPage('requests')"
+        class="text-xs font-bold text-blue-600 hover:text-blue-800 transition flex items-center gap-1"
+      >
+        <span>View All in My Requests</span>
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+    <div id="dashRecentRequestsContainer" class="space-y-2">
+      <!-- Dynamically populated or empty fallback -->
+      <div class="p-6 text-center text-slate-400 text-xs">
+        Loading recent activity...
+      </div>
+    </div>
+  </div>
+
+</div>

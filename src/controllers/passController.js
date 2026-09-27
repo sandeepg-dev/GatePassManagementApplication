@@ -132,32 +132,51 @@ async function getPasses(req, res) {
         }
 
         // Principal (Tier 4):
+        // Reviews both Day Scholar and Hosteller Gate Passes after HOD has approved!
+        // Leave requests end at HOD.
         if (role === 'principal') {
+          if (p.requestCategory === 'leave') return false;
+
           const reachedPrincipal = p.hodApproval?.approved === true || p.status === 'Pending Principal';
           if (!reachedPrincipal) return false;
           if (p.status === 'Rejected' && !p.hodApproval?.approved) return false;
         }
 
-        // Boys Warden (Tier 5):
+        // Boys Warden:
+        // Hosteller Gate Passes only! Reaches Warden after Principal approval.
         if (role === 'boys_warden') {
+          if (p.requestCategory === 'leave') return false;
           const isHostel = /hoste?l|^h$/i.test(p.accommodation) && !/day\s*scholar/i.test(p.accommodation);
           const isNotFemale = !/^female$/i.test(String(p.gender || '').trim());
           const isNotGirlsStatus = p.status !== 'Pending Girls Warden';
           if (!isHostel || !isNotFemale || !isNotGirlsStatus) return false;
 
-          const reachedWarden = p.principalApproval?.approved === true || p.status === 'Pending Boys Warden';
+          const reachedWarden = p.principalApproval?.approved === true || p.status === 'Pending Boys Warden' || p.status === 'Pending Warden';
           if (!reachedWarden) return false;
           if (p.status === 'Rejected' && !p.principalApproval?.approved) return false;
         }
 
-        // Girls Warden (Tier 5):
+        // Girls Warden:
+        // Hosteller Gate Passes only! Reaches Warden after Principal approval.
         if (role === 'girls_warden') {
+          if (p.requestCategory === 'leave') return false;
           const isHostel = /hoste?l|^h$/i.test(p.accommodation) && !/day\s*scholar/i.test(p.accommodation);
           const isFemale = /^female$/i.test(String(p.gender || '').trim()) || p.status === 'Pending Girls Warden';
           const isNotBoysStatus = p.status !== 'Pending Boys Warden';
           if (!isHostel || !isFemale || !isNotBoysStatus) return false;
 
-          const reachedWarden = p.principalApproval?.approved === true || p.status === 'Pending Girls Warden';
+          const reachedWarden = p.principalApproval?.approved === true || p.status === 'Pending Girls Warden' || p.status === 'Pending Warden';
+          if (!reachedWarden) return false;
+          if (p.status === 'Rejected' && !p.principalApproval?.approved) return false;
+        }
+
+        // General Warden:
+        if (role === 'warden') {
+          if (p.requestCategory === 'leave') return false;
+          const isHostel = /hoste?l|^h$/i.test(p.accommodation) && !/day\s*scholar/i.test(p.accommodation);
+          if (!isHostel) return false;
+
+          const reachedWarden = p.principalApproval?.approved === true || p.status === 'Pending Warden' || p.status.includes('Warden');
           if (!reachedWarden) return false;
           if (p.status === 'Rejected' && !p.principalApproval?.approved) return false;
         }
@@ -215,9 +234,18 @@ async function applyPass(req, res) {
     const studentGender = /^female$/i.test(String(rawGender).trim()) ? 'Female' : 'Male';
     const appliedTimestamp = getISTTimeString();
 
+    const studentName = req.body.studentName || req.body.name || student?.name || studentUser?.name || 'Student';
+    const fatherName = req.body.fatherName || req.body.parentName || student?.fatherName || student?.parentName || '-';
+    const parentContact = req.body.parentPhone || req.body.parentContact || student?.parentContact || '-';
+    const destination = req.body.destination ? String(req.body.destination).trim() : (req.body.placeOrEvent ? String(req.body.placeOrEvent).trim() : '');
+    const hostelRoom = req.body.hostelRoom ? String(req.body.hostelRoom).trim() : (student?.hostelRoom || '');
+    const hostelBlock = req.body.hostelBlock ? String(req.body.hostelBlock).trim() : (student?.hostelBlock || '');
+    const hostelDepartureInfo = req.body.hostelDepartureInfo ? String(req.body.hostelDepartureInfo).trim() : '';
+    const hostelReturnInfo = req.body.hostelReturnInfo ? String(req.body.hostelReturnInfo).trim() : '';
+
     const studentObj = {
       rollNo: cleanRoll,
-      name: student?.name || studentUser?.name || 'Student',
+      name: studentName,
       academicYear: studentYear,
       accommodation: studentAccom,
       gender: studentGender,
@@ -225,35 +253,63 @@ async function applyPass(req, res) {
       yearSec: extractSection(student?.yearSec || studentUser?.yearSec || 'A'),
       counselorName: assignedCounselor,
       mobile: student?.mobile || '-',
-      parentName: student?.parentName || '-',
-      fatherName: student?.parentName || '-',
-      parentContact: student?.parentContact || '-',
+      parentName: fatherName,
+      fatherName: fatherName,
+      parentContact: parentContact,
       email: student?.email || '-',
       address: student?.address || 'GRT College Campus'
     };
 
-    const leaveDate = req.body.leaveDate ? String(req.body.leaveDate).trim() : (req.body.departureDate ? String(req.body.departureDate).trim() : '');
+    const requestCategory = req.body.requestCategory === 'leave' ? 'leave' : 'gate_pass';
+    const leaveType = req.body.leaveType ? String(req.body.leaveType).trim() : 'Personal Leave';
+    const placeOrEvent = destination;
+    const contactNumber = req.body.contactNumber ? String(req.body.contactNumber).trim() : (parentContact !== '-' ? parentContact : studentObj.mobile);
+    const fromDate = req.body.fromDate ? String(req.body.fromDate).trim() : (req.body.leaveDate || req.body.departureDate || '');
+    const toDate = req.body.toDate ? String(req.body.toDate).trim() : (req.body.expectedReturnDate || '');
+    const additionalDetails = req.body.additionalDetails ? String(req.body.additionalDetails).trim() : '';
+
+    const leaveDate = fromDate || (req.body.leaveDate ? String(req.body.leaveDate).trim() : (req.body.departureDate ? String(req.body.departureDate).trim() : ''));
     const leaveTime = req.body.leaveTime ? String(req.body.leaveTime).trim() : (req.body.departureTime ? String(req.body.departureTime).trim() : '');
     const departureDate = req.body.departureDate ? String(req.body.departureDate).trim() : leaveDate;
     const departureTime = req.body.departureTime ? String(req.body.departureTime).trim() : leaveTime;
-    const expectedReturnDate = req.body.expectedReturnDate ? String(req.body.expectedReturnDate).trim() : '';
-    const expectedReturnTime = req.body.expectedReturnTime ? String(req.body.expectedReturnTime).trim() : '';
+    const expectedReturnDate = toDate || (req.body.expectedReturnDate ? String(req.body.expectedReturnDate).trim() : (req.body.returnDate ? String(req.body.returnDate).trim() : ''));
+    const expectedReturnTime = req.body.expectedReturnTime ? String(req.body.expectedReturnTime).trim() : (req.body.returnTime ? String(req.body.returnTime).trim() : '');
     const expectedReturnDateTime = req.body.expectedReturnDateTime
       ? String(req.body.expectedReturnDateTime).trim()
       : (expectedReturnDate && expectedReturnTime ? `${expectedReturnDate} ${expectedReturnTime}` : (expectedReturnDate || expectedReturnTime));
 
     const generatedLetter = generateFormalLetter(studentObj, reason, appliedTimestamp, {
+      requestCategory,
+      leaveType,
+      placeOrEvent,
+      destination,
       leaveDate,
       leaveTime,
       departureDate,
       departureTime,
       expectedReturnDate,
       expectedReturnTime,
-      expectedReturnDateTime
+      expectedReturnDateTime,
+      hostelRoom,
+      hostelBlock,
+      hostelDepartureInfo,
+      hostelReturnInfo
     });
 
     const newPass = new Pass({
       ...studentObj,
+      requestCategory,
+      leaveType,
+      placeOrEvent,
+      destination,
+      hostelRoom,
+      hostelBlock,
+      hostelDepartureInfo,
+      hostelReturnInfo,
+      contactNumber,
+      fromDate,
+      toDate,
+      additionalDetails,
       reason: reason.trim(),
       leaveDate,
       leaveTime,
@@ -272,7 +328,7 @@ async function applyPass(req, res) {
     await newPass.save();
     res.json({
       success: true,
-      message: `Requisition submitted & routed to Counselor (${assignedCounselor}).`,
+      message: `${requestCategory === 'leave' ? 'Leave Request' : 'Gate Pass'} submitted & routed to Counselor (${assignedCounselor}).`,
       passId: newPass._id,
       pass: newPass
     });

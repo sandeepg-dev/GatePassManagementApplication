@@ -1,10 +1,50 @@
 /**
  * Authentication & Authorization Controller
  */
+const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Student = require('../models/Student');
 const { extractSection, extractYear, extractRollNumber } = require('../utils/formatters');
+
+const SESSION_SECRET = process.env.SESSION_SECRET || process.env.JWT_SECRET || 'campus-passpro-institutional-secret-key-2026';
+
+function generateSessionToken(userId, role) {
+  const timestamp = Date.now();
+  const raw = `${String(userId).trim().toLowerCase()}:${String(role).trim().toLowerCase()}:${timestamp}`;
+  const hmac = crypto.createHmac('sha256', SESSION_SECRET).update(raw).digest('hex');
+  return Buffer.from(`${raw}:${hmac}`).toString('base64');
+}
+
+function verifySessionToken(token, expectedUserId, expectedRole) {
+  if (!token || typeof token !== 'string') return false;
+  try {
+    const decoded = Buffer.from(token, 'base64').toString('utf8');
+    const parts = decoded.split(':');
+    if (parts.length !== 4) return false;
+    const [userId, role, timestampStr, hmac] = parts;
+    if (!userId || !role || !timestampStr || !hmac) return false;
+
+    // Check user & role match
+    if (userId.toLowerCase() !== String(expectedUserId).toLowerCase().trim()) return false;
+    const cleanExpectedRole = String(expectedRole).trim().toLowerCase().replace(/[\s-]+/g, '_');
+    const cleanRole = String(role).trim().toLowerCase().replace(/[\s-]+/g, '_');
+    if (cleanRole !== cleanExpectedRole) return false;
+
+    // Check expiration (24 hours = 86,400,000 ms)
+    const timestamp = parseInt(timestampStr, 10);
+    if (isNaN(timestamp) || Date.now() - timestamp > 24 * 60 * 60 * 1000) {
+      return false; // Token expired
+    }
+
+    // Check HMAC
+    const expectedRaw = `${userId}:${role}:${timestampStr}`;
+    const expectedHmac = crypto.createHmac('sha256', SESSION_SECRET).update(expectedRaw).digest('hex');
+    return crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(expectedHmac));
+  } catch (e) {
+    return false;
+  }
+}
 
 /**
  * Check if a role is already taken or if counselor roll ranges overlap
@@ -272,6 +312,10 @@ async function login(req, res) {
     safeUser.role = String(safeUser.role || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
     safeUser.userType = safeUser.role === 'student' ? 'Student' : (safeUser.role === 'admin' ? 'Admin' : 'Staff');
 
+    // Generate authenticated session token (valid 24h)
+    const token = generateSessionToken(safeUser.userId, safeUser.role);
+    safeUser.token = token;
+
     // If student, enrich with latest Student model data
     if (safeUser.role === 'student') {
       const studentProfile = await Student.findOne({ rollNo: safeUser.userId.toUpperCase() });
@@ -290,6 +334,7 @@ async function login(req, res) {
     res.json({
       success: true,
       user: safeUser,
+      token,
       userId: safeUser.userId,
       loginId: safeUser.userId,
       role: safeUser.role,
@@ -301,17 +346,24 @@ async function login(req, res) {
 }
 
 /**
- * Verify if an existing session user is valid and active in the database
+ * Verify if an existing session user is valid, has an active non-expired token, and exists in the database
  */
 async function verifySession(req, res) {
   try {
-    const { userId, role } = req.body;
-    if (!userId || !role) {
-      return res.status(401).json({ success: false, message: 'Invalid session credentials.' });
+    const { userId, role, token } = req.body;
+    if (!userId || !role || !token) {
+      return res.status(401).json({ success: false, message: 'Missing session credentials or session token.' });
     }
 
     const cleanId = String(userId).trim().toLowerCase();
     const cleanRole = String(role).trim().toLowerCase().replace(/[\s-]+/g, '_');
+
+    // Cryptographically verify token validity and expiration (24h)
+    const isValidToken = verifySessionToken(token, cleanId, cleanRole);
+    if (!isValidToken) {
+      return res.status(401).json({ success: false, message: 'Session token has expired or is invalid. Please sign in again.' });
+    }
+
     const user = await User.findOne({ userId: cleanId, role: { $in: [cleanRole, role] } });
     if (!user) {
       return res.status(401).json({ success: false, message: 'Session expired or user not found.' });
@@ -323,6 +375,7 @@ async function verifySession(req, res) {
     safeUser.loginId = safeUser.userId;
     safeUser.role = String(safeUser.role || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
     safeUser.userType = safeUser.role === 'student' ? 'Student' : (safeUser.role === 'admin' ? 'Admin' : 'Staff');
+    safeUser.token = token;
 
     if (safeUser.role === 'student') {
       const studentProfile = await Student.findOne({ rollNo: safeUser.userId.toUpperCase() });
@@ -341,6 +394,7 @@ async function verifySession(req, res) {
     res.json({
       success: true,
       user: safeUser,
+      token,
       userId: safeUser.userId,
       loginId: safeUser.userId,
       role: safeUser.role,

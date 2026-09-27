@@ -16,6 +16,7 @@ const onDutyRoutes = require('./onDutyRoutes');
 router.use('/admin', adminRoutes);
 router.use('/auth', authRoutes);
 router.use('/approve', approvalRoutes);
+router.use('/approvals', approvalRoutes);
 router.use('/onduty', onDutyRoutes);
 router.use('/', passRoutes);
 router.use('/', studentRoutes);

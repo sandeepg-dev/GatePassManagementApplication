@@ -1,0 +1,34 @@
+<!-- FORMAL LETTER MODAL (OFFICIAL INSTITUTIONAL LETTERHEAD) -->
+<div id="letterModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 md:p-7 max-w-2xl w-full shadow-xl text-white space-y-4 max-h-[90vh] overflow-y-auto">
+    <!-- Letterhead Header -->
+    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-white p-1 border border-slate-700/60 flex items-center justify-center">
+          <img src="/public/grt-logo.png" onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='/grt-logo.png';}else if(this.dataset.retry==='1'){this.dataset.retry=2;this.src='/assets/grt-logo.png';}" alt="GRT" class="w-8 h-8 object-contain">
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-white uppercase">GRT Institute of Engineering and Technology</h3>
+          <p id="letterModalSubtitle" class="text-xs font-semibold text-blue-400 uppercase font-mono">Tiruttani • Formal Requisition Dossier</p>
+        </div>
+      </div>
+      <button onclick="closeLetterModal()" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition" aria-label="Close dialog">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+
+    <!-- Document Preview Body -->
+    <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 shadow-inner">
+      <pre id="letterModalContent" class="whitespace-pre-wrap font-mono text-xs md:text-sm text-slate-200 leading-relaxed"></pre>
+    </div>
+
+    <div class="flex flex-wrap justify-end gap-2 pt-2 border-t border-slate-800">
+      <button id="modalDownloadLetterBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs md:text-sm font-semibold transition active:scale-98 flex items-center gap-2">
+        <span>Download Letter (PDF)</span>
+      </button>
+      <button onclick="closeLetterModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs md:text-sm font-medium transition active:scale-98">
+        Close
+      </button>
+    </div>
+  </div>
+</div>

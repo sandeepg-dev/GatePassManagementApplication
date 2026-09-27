@@ -79,7 +79,7 @@ async function loadUniversalLogs() {
       )}&endRoll=${encodeURIComponent(loggedUser.endRoll || '')}`;
       logUrl += counselorParams;
       odUrl += counselorParams;
-    } else if (loggedUser.role === 'boys_warden') {
+    } else if (loggedUser.role === 'boys_warden' || loggedUser.role === 'warden') {
       logUrl += 'role=boys_warden';
     } else if (loggedUser.role === 'girls_warden') {
       logUrl += 'role=girls_warden';
@@ -988,6 +988,41 @@ function buildOfficialGatePassText(p) {
   const returnStr = p.expectedReturnDate ? `${p.expectedReturnDate}${retTime}` : (p.expectedReturnDateTime || '-');
   const leaveTime = p.approvalTime || p.appliedTime || '-';
 
+  if (p.requestCategory === 'leave') {
+    return `GRT INSTITUTE OF ENGINEERING AND TECHNOLOGY
+(Approved by AICTE, New Delhi | Affiliated to Anna University, Chennai)
+(An Autonomous Institution | Accredited by NAAC with 'A++' Grade)
+GRT Mahalaksmi Nagar, Chennai-Tirupati Highway, Tiruttani - 631 209.
+DEPARTMENT OF ${deptUpper}
+
+OFFICIAL STUDENT LEAVE SANCTION LETTER
+Date: ${appliedDate}
+Pass Ref: GRTIET/${deptUpper}/LEAVE/2026/${p.rollNo}
+
+STUDENT PARTICULARS:
+--------------------------------------------------------------------------------
+Name                   : ${p.name || 'Student'}
+Registration / Roll No : ${p.rollNo}
+Accommodation          : ${accomStr}
+Leave Type             : ${p.leaveType || 'Personal Leave'}
+Reason for Leave       : ${p.reason || '-'}
+Place / Event          : ${p.placeOrEvent || '-'}
+From Date              : ${p.fromDate || p.departureDate || '-'}
+To Date                : ${p.toDate || p.expectedReturnDate || '-'}
+Expected Return        : ${returnStr}
+Contact Number         : ${p.contactNumber || p.mobile || p.parentContact || '-'}
+
+APPROVAL WORKFLOW (Counselor -> Advisor -> HOD -> CLOSED):
+--------------------------------------------------------------------------------
+[1] Class Counselor : ${p.counselorApproval?.approved ? 'APPROVED' : 'PENDING'} (${p.counselorApproval?.counselorName || 'Parent Verified'})
+[2] Class Advisor   : ${p.advisorApproval?.approved ? 'APPROVED' : 'PENDING'} (${p.advisorApproval?.advisorName || 'Class Endorsed'})
+[3] Head of Dept    : ${p.hodApproval?.approved ? 'APPROVED (FINAL SANCTION)' : 'PENDING'} (${p.hodApproval?.hodName || 'Department Authorized'})
+
+STATUS: ${p.status === 'Approved' ? 'SANCTIONED & CLOSED' : p.status.toUpperCase()}
+--------------------------------------------------------------------------------
+Campus PassPro • Official GRT Institutional Leave Sanction Letter`;
+  }
+
   let movementSection = '';
   if (isHostel) {
     movementSection = `OFFICIAL HOSTELLER MOVEMENT SCHEDULE:
@@ -1001,7 +1036,7 @@ Class Section          : Section '${p.yearSec || 'A'}'`;
   } else {
     const dsDate = p.leaveDate || p.departureDate || (p.appliedTime ? String(p.appliedTime).split(' ')[0] : appliedDate);
     const dsTime = p.leaveTime || p.departureTime || '-';
-    movementSection = `OFFICIAL DAY SCHOLAR LEAVE PARTICULARS:
+    movementSection = `OFFICIAL DAY SCHOLAR GATE PASS PARTICULARS:
 --------------------------------------------------------------------------------
 Leave Date             : ${dsDate}
 Leave Time             : ${dsTime}
@@ -1016,7 +1051,7 @@ Class Section          : Section '${p.yearSec || 'A'}'`;
 GRT Mahalaksmi Nagar, Chennai-Tirupati Highway, Tiruttani - 631 209.
 DEPARTMENT OF ${deptUpper}
 
-OFFICIAL COLLEGE GATE PASS / LEAVE CLEARANCE
+OFFICIAL COLLEGE GATE PASS CLEARANCE
 Date: ${appliedDate}
 Pass Ref: GRTIET/${deptUpper}/GP/2026/${p.rollNo}
 
@@ -1036,8 +1071,9 @@ MULTI-TIER INSTITUTIONAL APPROVAL ENDORSEMENTS:
 [1] Class Counselor : APPROVED (${p.counselorApproval?.counselorName || p.parentCalledBy || 'Verified & Parent Call Confirmed'})
 [2] Class Advisor   : APPROVED (${p.advisorApproval?.advisorName || 'Endorsed'})
 [3] Head of Dept    : APPROVED (${p.hodApproval?.hodName || 'Authorized'})
-[4] Principal       : APPROVED (Institutional Directorate Cleared)
-${isHostel ? `[5] Hostel Warden   : APPROVED (${p.gender === 'Female' ? 'Girls' : 'Boys'} Hostel Sanctioned)\n` : ''}
+${isHostel
+  ? `[4] Hostel Warden   : APPROVED (${p.gender === 'Female' ? 'Girls' : 'Boys'} Hostel Sanctioned)\n`
+  : `[4] Principal       : APPROVED (Institutional Directorate Cleared)\n`}
 STATUS: AUTHORIZED FOR CAMPUS GATE PASS
 Valid Until: ${p.validUntil || 'Authorized Hours'}
 --------------------------------------------------------------------------------

@@ -2,15 +2,17 @@
  * Single Common Authentication & Role Detection Module
  * Campus PassPro • GRT Institute of Engineering and Technology
  * 
- * Enforces 3-State Authentication Lifecycle:
- * 1. CHECKING: Verifies active session against /api/auth/verify-session without flickering
- * 2. UNAUTHENTICATED: Institutional Login continuously visible (never blank blue screen)
- * 3. AUTHENTICATED: Seamlessly transitions to the authorized dashboard
+ * Restored Proven Authentication Flow:
+ * - Application Launch -> Institutional Login Page appears immediately
+ * - User enters Login ID & Password -> Sign In
+ * - Backend validates credentials -> Identifies Student / Staff Role
+ * - Automatically opens corresponding authorized dashboard
+ * - If no session or session invalid -> Institutional Login remains visible
  */
 
-let loggedUser = null;
+var loggedUser = (typeof loggedUser !== 'undefined' ? loggedUser : null);
 if (typeof window !== 'undefined') {
-  window.loggedUser = null;
+  window.loggedUser = loggedUser;
 }
 
 const AuthState = {
@@ -18,7 +20,7 @@ const AuthState = {
   UNAUTHENTICATED: 'UNAUTHENTICATED',
   AUTHENTICATED: 'AUTHENTICATED'
 };
-let currentAuthState = AuthState.UNAUTHENTICATED;
+var currentAuthState = (typeof currentAuthState !== 'undefined' ? currentAuthState : AuthState.UNAUTHENTICATED);
 
 /**
  * Normalizes role string to canonical format
@@ -28,70 +30,71 @@ function normalizeRole(role) {
   const r = String(role).trim().toLowerCase().replace(/[\s-]+/g, '_');
   if (r === 'boyswarden' || r === 'boys_warden') return 'boys_warden';
   if (r === 'girlswarden' || r === 'girls_warden') return 'girls_warden';
+  if (r === 'warden' || r === 'hostel_warden') return 'warden';
   if (r === 'class_advisor' || r === 'advisor') return 'advisor';
   if (r === 'class_counselor' || r === 'counselor') return 'counselor';
   if (r === 'head_of_department' || r === 'hod') return 'hod';
+  if (r === 'principal' || r === 'head') return 'principal';
+  if (r === 'admin' || r === 'administrator') return 'admin';
+  if (r === 'student') return 'student';
   return r;
 }
 
 /**
- * Manage 3-State Auth Transitions
+ * Set application UI display state
  */
 function setAuthState(state, user = null) {
   currentAuthState = state;
-  const overlay = document.getElementById('authCheckingOverlay');
+  if (typeof window !== 'undefined') {
+    window.currentAuthState = state;
+  }
+
   const loginPortal = document.getElementById('singleLoginPortalScreen');
   const dashScreen = document.getElementById('dashScreen');
 
-  if (state === AuthState.CHECKING) {
-    if (overlay) overlay.classList.remove('hidden');
-    if (loginPortal) loginPortal.classList.remove('hidden');
-    if (dashScreen) dashScreen.classList.add('hidden');
-  } else if (state === AuthState.UNAUTHENTICATED) {
-    if (overlay) overlay.classList.add('hidden');
-    if (loginPortal) loginPortal.classList.remove('hidden');
-    if (dashScreen) dashScreen.classList.add('hidden');
-    loggedUser = null;
-    window.loggedUser = null;
-  } else if (state === AuthState.AUTHENTICATED) {
-    if (overlay) overlay.classList.add('hidden');
-
-    if (!user) {
-      console.warn('Authenticated state called without user');
-      return;
-    }
-
-    user.role = normalizeRole(user.role);
+  if (state === AuthState.AUTHENTICATED && user && user.userId && user.role) {
+    const role = normalizeRole(user.role);
+    user.role = role;
     loggedUser = user;
-    window.loggedUser = user;
+    if (typeof window !== 'undefined') window.loggedUser = user;
 
-    if (user.role === 'admin') {
+    if (role === 'admin') {
+      if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('campusAdminUser', JSON.stringify(user));
+      if (typeof localStorage !== 'undefined') localStorage.setItem('campusAdminUser', JSON.stringify(user));
       window.location.replace('/admin.html');
       return;
     }
 
-    // Direct, immediate transition to authenticated dashboard
-    if (loginPortal) loginPortal.classList.add('hidden');
-    if (dashScreen) dashScreen.classList.remove('hidden');
-    if (typeof window !== 'undefined' && window.scrollTo) {
-      window.scrollTo(0, 0);
-    }
-
     if (typeof openDashboard === 'function') {
       try {
-        openDashboard(user);
-      } catch (err) {
-        console.error('Error initializing dashboard for authenticated user:', err);
-        if (typeof showToast === 'function') {
-          showToast('Dashboard loaded with notice: ' + (err.message || 'Check console'), 'warning', 3500);
+        const ok = openDashboard(user);
+        if (ok !== false) {
+          if (loginPortal) loginPortal.classList.add('hidden');
+          if (dashScreen) dashScreen.classList.remove('hidden');
+          if (typeof window !== 'undefined' && window.scrollTo) window.scrollTo(0, 0);
+          return;
         }
+      } catch (err) {
+        console.error('Error opening dashboard:', err);
       }
     }
   }
+
+  // Fallback / Unauthenticated state: Login page remains continuously visible
+  currentAuthState = AuthState.UNAUTHENTICATED;
+  if (typeof window !== 'undefined') window.currentAuthState = AuthState.UNAUTHENTICATED;
+  loggedUser = null;
+  if (typeof window !== 'undefined') window.loggedUser = null;
+  if (typeof document !== 'undefined') {
+    document.body.classList.remove('theme-student');
+  }
+
+  if (loginPortal) loginPortal.classList.remove('hidden');
+  if (dashScreen) dashScreen.classList.add('hidden');
 }
 
 /**
- * Check authentication session on application launch
+ * Check existing session on startup or refresh
  */
 async function checkInitialAuthState() {
   const idInput = document.getElementById('commonLoginId');
@@ -104,73 +107,33 @@ async function checkInitialAuthState() {
   let saved = null;
   try {
     saved = sessionStorage.getItem('campusPassUser') || localStorage.getItem('campusPassUser');
-  } catch (err) {
-    console.warn('Storage access warning:', err);
+  } catch (e) {
+    console.warn('Storage read warning:', e);
   }
 
-  // 1. If NO saved user session:
-  // Immediately UNAUTHENTICATED. Keep Institutional Login permanently visible.
   if (!saved) {
     setAuthState(AuthState.UNAUTHENTICATED);
     return;
   }
 
-  // 2. Parse session
-  let user = null;
   try {
-    user = JSON.parse(saved);
-  } catch (err) {
-    console.warn('Invalid saved session JSON:', err);
-    sessionStorage.removeItem('campusPassUser');
-    localStorage.removeItem('campusPassUser');
-    setAuthState(AuthState.UNAUTHENTICATED);
-    return;
-  }
-
-  if (!user || !user.userId || !user.role) {
-    sessionStorage.removeItem('campusPassUser');
-    localStorage.removeItem('campusPassUser');
-    setAuthState(AuthState.UNAUTHENTICATED);
-    return;
-  }
-
-  // 3. Stored session present: CHECKING state with institutional backend validation
-  setAuthState(AuthState.CHECKING);
-
-  try {
-    const res = await fetch('/api/auth/verify-session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: user.userId, role: user.role })
-    });
-
-    const data = await res.json();
-
-    if (res.ok && data && data.success && data.user) {
-      const verifiedUser = data.user;
-      verifiedUser.role = normalizeRole(verifiedUser.role || data.role);
-      loggedUser = verifiedUser;
-      window.loggedUser = verifiedUser;
-      sessionStorage.setItem('campusPassUser', JSON.stringify(verifiedUser));
-      if (localStorage.getItem('campusPassUser')) {
-        localStorage.setItem('campusPassUser', JSON.stringify(verifiedUser));
-      }
-      setAuthState(AuthState.AUTHENTICATED, verifiedUser);
-    } else {
-      console.warn('Session verification rejected by server:', data?.message);
-      sessionStorage.removeItem('campusPassUser');
-      localStorage.removeItem('campusPassUser');
-      setAuthState(AuthState.UNAUTHENTICATED);
+    const user = JSON.parse(saved);
+    if (user && user.userId && user.role) {
+      user.role = normalizeRole(user.role);
+      setAuthState(AuthState.AUTHENTICATED, user);
+      return;
     }
   } catch (err) {
-    console.warn('Session verification network error:', err);
-    sessionStorage.removeItem('campusPassUser');
-    localStorage.removeItem('campusPassUser');
-    setAuthState(AuthState.UNAUTHENTICATED);
+    console.warn('Corrupted saved session:', err);
   }
+
+  // Invalid or unparseable session: clean up and ensure Login is visible
+  if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem('campusPassUser');
+  if (typeof localStorage !== 'undefined') localStorage.removeItem('campusPassUser');
+  setAuthState(AuthState.UNAUTHENTICATED);
 }
 
-// Auto-restore session or ensure persistent login on page load
+// Auto-restore session or ensure login visibility on page load
 if (typeof document !== 'undefined') {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', checkInitialAuthState);
@@ -181,7 +144,7 @@ if (typeof document !== 'undefined') {
 
 if (typeof window !== 'undefined') {
   window.addEventListener('pageshow', () => {
-    if (!loggedUser && !sessionStorage.getItem('campusPassUser')) {
+    if (!loggedUser && typeof sessionStorage !== 'undefined' && !sessionStorage.getItem('campusPassUser')) {
       const idInput = document.getElementById('commonLoginId');
       const passInput = document.getElementById('commonPassword');
       if (idInput) idInput.value = '';
@@ -200,31 +163,37 @@ async function handleCommonLogin(e) {
   const passInput = document.getElementById('commonPassword');
   const submitBtn = document.getElementById('commonLoginBtn');
   const errorAlert = document.getElementById('loginErrorAlert');
-  const rememberCheckbox = document.getElementById('rememberMe');
+  const loginCard = document.getElementById('loginCard');
 
-  if (errorAlert) errorAlert.classList.add('hidden');
+  if (errorAlert) {
+    errorAlert.classList.add('hidden');
+    errorAlert.classList.remove('animate-shake');
+  }
 
   const userId = (idInput?.value || '').trim();
   const password = (passInput?.value || '').trim();
 
   if (!userId || !password) {
+    const msg = 'Please enter both Login ID and Password.';
     if (errorAlert) {
-      errorAlert.innerText = 'Please enter both your Login ID / Register Number and Password.';
+      errorAlert.innerText = msg;
       errorAlert.classList.remove('hidden');
-    } else if (typeof showToast === 'function') {
-      showToast('Please enter both Login ID and Password.', 'warning', 3000);
+      errorAlert.classList.add('animate-shake');
+      setTimeout(() => errorAlert.classList.remove('animate-shake'), 450);
     }
     return;
   }
 
+  // Subtle professional loading state
   if (submitBtn) {
     submitBtn.disabled = true;
+    submitBtn.classList.add('is-loading');
     submitBtn.innerHTML = `
-      <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <svg class="animate-spin h-4 w-4 text-white inline-block" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
       </svg>
-      <span>Authenticating...</span>
+      <span class="tracking-wider text-xs">SIGNING IN...</span>
     `;
   }
 
@@ -242,45 +211,92 @@ async function handleCommonLogin(e) {
       if (errorAlert) {
         errorAlert.innerText = errMsg;
         errorAlert.classList.remove('hidden');
-      } else if (typeof showToast === 'function') {
-        showToast(errMsg, 'error', 3500);
+        errorAlert.classList.add('animate-shake');
+        setTimeout(() => errorAlert.classList.remove('animate-shake'), 450);
+      }
+      if (submitBtn) {
+        submitBtn.classList.remove('is-loading');
+        submitBtn.classList.add('animate-shake');
+        setTimeout(() => submitBtn.classList.remove('animate-shake'), 450);
       }
       setAuthState(AuthState.UNAUTHENTICATED);
       return;
     }
 
     const user = data.user;
+    if (!user || !user.role) {
+      const roleErr = 'Unable to determine your account role. Please contact the administrator.';
+      if (errorAlert) {
+        errorAlert.innerText = roleErr;
+        errorAlert.classList.remove('hidden');
+      }
+      setAuthState(AuthState.UNAUTHENTICATED);
+      return;
+    }
+
     user.role = normalizeRole(user.role || data.role);
-    loggedUser = user;
-    window.loggedUser = user;
+    user.userType = data.userType || (user.role === 'student' ? 'Student' : (user.role === 'admin' ? 'Admin' : 'Staff'));
+    if (data.token) {
+      user.token = data.token;
+    }
 
-    sessionStorage.setItem('campusPassUser', JSON.stringify(user));
-    if (rememberCheckbox && rememberCheckbox.checked) {
+    // Persist active session
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem('campusPassUser', JSON.stringify(user));
+    }
+    if (typeof localStorage !== 'undefined') {
       localStorage.setItem('campusPassUser', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('campusPassUser');
     }
 
-    if (typeof showToast === 'function') {
-      showToast(`Welcome back, ${user.name}!`, 'success', 2500);
+    if (user.role === 'admin') {
+      if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('campusAdminUser', JSON.stringify(user));
+      if (typeof localStorage !== 'undefined') localStorage.setItem('campusAdminUser', JSON.stringify(user));
     }
 
-    // Direct, immediate transition to authenticated dashboard
+    // Subtle professional success animation on button
+    if (submitBtn) {
+      submitBtn.classList.remove('is-loading');
+      submitBtn.classList.add('is-success');
+      submitBtn.innerHTML = `
+        <svg class="w-4 h-4 text-white animate-scale-check" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+        </svg>
+        <span class="tracking-wider text-xs">SUCCESS</span>
+      `;
+    }
+
+    if (loginCard) {
+      loginCard.style.opacity = '0.92';
+      loginCard.style.transform = 'scale(0.99)';
+    }
+
+    // Brief smooth transition timing
+    await new Promise(r => setTimeout(r, 260));
+
+    // Open corresponding authorized dashboard immediately
     setAuthState(AuthState.AUTHENTICATED, user);
 
   } catch (err) {
     console.error('Login error:', err);
+    const failMsg = 'Unable to connect to the authentication server. Please check your network connection.';
     if (errorAlert) {
-      errorAlert.innerText = 'Unable to connect to the authentication server. Please check your network connection.';
+      errorAlert.innerText = failMsg;
       errorAlert.classList.remove('hidden');
-    } else if (typeof showToast === 'function') {
-      showToast('Authentication server error. Please try again.', 'error', 3500);
     }
     setAuthState(AuthState.UNAUTHENTICATED);
   } finally {
-    if (submitBtn) {
+    if (submitBtn && currentAuthState !== AuthState.AUTHENTICATED) {
       submitBtn.disabled = false;
-      submitBtn.innerHTML = `<span>Sign In to Institutional Portal</span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>`;
+      submitBtn.classList.remove('is-loading', 'is-success');
+      submitBtn.innerHTML = `
+        <span id="loginBtnContent" class="flex items-center justify-center gap-2">
+          <span>SIGN IN</span>
+        </span>
+      `;
+    }
+    if (loginCard && currentAuthState !== AuthState.AUTHENTICATED) {
+      loginCard.style.opacity = '1';
+      loginCard.style.transform = 'none';
     }
   }
 }
@@ -310,32 +326,61 @@ function logout() {
     clearInterval(wardenAutoRefreshTimer);
     wardenAutoRefreshTimer = null;
   }
-  loggedUser = null;
-  window.loggedUser = null;
-  sessionStorage.removeItem('campusPassUser');
-  localStorage.removeItem('campusPassUser');
-  sessionStorage.clear();
 
-  // Reset inputs
+  // Clear all storage tokens and user cache
+  if (typeof sessionStorage !== 'undefined') {
+    sessionStorage.removeItem('campusPassUser');
+    sessionStorage.removeItem('campusAdminUser');
+    sessionStorage.clear();
+  }
+  if (typeof localStorage !== 'undefined') {
+    localStorage.removeItem('campusPassUser');
+    localStorage.removeItem('campusAdminUser');
+  }
+
+  // Reset form inputs & button states
   const idInput = document.getElementById('commonLoginId');
   const passInput = document.getElementById('commonPassword');
+  const submitBtn = document.getElementById('commonLoginBtn');
+  const loginCard = document.getElementById('loginCard');
+
   if (idInput) idInput.value = '';
   if (passInput) passInput.value = '';
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.classList.remove('is-loading', 'is-success');
+    submitBtn.innerHTML = `
+      <span id="loginBtnContent" class="flex items-center justify-center gap-2">
+        <span>SIGN IN</span>
+      </span>
+    `;
+  }
+  if (loginCard) {
+    loginCard.style.opacity = '1';
+    loginCard.style.transform = 'none';
+  }
 
-  // Transition to UNAUTHENTICATED
+  if (typeof document !== 'undefined') {
+    document.body.classList.remove('theme-student');
+  }
+
+  // Switch display back to Institutional Login
   setAuthState(AuthState.UNAUTHENTICATED);
 
-  if (window.history && window.history.replaceState) {
-    window.history.replaceState(null, '', '/');
+  if (typeof showToast === 'function') {
+    showToast('Signed out successfully.', 'info', 2500);
   }
-  window.location.replace('/');
 }
 
 // Global window bindings
-window.AuthState = AuthState;
-window.normalizeRole = normalizeRole;
-window.setAuthState = setAuthState;
-window.checkInitialAuthState = checkInitialAuthState;
-window.handleCommonLogin = handleCommonLogin;
-window.togglePasswordVisibility = togglePasswordVisibility;
-window.logout = logout;
+if (typeof window !== 'undefined') {
+  window.AuthState = AuthState;
+  window.currentAuthState = currentAuthState;
+  window.loggedUser = loggedUser;
+  window.normalizeRole = normalizeRole;
+  window.setAuthState = setAuthState;
+  window.checkInitialAuthState = checkInitialAuthState;
+  window.handleCommonLogin = handleCommonLogin;
+  window.togglePasswordVisibility = togglePasswordVisibility;
+  window.logout = logout;
+}
