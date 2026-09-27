@@ -415,6 +415,37 @@
 
   </div>
 
+  <!-- INSTITUTIONAL PAGE TRANSITION LOADER (LOGO-ONLY SPINNER) -->
+  <div
+    id="grtPageTransitionLoader"
+    class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-950/45 backdrop-blur-md transition-all duration-300 select-none opacity-0 pointer-events-none"
+    aria-live="polite"
+    aria-hidden="true"
+  >
+    <div
+      id="grtLoaderCard"
+      class="relative flex flex-col items-center justify-center p-6 sm:p-7 bg-white/95 backdrop-blur-xl border border-white/80 rounded-3xl shadow-2xl shadow-slate-900/25 transform transition-all duration-300 scale-95"
+    >
+      <div class="relative w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center">
+        <div class="absolute inset-0 rounded-full bg-blue-500/15 blur-xl animate-pulse"></div>
+        <div class="absolute -inset-2 sm:-inset-2.5 rounded-full border-2 border-transparent border-t-blue-600 border-r-indigo-500 border-b-sky-400 grt-spin-orbital"></div>
+        <div class="absolute -inset-0.5 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/50 to-indigo-50/30"></div>
+        <div class="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white p-2 sm:p-2.5 shadow-md border border-slate-100/80 flex items-center justify-center overflow-hidden">
+          <img
+            id="grtLoaderLogoImg"
+            src="/public/grt-logo.png"
+            onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='/grt-logo.png';}else if(this.dataset.retry==='1'){this.dataset.retry=2;this.src='/assets/grt-logo.png';}"
+            alt="GRT Emblem"
+            class="w-full h-full object-contain grt-loader-logo-pulse"
+          />
+        </div>
+      </div>
+      <span id="grtLoaderTitle" class="sr-only" aria-hidden="true"></span>
+      <span id="grtLoaderSubtitle" class="sr-only" aria-hidden="true"></span>
+      <div id="grtLoaderProgressBar" class="sr-only hidden" style="width: 100%"></div>
+    </div>
+  </div>
+
   <!-- UNIVERSAL MODALS CONTAINER -->
   <div id="adminModalOverlay" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
     <div id="adminModalContent" class="bg-slate-900 border border-slate-800 rounded-xl p-6 sm:p-7 max-w-lg w-full shadow-xl space-y-4 my-auto max-h-[90vh] overflow-y-auto">
@@ -430,5 +461,17 @@
   <!-- Scripts -->
   <script src="/js/utils.js"></script>
   <script src="/js/adminPortal.js"></script>
+  <script>
+    // Smooth entry transition on admin page arrival
+    (function() {
+      const loader = document.getElementById('grtPageTransitionLoader');
+      if (loader) {
+        loader.classList.add('active');
+        setTimeout(() => {
+          loader.classList.remove('active');
+        }, 550);
+      }
+    })();
+  </script>
 </body>
 </html>

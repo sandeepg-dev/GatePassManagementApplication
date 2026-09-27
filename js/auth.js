@@ -40,10 +40,67 @@ function normalizeRole(role) {
   return r;
 }
 
+let universalTransitionTimer = null;
+
+/**
+ * Universal Minimalist Page Transition Loader
+ * Renders the official logo-only spinner during portal redirection & view transitions
+ */
+function showPageTransitionLoader(onMidpoint, options = {}) {
+  const duration = typeof options.duration === 'number' ? options.duration : 1200;
+  const midpointDelay = typeof options.midpointDelay === 'number' ? options.midpointDelay : 250;
+  const loader = document.getElementById('grtPageTransitionLoader');
+
+  if (!loader) {
+    if (typeof onMidpoint === 'function') onMidpoint();
+    if (typeof options.onComplete === 'function') options.onComplete();
+    return;
+  }
+
+  if (universalTransitionTimer) {
+    clearTimeout(universalTransitionTimer);
+    universalTransitionTimer = null;
+  }
+
+  // Update hidden accessibility labels if passed
+  const titleEl = document.getElementById('grtLoaderTitle');
+  const subtitleEl = document.getElementById('grtLoaderSubtitle');
+  if (titleEl && options.title) titleEl.innerText = options.title;
+  if (subtitleEl && options.subtitle) subtitleEl.innerText = options.subtitle;
+
+  loader.classList.add('active');
+  loader.setAttribute('aria-hidden', 'false');
+
+  let midpointExecuted = false;
+  const runMidpoint = () => {
+    if (midpointExecuted) return;
+    midpointExecuted = true;
+    if (typeof onMidpoint === 'function') {
+      try {
+        onMidpoint();
+      } catch (err) {
+        console.error('[PageTransition] Error in onMidpoint callback:', err);
+      }
+    }
+  };
+
+  setTimeout(runMidpoint, midpointDelay);
+
+  universalTransitionTimer = setTimeout(() => {
+    runMidpoint();
+    loader.classList.remove('active');
+    loader.setAttribute('aria-hidden', 'true');
+    universalTransitionTimer = null;
+    if (typeof options.onComplete === 'function') {
+      options.onComplete();
+    }
+  }, duration);
+}
+
 /**
  * Set application UI display state
  */
-function setAuthState(state, user = null) {
+function setAuthState(state, user = null, options = {}) {
   currentAuthState = state;
   if (typeof window !== 'undefined') {
     window.currentAuthState = state;
@@ -61,23 +118,41 @@ function setAuthState(state, user = null) {
     if (role === 'admin') {
       if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('campusAdminUser', JSON.stringify(user));
       if (typeof localStorage !== 'undefined') localStorage.setItem('campusAdminUser', JSON.stringify(user));
-      window.location.replace('/admin.html');
+      if (options.immediate) {
+        window.location.replace('/admin.html');
+      } else {
+        showPageTransitionLoader(() => {
+          window.location.replace('/admin.html');
+        }, { duration: 1100, midpointDelay: 850 });
+      }
       return;
     }
 
-    if (typeof openDashboard === 'function') {
-      try {
-        const ok = openDashboard(user);
-        if (ok !== false) {
-          if (loginPortal) loginPortal.classList.add('hidden');
-          if (dashScreen) dashScreen.classList.remove('hidden');
-          if (typeof window !== 'undefined' && window.scrollTo) window.scrollTo(0, 0);
-          return;
+    const activateDashboard = () => {
+      if (typeof openDashboard === 'function') {
+        try {
+          openDashboard(user);
+        } catch (err) {
+          console.error('Error opening dashboard:', err);
         }
-      } catch (err) {
-        console.error('Error opening dashboard:', err);
       }
+      if (loginPortal) loginPortal.classList.add('hidden');
+      if (dashScreen) dashScreen.classList.remove('hidden');
+      if (typeof window !== 'undefined' && window.scrollTo) window.scrollTo(0, 0);
+    };
+
+    if (options.immediate) {
+      activateDashboard();
+      return;
     }
+
+    // Reflect logo-only loading spinner transition across ALL portals:
+    // Student, Class Advisor, Counselor, HOD, Principal, Warden
+    showPageTransitionLoader(activateDashboard, {
+      duration: typeof options.duration === 'number' ? options.duration : 1200,
+      midpointDelay: 250
+    });
+    return;
   }
 
   // Fallback / Unauthenticated state: Login page remains continuously visible
@@ -87,6 +162,7 @@ function setAuthState(state, user = null) {
   if (typeof window !== 'undefined') window.loggedUser = null;
   if (typeof document !== 'undefined') {
     document.body.classList.remove('theme-student');
+    document.body.classList.remove('theme-authority');
   }
 
   if (loginPortal) loginPortal.classList.remove('hidden');
@@ -112,7 +188,7 @@ async function checkInitialAuthState() {
   }
 
   if (!saved) {
-    setAuthState(AuthState.UNAUTHENTICATED);
+    setAuthState(AuthState.UNAUTHENTICATED, null, { immediate: true });
     return;
   }
 
@@ -120,7 +196,7 @@ async function checkInitialAuthState() {
     const user = JSON.parse(saved);
     if (user && user.userId && user.role) {
       user.role = normalizeRole(user.role);
-      setAuthState(AuthState.AUTHENTICATED, user);
+      setAuthState(AuthState.AUTHENTICATED, user, { immediate: true });
       return;
     }
   } catch (err) {
@@ -130,7 +206,7 @@ async function checkInitialAuthState() {
   // Invalid or unparseable session: clean up and ensure Login is visible
   if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem('campusPassUser');
   if (typeof localStorage !== 'undefined') localStorage.removeItem('campusPassUser');
-  setAuthState(AuthState.UNAUTHENTICATED);
+  setAuthState(AuthState.UNAUTHENTICATED, null, { immediate: true });
 }
 
 // Auto-restore session or ensure login visibility on page load
@@ -327,49 +403,54 @@ function logout() {
     wardenAutoRefreshTimer = null;
   }
 
-  // Clear all storage tokens and user cache
-  if (typeof sessionStorage !== 'undefined') {
-    sessionStorage.removeItem('campusPassUser');
-    sessionStorage.removeItem('campusAdminUser');
-    sessionStorage.clear();
-  }
-  if (typeof localStorage !== 'undefined') {
-    localStorage.removeItem('campusPassUser');
-    localStorage.removeItem('campusAdminUser');
-  }
+  const performReset = () => {
+    // Clear all storage tokens and user cache
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.removeItem('campusPassUser');
+      sessionStorage.removeItem('campusAdminUser');
+      sessionStorage.clear();
+    }
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('campusPassUser');
+      localStorage.removeItem('campusAdminUser');
+    }
 
-  // Reset form inputs & button states
-  const idInput = document.getElementById('commonLoginId');
-  const passInput = document.getElementById('commonPassword');
-  const submitBtn = document.getElementById('commonLoginBtn');
-  const loginCard = document.getElementById('loginCard');
+    // Reset form inputs & button states
+    const idInput = document.getElementById('commonLoginId');
+    const passInput = document.getElementById('commonPassword');
+    const submitBtn = document.getElementById('commonLoginBtn');
+    const loginCard = document.getElementById('loginCard');
 
-  if (idInput) idInput.value = '';
-  if (passInput) passInput.value = '';
-  if (submitBtn) {
-    submitBtn.disabled = false;
-    submitBtn.classList.remove('is-loading', 'is-success');
-    submitBtn.innerHTML = `
-      <span id="loginBtnContent" class="flex items-center justify-center gap-2">
-        <span>SIGN IN</span>
-      </span>
-    `;
-  }
-  if (loginCard) {
-    loginCard.style.opacity = '1';
-    loginCard.style.transform = 'none';
-  }
+    if (idInput) idInput.value = '';
+    if (passInput) passInput.value = '';
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.classList.remove('is-loading', 'is-success');
+      submitBtn.innerHTML = `
+        <span id="loginBtnContent" class="flex items-center justify-center gap-2">
+          <span>SIGN IN</span>
+        </span>
+      `;
+    }
+    if (loginCard) {
+      loginCard.style.opacity = '1';
+      loginCard.style.transform = 'none';
+    }
 
-  if (typeof document !== 'undefined') {
-    document.body.classList.remove('theme-student');
-  }
+    if (typeof document !== 'undefined') {
+      document.body.classList.remove('theme-student');
+      document.body.classList.remove('theme-authority');
+    }
 
-  // Switch display back to Institutional Login
-  setAuthState(AuthState.UNAUTHENTICATED);
+    // Switch display back to Institutional Login
+    setAuthState(AuthState.UNAUTHENTICATED, null, { immediate: true });
 
-  if (typeof showToast === 'function') {
-    showToast('Signed out successfully.', 'info', 2500);
-  }
+    if (typeof showToast === 'function') {
+      showToast('Signed out successfully.', 'info', 2500);
+    }
+  };
+
+  showPageTransitionLoader(performReset, { duration: 550, midpointDelay: 180 });
 }
 
 // Global window bindings
@@ -383,4 +464,5 @@ if (typeof window !== 'undefined') {
   window.handleCommonLogin = handleCommonLogin;
   window.togglePasswordVisibility = togglePasswordVisibility;
   window.logout = logout;
+  window.showPageTransitionLoader = showPageTransitionLoader;
 }

@@ -816,12 +816,10 @@ function openDashboard(user) {
     if (gpRetT) gpRetT.value = '';
     if (gpReason) gpReason.value = '';
 
-    if (typeof switchStudentPage === 'function') {
-      switchStudentPage('dashboard', {
-        title: 'Welcome to Student Portal',
-        subtitle: 'Preparing institutional workspace & records...',
-        duration: 1500
-      });
+    if (typeof applyStudentPageDOM === 'function') {
+      applyStudentPageDOM('dashboard');
+    } else if (typeof switchStudentPage === 'function') {
+      switchStudentPage('dashboard', { immediate: true });
     } else if (typeof switchStudentTab === 'function') {
       switchStudentTab('dashboard');
     }

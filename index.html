@@ -41,51 +41,35 @@
 >
   <div
     id="grtLoaderCard"
-    class="relative flex flex-col items-center p-7 sm:p-9 bg-white/95 backdrop-blur-xl border border-white/80 rounded-3xl shadow-2xl shadow-slate-900/25 max-w-sm w-11/12 mx-auto text-center transform transition-all duration-300 scale-95"
+    class="relative flex flex-col items-center justify-center p-6 sm:p-7 bg-white/95 backdrop-blur-xl border border-white/80 rounded-3xl shadow-2xl shadow-slate-900/25 transform transition-all duration-300 scale-95"
   >
-    <!-- Outer Orbital Glowing Rings & College Emblem -->
-    <div class="relative w-28 h-28 mb-5 flex items-center justify-center">
+    <!-- Outer Orbital Glowing Rings & College Emblem (Logo Only) -->
+    <div class="relative w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center">
       <!-- Ambient Radiant Glow -->
       <div class="absolute inset-0 rounded-full bg-blue-500/15 blur-xl animate-pulse"></div>
 
       <!-- Outer Rotating Conic Spinner Ring -->
-      <div class="absolute -inset-2 rounded-full border-2 border-transparent border-t-blue-600 border-r-indigo-500 border-b-sky-400 grt-spin-orbital"></div>
+      <div class="absolute -inset-2 sm:-inset-2.5 rounded-full border-2 border-transparent border-t-blue-600 border-r-indigo-500 border-b-sky-400 grt-spin-orbital"></div>
 
-      <!-- Inner Counter Subtle Glow Ring -->
+      <!-- Inner Subtle Glow Ring -->
       <div class="absolute -inset-0.5 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/50 to-indigo-50/30"></div>
 
       <!-- Official College Emblem Container -->
-      <div class="relative w-24 h-24 rounded-2xl bg-white p-2.5 shadow-md border border-slate-100/80 flex items-center justify-center overflow-hidden">
+      <div class="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white p-2 sm:p-2.5 shadow-md border border-slate-100/80 flex items-center justify-center overflow-hidden">
         <img
           id="grtLoaderLogoImg"
           src="/public/grt-logo.png"
           onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='/grt-logo.png';}else if(this.dataset.retry==='1'){this.dataset.retry=2;this.src='/assets/grt-logo.png';}"
-          alt="GRT Institute Emblem"
+          alt="GRT Emblem"
           class="w-full h-full object-contain grt-loader-logo-pulse"
         />
       </div>
     </div>
 
-    <!-- Institutional Brand & Status Messages -->
-    <div class="space-y-1.5 w-full">
-      <div class="text-[10px] font-extrabold tracking-widest text-slate-400 uppercase font-mono">
-        GRT Institute of Engineering and Technology
-      </div>
-      <div id="grtLoaderTitle" class="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
-        Loading Student Portal
-      </div>
-      <div id="grtLoaderSubtitle" class="text-xs text-slate-500 font-medium">
-        Synchronizing verified records &amp; requests...
-      </div>
-    </div>
-
-    <!-- Modern Animated Progress Track (1.5s visual feedback) -->
-    <div class="w-full max-w-[220px] h-1.5 bg-slate-100 rounded-full mt-5 overflow-hidden p-0.5 border border-slate-200/80 relative">
-      <div
-        id="grtLoaderProgressBar"
-        class="h-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 rounded-full transition-all ease-out w-0 grt-progress-bar-glow"
-      ></div>
-    </div>
+    <!-- Hidden accessible elements for backward compatibility with scripts & tests (No visual presence) -->
+    <span id="grtLoaderTitle" class="sr-only" aria-hidden="true"></span>
+    <span id="grtLoaderSubtitle" class="sr-only" aria-hidden="true"></span>
+    <div id="grtLoaderProgressBar" class="sr-only hidden" style="width: 100%"></div>
   </div>
 </div>
 

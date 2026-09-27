@@ -116,6 +116,20 @@ function showAdminDashboard() {
  * Admin Logout -> Always redirects to Common Login Page
  */
 function adminLogout() {
+  const loader = document.getElementById('grtPageTransitionLoader');
+  if (loader) {
+    loader.classList.add('active');
+    setTimeout(() => {
+      sessionStorage.removeItem('campusAdminUser');
+      localStorage.removeItem('campusAdminUser');
+      sessionStorage.removeItem('campusPassUser');
+      localStorage.removeItem('campusPassUser');
+      sessionStorage.clear();
+      activeAdmin = null;
+      window.location.replace('/');
+    }, 400);
+    return;
+  }
   sessionStorage.removeItem('campusAdminUser');
   localStorage.removeItem('campusAdminUser');
   sessionStorage.removeItem('campusPassUser');
