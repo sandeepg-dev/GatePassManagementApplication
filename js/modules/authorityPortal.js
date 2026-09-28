@@ -114,8 +114,8 @@ function getRosterTabLabel(role) {
     case 'advisor': return 'Class Student List';
     case 'hod': return 'Department Student Roster';
     case 'principal': return 'Institutional Directory';
-    case 'boys_warden':
-    case 'girls_warden':
+    case 'boys_warden': return 'Boys Hostel Residents';
+    case 'girls_warden': return 'Girls Hostel Residents';
     case 'warden': return 'Hostel Resident Roster';
     default: return 'Student Roster';
   }
@@ -185,6 +185,10 @@ function initAuthorityPortal(user) {
 
   const roleKey = String(user.role).trim().toLowerCase().replace(/[\s-]+/g, '_');
   const isCounselor = roleKey === 'counselor';
+  const isAdvisor = roleKey === 'advisor';
+  const isHod = roleKey === 'hod';
+  const isPrincipal = roleKey === 'principal';
+  const isWarden = roleKey.includes('warden');
 
   // Requirement: Top Navigation removed completely from all staff portals (Navigation strictly in Left Sidebar)
   const topNavContainer = document.getElementById('authTopNavContainer');
@@ -194,26 +198,42 @@ function initAuthorityPortal(user) {
     topNavContainer.style.display = 'none';
   }
 
-  // Requirement: Hide "All Requests" filter button for Counselor, Advisor, and HOD (replaced with Gate Pass Request)
-  const allReqsTabBtn = document.getElementById('authTabBtn_all');
-  if (allReqsTabBtn) {
-    if (isCounselor || roleKey === 'advisor' || roleKey === 'hod') {
-      allReqsTabBtn.classList.add('hidden');
-      allReqsTabBtn.style.display = 'none';
-    } else {
-      allReqsTabBtn.classList.remove('hidden');
-      allReqsTabBtn.style.display = '';
+  // Requirement: Principal & Warden Portals focus on Gate Passes - Leave & OD are completely omitted
+  if (isPrincipal || isWarden) {
+    const sideLeaveBtn = document.getElementById('authSideBtn_leave');
+    if (sideLeaveBtn) { sideLeaveBtn.classList.add('hidden'); sideLeaveBtn.style.display = 'none'; }
+    const sideOdBtn = document.getElementById('authSideBtn_onduty');
+    if (sideOdBtn) { sideOdBtn.classList.add('hidden'); sideOdBtn.style.display = 'none'; }
+
+    const tabLeaveBtn = document.getElementById('authTabBtn_leave');
+    if (tabLeaveBtn) { tabLeaveBtn.classList.add('hidden'); tabLeaveBtn.style.display = 'none'; }
+    const tabOdBtn = document.getElementById('authTabBtn_onduty');
+    if (tabOdBtn) { tabOdBtn.classList.add('hidden'); tabOdBtn.style.display = 'none'; }
+    const tabAllBtn = document.getElementById('authTabBtn_all');
+    if (tabAllBtn) { tabAllBtn.classList.add('hidden'); tabAllBtn.style.display = 'none'; }
+  } else {
+    // Requirement: Hide "All Requests" filter button for Counselor, Advisor, and HOD (replaced with Gate Pass Request)
+    const allReqsTabBtn = document.getElementById('authTabBtn_all');
+    if (allReqsTabBtn) {
+      if (isCounselor || isAdvisor || isHod) {
+        allReqsTabBtn.classList.add('hidden');
+        allReqsTabBtn.style.display = 'none';
+      } else {
+        allReqsTabBtn.classList.remove('hidden');
+        allReqsTabBtn.style.display = '';
+      }
     }
   }
 
-  // Pre-fetch student roster for Counselor, Advisor, and HOD so parent contact and student info are immediately resolved
-  if (isCounselor || roleKey === 'advisor' || roleKey === 'hod') {
+  // Pre-fetch student roster for Counselor, Advisor, HOD, and Warden
+  if (isCounselor || isAdvisor || isHod || isWarden) {
     fetchAuthorityStudents();
   }
 
-  // Set default view tab: Counselor, Advisor, and HOD open directly with Gate Pass Request
-  if (isCounselor || roleKey === 'advisor' || roleKey === 'hod') {
+  // Set default view tab: Counselor, Advisor, HOD, Principal, and Warden open directly with Gate Pass Request
+  if (isCounselor || isAdvisor || isHod || isPrincipal || isWarden) {
     switchAuthorityMainTab('gatepass');
+    setAuthoritySubFilter('gatepass');
   } else {
     switchAuthorityMainTab('verification');
   }
@@ -231,10 +251,12 @@ function switchAuthorityMainTab(tab) {
   const isCounselor = roleKey === 'counselor';
   const isAdvisor = roleKey === 'advisor';
   const isHod = roleKey === 'hod';
+  const isPrincipal = roleKey === 'principal';
+  const isWarden = roleKey.includes('warden');
 
   let targetTab = tab;
-  // When Counselor, Advisor, or HOD opens/clicks Verification Desk, default directly to Gate Pass Request
-  if ((isCounselor || isAdvisor || isHod) && tab === 'verification') {
+  // When Counselor, Advisor, HOD, Principal, or Warden opens/clicks Verification Desk, default directly to Gate Pass Request
+  if ((isCounselor || isAdvisor || isHod || isPrincipal || isWarden) && (tab === 'verification' || ((isPrincipal || isWarden) && (tab === 'leave' || tab === 'onduty')))) {
     targetTab = 'gatepass';
   } else if (tab === 'ward') {
     targetTab = 'roster';
@@ -252,7 +274,7 @@ function switchAuthorityMainTab(tab) {
   sideBtns.forEach(b => {
     const btn = document.getElementById(`authSideBtn_${b}`);
     if (btn) {
-      const isSelected = (b === targetTab) || (b === tab) || ((isCounselor || isAdvisor || isHod) && targetTab === 'gatepass' && b === 'verification');
+      const isSelected = (b === targetTab) || (b === tab) || ((isCounselor || isAdvisor || isHod || isPrincipal || isWarden) && targetTab === 'gatepass' && b === 'verification');
       if (isSelected) {
         btn.className = 'w-full flex items-center justify-between px-3.5 py-3 rounded-xl font-bold transition text-left auth-side-active shadow-2xs';
       } else {
@@ -338,15 +360,31 @@ async function fetchAuthorityData() {
     } else if (role === 'hod') {
       passUrl += `&dept=${encodeURIComponent(user.dept || '')}`;
       odUrl += `&dept=${encodeURIComponent(user.dept || '')}`;
+    } else if (role === 'boys_warden' || role.includes('boys')) {
+      passUrl += `&accommodation=Hosteller&role=boys_warden&gender=Male`;
+    } else if (role === 'girls_warden' || role.includes('girls')) {
+      passUrl += `&accommodation=Hosteller&role=girls_warden&gender=Female`;
     }
 
     const [passesRes, odRes] = await Promise.all([
       Api.get(passUrl).catch(() => []),
-      Api.get(odUrl).catch(() => [])
+      (role === 'principal' || role.includes('warden')) ? Promise.resolve([]) : Api.get(odUrl).catch(() => [])
     ]);
 
-    const passes = Array.isArray(passesRes) ? passesRes : (passesRes?.passes || []);
-    const odRequests = Array.isArray(odRes) ? odRes : (odRes?.requests || []);
+    let passes = Array.isArray(passesRes) ? passesRes : (passesRes?.passes || []);
+    let odRequests = (role === 'principal' || role.includes('warden')) ? [] : (Array.isArray(odRes) ? odRes : (odRes?.requests || []));
+
+    // Client-side guard: Principal only receives Gate Passes
+    if (role === 'principal') {
+      passes = passes.filter(p => p.requestCategory !== 'leave' && p.type !== 'leave' && !(!p.departureDate && (p.fromDate || p.leaveDate)) && p.requestCategory !== 'onduty' && p._type !== 'onduty');
+      odRequests = [];
+    } else if (role === 'boys_warden' || role.includes('boys')) {
+      passes = passes.filter(p => p.requestCategory !== 'leave' && p.type !== 'leave' && !(!p.departureDate && (p.fromDate || p.leaveDate)) && p.requestCategory !== 'onduty' && p._type !== 'onduty' && String(p.gender || '').trim().toLowerCase() === 'male');
+      odRequests = [];
+    } else if (role === 'girls_warden' || role.includes('girls')) {
+      passes = passes.filter(p => p.requestCategory !== 'leave' && p.type !== 'leave' && !(!p.departureDate && (p.fromDate || p.leaveDate)) && p.requestCategory !== 'onduty' && p._type !== 'onduty' && String(p.gender || '').trim().toLowerCase() === 'female');
+      odRequests = [];
+    }
 
     authState.passes = passes;
     authState.odRequests = odRequests;
@@ -493,8 +531,49 @@ function getFilteredRequests() {
 
   let list = [];
 
-  // Requirement 3: Strict Request Separation (Gate Pass ONLY, Leave ONLY, OD ONLY)
-  if (sub === 'leave') {
+  const user = window.loggedUser;
+  const roleKey = user && user.role ? String(user.role).trim().toLowerCase().replace(/[\s-]+/g, '_') : '';
+  const isCounselor = roleKey === 'counselor';
+  const isAdvisor = roleKey === 'advisor';
+  const isHod = roleKey === 'hod';
+  const isPrincipal = roleKey === 'principal';
+  const isWarden = roleKey.includes('warden');
+  const isBoysWarden = roleKey === 'boys_warden' || roleKey.includes('boys');
+  const isGirlsWarden = roleKey === 'girls_warden' || roleKey.includes('girls');
+
+  // Requirement: Principal Portal displays ONLY Gate Pass Requests (No Leave, No OD)
+  if (isPrincipal) {
+    if (sub === 'approved') {
+      list = authState.passes
+        .filter(p => isGatePass(p) && isApprovedByRole(p, false))
+        .map(p => ({ ...p, _type: 'gatepass' }));
+    } else {
+      list = authState.passes
+        .filter(p => isGatePass(p) && isPendingForRole(p, false))
+        .map(p => ({ ...p, _type: 'gatepass' }));
+    }
+  } else if (isWarden) {
+    // Requirement: Warden Portal displays ONLY Hosteller Gate Pass requests strictly isolated by gender
+    const wardenPasses = authState.passes.filter(p => {
+      if (!isGatePass(p)) return false;
+      const isHostel = (/hoste?l|^h$/i.test(p.accommodation || '') && !/day\s*scholar/i.test(p.accommodation || ''));
+      if (!isHostel) return false;
+      const g = String(p.gender || '').trim().toLowerCase();
+      if (isBoysWarden && g !== 'male') return false;
+      if (isGirlsWarden && g !== 'female') return false;
+      return true;
+    });
+
+    if (sub === 'approved') {
+      list = wardenPasses
+        .filter(p => isApprovedByRole(p, false))
+        .map(p => ({ ...p, _type: 'gatepass' }));
+    } else {
+      list = wardenPasses
+        .filter(p => isPendingForRole(p, false))
+        .map(p => ({ ...p, _type: 'gatepass' }));
+    }
+  } else if (sub === 'leave') {
     list = authState.passes
       .filter(p => isLeavePass(p) && isPendingForRole(p, false))
       .map(p => ({ ...p, _type: 'leave' }));
@@ -559,12 +638,15 @@ function renderAuthorityRequestsTable() {
   const isCounselor = roleKey === 'counselor';
   const isAdvisor = roleKey === 'advisor';
   const isHod = roleKey === 'hod';
-  const usesCardsView = isCounselor || isAdvisor || isHod;
+  const isPrincipal = roleKey === 'principal';
+  const isWarden = roleKey.includes('warden');
+  // Requirement: Principal & Warden Portals use the exact same modern, spacious card layout as HOD Portal
+  const usesCardsView = isCounselor || isAdvisor || isHod || isPrincipal || isWarden;
 
   const tableContainer = document.getElementById('authTableContainer');
   const counselorCardsContainer = document.getElementById('counselorCardsContainer');
 
-  // Requirement: Dedicated Gate Pass Request & Leave Request cards for Counselor, Class Advisor, and HOD
+  // Requirement: Dedicated spacious card layout for all authority roles
   if (usesCardsView) {
     if (tableContainer) tableContainer.classList.add('hidden');
     if (counselorCardsContainer) {
@@ -888,9 +970,9 @@ function renderCounselorCardsView(items, container, sub) {
     };
 
     return `
-      <div class="auth-card p-5 sm:p-6 bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition space-y-5" id="counselorCard_${item._id}">
+      <div class="auth-card p-6 sm:p-7 bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition space-y-6" id="counselorCard_${item._id}">
         <!-- Top Row: Student Name, Roll No, Student Type Badge, Department, Section, Status -->
-        <div class="flex flex-wrap items-start justify-between gap-3 pb-3 border-b border-slate-100">
+        <div class="flex flex-wrap items-start justify-between gap-4 pb-4 border-b border-slate-100">
           <div class="space-y-1.5">
             <div class="flex flex-wrap items-center gap-2.5">
               <h3 class="text-base sm:text-lg font-black text-slate-900 tracking-tight">${escapeHtml(studentName)}</h3>
@@ -932,7 +1014,7 @@ function renderCounselorCardsView(items, container, sub) {
         <!-- Middle Details Grid (Strict Hosteller / Day Scholar Display Logic) -->
         ${isOD ? `
           <!-- OD Specific Details -->
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-xl bg-slate-50/70 border border-slate-200/80">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 p-5 rounded-2xl bg-slate-50/80 border border-slate-200/90">
             <!-- 1. Duty / Event Title -->
             <div class="space-y-1">
               <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Duty / Event Title</div>
@@ -953,7 +1035,7 @@ function renderCounselorCardsView(items, container, sub) {
           </div>
         ` : `
           <!-- Gate Pass & Leave Details: Direct Parent details & Hosteller/Day Scholar schedule -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 ${isLeave ? 'lg:grid-cols-4' : (isHostel ? 'lg:grid-cols-3 xl:grid-cols-6' : 'lg:grid-cols-4')} gap-4 p-4 rounded-xl bg-slate-50/70 border border-slate-200/80">
+          <div class="grid grid-cols-1 sm:grid-cols-2 ${isLeave ? 'lg:grid-cols-4' : (isHostel ? 'lg:grid-cols-3 xl:grid-cols-6' : 'lg:grid-cols-4')} gap-5 p-5 rounded-2xl bg-slate-50/80 border border-slate-200/90">
             <!-- 1. Parent Name -->
             <div class="space-y-1">
               <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Parent Name</div>
@@ -1022,14 +1104,14 @@ function renderCounselorCardsView(items, container, sub) {
         `}
 
         <!-- Reason Section Directly Visible -->
-        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+        <div class="p-5 rounded-2xl bg-slate-50/90 border border-slate-200/90">
           <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">${isOD ? 'Duty Description &amp; Objectives' : 'Reason for the Gate Pass'}</div>
           <div class="text-xs sm:text-sm font-medium text-slate-900 leading-relaxed">${escapeHtml(reason)}</div>
           ${item.destination && !isOD ? `<div class="mt-1 text-xs text-blue-700 font-semibold"><span class="text-slate-500 font-medium">Destination:</span> ${escapeHtml(item.destination)}</div>` : ''}
         </div>
 
         ${((item.exitTime && item.exitTime !== '-') || (item.returnTime && item.returnTime !== '-')) ? `
-          <div class="p-3 rounded-xl bg-slate-50/90 border border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+          <div class="p-4 rounded-xl bg-slate-50/90 border border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
             ${item.exitTime && item.exitTime !== '-' ? `
               <div class="flex items-center gap-1.5">
                 <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Campus Exit Scanned:</span>
@@ -1065,7 +1147,7 @@ function renderCounselorCardsView(items, container, sub) {
         <!-- Bottom Action Bar: Role Actions -->
         ${isPending ? (isOD ? `
           <!-- OD Action Bar -->
-          <div class="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-slate-100">
+          <div class="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-100">
             <div class="flex items-center gap-2">
               <span class="text-xs font-semibold text-slate-500">${roleKey === 'advisor' ? 'Class Advisor Endorsement' : (roleKey === 'hod' ? 'Department Head Sanction' : 'Official OD Requisition Endorsement')}</span>
             </div>
@@ -1111,7 +1193,7 @@ function renderCounselorCardsView(items, container, sub) {
           </div>
         ` : (isCounselor ? `
           <!-- Counselor Gate Pass & Leave Action Bar (Requires Talked to Parent confirmation) -->
-          <div class="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-slate-100">
+          <div class="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-100">
             <!-- Left: Talked to Parent Checkbox -->
             <div class="flex items-center gap-3">
               <label class="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-amber-50/80 border border-amber-200 hover:bg-amber-100/80 transition cursor-pointer select-none">
@@ -1172,10 +1254,15 @@ function renderCounselorCardsView(items, container, sub) {
             </div>
           </div>
         ` : `
-          <!-- Class Advisor & HOD Action Bar (Direct approval, no parent confirmation required) -->
-          <div class="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-slate-100">
+          <!-- Class Advisor, HOD, Principal & Warden Action Bar -->
+          <div class="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-100">
             <div class="flex items-center gap-2">
-              <span class="text-xs font-semibold text-slate-500">${roleKey === 'advisor' ? 'Class Advisor Clearance &amp; Endorsement' : (roleKey === 'hod' ? 'Department Head Gate Pass Sanction' : 'Clearance Verification')}</span>
+              <span class="text-xs font-semibold text-slate-500">${
+                roleKey === 'advisor' ? 'Class Advisor Clearance &amp; Endorsement' :
+                (roleKey === 'hod' ? 'Department Head Gate Pass Sanction' :
+                (roleKey === 'principal' ? 'Principal Gate Pass Final Review &amp; Sanction' :
+                (roleKey.includes('warden') ? 'Hostel Warden Security Gate Pass Clearance' : 'Clearance Verification')))
+              }</span>
             </div>
             <div class="flex items-center gap-2">
               <button
@@ -1210,16 +1297,24 @@ function renderCounselorCardsView(items, container, sub) {
                 id="roleApproveBtn_${item._id}"
                 onclick="executeRoleApprove('${item._id}', false)"
                 class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-xs active:scale-95 cursor-pointer flex items-center gap-1.5"
-                title="${roleKey === 'advisor' ? 'Approve and endorse request to Head of Department' : 'Approve and sanction departmental clearance'}"
+                title="${
+                  roleKey === 'advisor' ? 'Approve and endorse request to Head of Department' :
+                  (roleKey === 'hod' ? 'Approve and sanction departmental clearance' :
+                  (roleKey === 'principal' ? 'Approve and sanction Gate Pass' : 'Approve and issue Hostel Gate Pass'))
+                }"
               >
                 <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                <span>${roleKey === 'advisor' ? 'Approve &amp; Forward' : 'Approve Clearance'}</span>
+                <span>${
+                  roleKey === 'advisor' ? 'Approve &amp; Forward' :
+                  (roleKey === 'hod' ? 'Approve Clearance' :
+                  (roleKey === 'principal' ? 'Approve Gate Pass' : 'Approve &amp; Issue Pass'))
+                }</span>
               </button>
             </div>
           </div>
         `)) : `
           <!-- Non-pending Records Action Bar -->
-          <div class="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-slate-100">
+          <div class="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-100">
             <span class="text-xs font-semibold text-slate-500">Current Status: <strong class="text-slate-800">${escapeHtml(item.status)}</strong></span>
             <div class="flex items-center gap-2">
               <button
@@ -1249,8 +1344,8 @@ function renderCounselorCardsView(items, container, sub) {
   // Assemble container with Header, Cards, and Pagination
   container.innerHTML = `
     <!-- Header Summary -->
-    <div class="auth-card p-5 sm:p-6 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 mb-4 bg-white rounded-2xl border border-slate-200 shadow-xs">
-      <div class="space-y-0.5">
+    <div class="auth-card p-6 sm:p-7 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4 mb-6 bg-white rounded-2xl border border-slate-200 shadow-xs">
+      <div class="space-y-1">
         <h3 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight">${escapeHtml(currentTitle)} (${items.length})</h3>
         <p class="text-xs text-slate-500">${escapeHtml(currentSubtitle)}</p>
       </div>
@@ -1267,7 +1362,7 @@ function renderCounselorCardsView(items, container, sub) {
     </div>
 
     <!-- Cards List -->
-    <div class="space-y-4">
+    <div class="space-y-6 sm:space-y-7">
       ${cardsHtml}
     </div>
 
@@ -1471,12 +1566,31 @@ async function fetchAuthorityStudents() {
       q += `&dept=${encodeURIComponent(user.dept || '')}&yearSec=${encodeURIComponent(user.yearSec || '')}`;
     } else if (role === 'hod') {
       q += `&dept=${encodeURIComponent(user.dept || '')}`;
+    } else if (role === 'boys_warden' || role.includes('boys')) {
+      q += `&accommodation=Hosteller&role=boys_warden&gender=Male`;
+    } else if (role === 'girls_warden' || role.includes('girls')) {
+      q += `&accommodation=Hosteller&role=girls_warden&gender=Female`;
     } else if (role.includes('warden')) {
-      q += `&accommodation=Hosteller`;
+      q += `&accommodation=Hosteller&role=${encodeURIComponent(role)}`;
     }
 
     const res = await Api.get(`/api/admin/students${q}`);
     let students = Array.isArray(res) ? res : (res?.students || []);
+
+    // Filter warden students strictly by gender and hosteller accommodation at data level
+    if (role === 'boys_warden' || role.includes('boys')) {
+      students = students.filter(st => {
+        const g = String(st.gender || '').trim().toLowerCase();
+        const isHostel = (/hoste?l|^h$/i.test(st.accommodation || '') && !/day\s*scholar/i.test(st.accommodation || ''));
+        return g === 'male' && isHostel;
+      });
+    } else if (role === 'girls_warden' || role.includes('girls')) {
+      students = students.filter(st => {
+        const g = String(st.gender || '').trim().toLowerCase();
+        const isHostel = (/hoste?l|^h$/i.test(st.accommodation || '') && !/day\s*scholar/i.test(st.accommodation || ''));
+        return g === 'female' && isHostel;
+      });
+    }
 
     // Filter counselor ward by startRoll & endRoll strictly if set
     if (role === 'counselor' && user.startRoll && user.endRoll) {
@@ -1507,6 +1621,13 @@ function renderAuthorityStudentsTable() {
 
   const q = (authState.searchQuery || '').trim().toLowerCase();
   let students = authState.students || [];
+
+  const role = String(window.loggedUser?.role || '').toLowerCase().replace(/[\s-]+/g, '_');
+  if (role === 'boys_warden' || role.includes('boys')) {
+    students = students.filter(s => String(s.gender || '').trim().toLowerCase() === 'male');
+  } else if (role === 'girls_warden' || role.includes('girls')) {
+    students = students.filter(s => String(s.gender || '').trim().toLowerCase() === 'female');
+  }
 
   if (q) {
     students = students.filter(s =>

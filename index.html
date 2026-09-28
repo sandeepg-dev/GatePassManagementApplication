@@ -212,10 +212,10 @@
     <!-- Student Profile Pill & Dropdown -->
     <div class="relative">
       <button type="button" onclick="toggleStuProfileMenu()" class="flex items-center gap-2 cursor-pointer p-1 rounded-lg hover:bg-slate-100 transition">
-        <div id="stuAvatarInitials" class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0">SG</div>
+        <div id="stuAvatarInitials" class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0">-</div>
         <div class="hidden sm:block text-left leading-tight">
-          <div id="stuProfileName" class="text-xs font-bold text-slate-900">Student</div>
-          <div id="stuProfileMeta" class="text-[10px] text-slate-500 font-mono">III Year - CSE (Sec B)</div>
+          <div id="stuProfileName" class="text-xs font-bold text-slate-900">-</div>
+          <div id="stuProfileMeta" class="text-[10px] text-slate-500 font-mono">-</div>
         </div>
         <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
       </button>
@@ -356,9 +356,9 @@
     <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2">
       <div class="flex items-center justify-between">
         <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 font-mono">STUDENT RECORD</span>
-        <span id="sidebarAccomBadge" class="px-2 py-0.5 text-[9px] font-bold rounded-md bg-blue-50 text-blue-700 border border-blue-200">Day Scholar</span>
+        <span id="sidebarAccomBadge" class="px-2 py-0.5 text-[9px] font-bold rounded-md bg-blue-50 text-blue-700 border border-blue-200">-</span>
       </div>
-      <div class="text-xs font-bold text-slate-900 truncate" id="sidebarStudentName">Student</div>
+      <div class="text-xs font-bold text-slate-900 truncate" id="sidebarStudentName">-</div>
       <div class="text-[11px] text-slate-500 font-mono" id="sidebarStudentRoll">-</div>
       <button
         type="button"
@@ -389,12 +389,12 @@
         <span class="text-xs text-slate-400">&bull;</span>
         <span class="text-xs font-medium text-slate-500">Autonomous Governance</span>
       </div>
-      <h1 id="stuWelcomeHeading" class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Welcome, Student</h1>
+      <h1 id="stuWelcomeHeading" class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Welcome</h1>
       <p id="stuWelcomeSubtitle" class="text-xs sm:text-sm text-slate-500 font-medium">Institutional Student Portal &bull; Campus PassPro</p>
     </div>
     <div class="flex flex-wrap items-center gap-2">
-      <span id="stuDeptSecBadge" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 font-mono shadow-2xs">III Year - CSE (Sec B)</span>
-      <span id="stuAccomBadge" class="px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-semibold rounded-xl border border-blue-200 font-mono shadow-2xs">Day Scholar</span>
+      <span id="stuDeptSecBadge" class="px-3 py-1.5 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 font-mono shadow-2xs">-</span>
+      <span id="stuAccomBadge" class="px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-semibold rounded-xl border border-blue-200 font-mono shadow-2xs">-</span>
     </div>
   </div>
 
@@ -628,11 +628,11 @@
           <!-- User Profile & Sign Out -->
           <div class="flex items-center gap-3 pl-3 border-l border-slate-200">
             <div id="authAvatarInitials" class="w-8 h-8 rounded-full bg-blue-100 text-blue-800 font-bold text-xs flex items-center justify-center shrink-0 border border-blue-200">
-              MS
+              -
             </div>
             <div class="hidden sm:block text-left leading-tight">
-              <div id="authProfileName" class="text-xs font-bold text-slate-900">User</div>
-              <div id="authProfileRole" class="text-[10px] text-slate-500 font-medium">Role</div>
+              <div id="authProfileName" class="text-xs font-bold text-slate-900">-</div>
+              <div id="authProfileRole" class="text-[10px] text-slate-500 font-medium">-</div>
             </div>
             <button
               type="button"
@@ -653,8 +653,8 @@
         <aside class="w-full md:w-68 lg:w-72 shrink-0 space-y-4" id="authSidebarAside">
           <!-- Role & Jurisdiction Card -->
           <div class="auth-card p-4 space-y-1">
-            <div id="authSidebarRoleTitle" class="text-sm font-bold text-slate-900 tracking-tight">Class Counselor</div>
-            <div id="authSidebarJurisdictionBadge" class="text-[11px] font-mono text-slate-500 font-medium break-words">Ward: 110324104081 - 110324104100</div>
+            <div id="authSidebarRoleTitle" class="text-sm font-bold text-slate-900 tracking-tight">-</div>
+            <div id="authSidebarJurisdictionBadge" class="text-[11px] font-mono text-slate-500 font-medium break-words">-</div>
           </div>
 
           <!-- Vertical Navigation Menu with Increased Readable Font Size -->
@@ -763,7 +763,7 @@
           <div class="auth-card p-5 sm:p-6 flex flex-wrap items-center justify-between gap-4">
             <div class="space-y-1">
               <h1 id="authWelcomeHeading" class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                Welcome, User
+                Welcome
               </h1>
               <p id="authWelcomeSubtitle" class="text-xs sm:text-sm text-slate-500 max-w-2xl leading-relaxed">
                 Review and verify student requests before forwarding to the next governance tier.
@@ -786,10 +786,10 @@
           </div>
 
           <!-- 2. Requests Section (Verification Desk / Filter Tabs / Main Table) -->
-          <div id="authSection_requests" class="space-y-4">
+          <div id="authSection_requests" class="space-y-6">
 
             <!-- Filter Tabs Bar (Gate Pass | Leave | OD | All Requests) + Search & Refresh -->
-            <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center justify-between gap-4">
               <!-- Filter Tabs -->
               <div class="flex items-center flex-wrap gap-2">
                 <button
@@ -863,8 +863,8 @@
               </div>
             </div>
 
-            <!-- Dedicated Request Cards Container for Counselor Portal -->
-            <div id="counselorCardsContainer" class="hidden space-y-4"></div>
+            <!-- Dedicated Request Cards Container for Authority Portals (Counselor, Advisor, HOD, Principal, Warden) -->
+            <div id="counselorCardsContainer" class="hidden space-y-6 sm:space-y-7"></div>
 
             <!-- Main Table Card (for non-counselor authority roles) -->
             <div id="authTableContainer" class="auth-card overflow-hidden">
@@ -1836,8 +1836,8 @@
     <div class="flex items-center justify-between pb-3 border-b border-slate-100">
       <div>
         <div class="flex items-center gap-2">
-          <span id="stuModalReqId" class="font-mono text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded">GP-2026-0001</span>
-          <span id="stuModalAccomBadge" class="px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">Day Scholar</span>
+          <span id="stuModalReqId" class="font-mono text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded">-</span>
+          <span id="stuModalAccomBadge" class="px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">-</span>
         </div>
         <h3 id="stuModalHeading" class="text-base font-bold text-slate-900 mt-1">Gate Pass Request Details</h3>
         <p id="stuModalAppliedOn" class="text-[11px] text-slate-500 font-mono">Applied on: -</p>
@@ -1856,11 +1856,11 @@
     <div id="stuModalStatusBanner" class="p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-amber-50/80 border-amber-200 text-amber-900">
       <div>
         <div class="text-[10px] uppercase font-bold tracking-wider opacity-75">Current Clearance Status</div>
-        <div id="stuModalCurrentStatus" class="text-sm font-extrabold flex items-center gap-1.5 mt-0.5">Pending – Counselor Review</div>
+        <div id="stuModalCurrentStatus" class="text-sm font-extrabold flex items-center gap-1.5 mt-0.5">-</div>
       </div>
       <div class="sm:text-right">
         <div class="text-[10px] uppercase font-bold tracking-wider opacity-75">Current Approval Authority</div>
-        <div id="stuModalCurrentAuthority" class="text-xs font-bold font-mono text-slate-800">Class Counselor</div>
+        <div id="stuModalCurrentAuthority" class="text-xs font-bold font-mono text-slate-800">-</div>
       </div>
     </div>
 

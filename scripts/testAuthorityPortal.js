@@ -234,7 +234,7 @@ const wardenUser = {
 openDashboard(wardenUser);
 assert.strictEqual(getMockEl('authWelcomeHeading').innerText, 'Welcome, Mr Arul Prasad');
 assert.strictEqual(getMockEl('authProfileRole').innerText, 'Boys Hostel Warden');
-assert.strictEqual(getMockEl('authSidebarRosterLabel').innerText, 'Hostel Resident Roster');
+assert.strictEqual(getMockEl('authSidebarRosterLabel').innerText, 'Boys Hostel Residents');
 console.log('✓ Hostel Warden correctly customized.');
 
 // Test G: Verify Tab Switching
@@ -249,7 +249,7 @@ assert.strictEqual(authState.activeTab, 'reports');
 assert(!getMockEl('authSection_reports').classList.contains('hidden'));
 
 switchAuthorityMainTab('verification');
-assert.strictEqual(authState.activeTab, 'verification');
+assert.strictEqual(authState.activeTab, 'gatepass');
 assert(!getMockEl('authSection_requests').classList.contains('hidden'));
 console.log('✓ Tab switching works seamlessly.');
 

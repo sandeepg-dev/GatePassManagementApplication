@@ -150,6 +150,15 @@ async function runAllTests() {
     const cODAfter = await (await fetch(`${baseApi}/api/onduty?authorityUserId=${testUser}&role=counselor&startRoll=110324104001&endRoll=110324104050`)).json();
     assert('Authority dashboard shows 0 requests after scoped clear', cPassAfter.length === 0 && cODAfter.length === 0);
 
+    // Guaranteed test fixture cleanup
+    const Pass = require('../src/models/Pass');
+    const OnDuty = require('../src/models/OnDuty');
+    if (gpRes && gpRes.pass && gpRes.pass._id) {
+      await Pass.deleteOne({ _id: gpRes.pass._id });
+    }
+    if (odRes && odRes.data && odRes.data._id) {
+      await OnDuty.deleteOne({ _id: odRes.data._id });
+    }
   } catch (err) {
     console.warn(`[SKIP] Live server API test skipped: ${err.message}`);
   }

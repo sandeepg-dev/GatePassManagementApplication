@@ -115,6 +115,8 @@ async function loadUniversalLogs() {
       });
     } else if (loggedUser.role === 'principal') {
       passes = passes.filter(p => {
+        if (p.requestCategory === 'leave' || p.type === 'leave' || p.isLeave) return false;
+        if (p.requestCategory === 'onduty' || p.type === 'onduty' || p._type === 'onduty') return false;
         const reached = p.hodApproval?.approved === true || p.status === 'Pending Principal';
         if (!reached) return false;
         if (p.status === 'Rejected' && !p.hodApproval?.approved) return false;
@@ -122,10 +124,12 @@ async function loadUniversalLogs() {
       });
     } else if (loggedUser.role === 'boys_warden') {
       passes = passes.filter(p => {
+        if (p.requestCategory === 'leave' || p.type === 'leave' || p.isLeave) return false;
+        if (p.requestCategory === 'onduty' || p.type === 'onduty' || p._type === 'onduty') return false;
         const isHostel = (/hoste?l|^h$/i.test(p.accommodation || '') && !/day\s*scholar/i.test(p.accommodation || ''));
-        const isNotFemale = !/^female$/i.test(String(p.gender || '').trim());
+        const isMale = /^male$/i.test(String(p.gender || '').trim());
         const isNotGirlsStatus = p.status !== 'Pending Girls Warden';
-        if (!isHostel || !isNotFemale || !isNotGirlsStatus) return false;
+        if (!isHostel || !isMale || !isNotGirlsStatus) return false;
         const reached = p.principalApproval?.approved === true || p.status === 'Pending Boys Warden';
         if (!reached) return false;
         if (p.status === 'Rejected' && !p.principalApproval?.approved) return false;
@@ -133,8 +137,10 @@ async function loadUniversalLogs() {
       });
     } else if (loggedUser.role === 'girls_warden') {
       passes = passes.filter(p => {
+        if (p.requestCategory === 'leave' || p.type === 'leave' || p.isLeave) return false;
+        if (p.requestCategory === 'onduty' || p.type === 'onduty' || p._type === 'onduty') return false;
         const isHostel = (/hoste?l|^h$/i.test(p.accommodation || '') && !/day\s*scholar/i.test(p.accommodation || ''));
-        const isFemale = /^female$/i.test(String(p.gender || '').trim()) || p.status === 'Pending Girls Warden';
+        const isFemale = /^female$/i.test(String(p.gender || '').trim());
         const isNotBoysStatus = p.status !== 'Pending Boys Warden';
         if (!isHostel || !isFemale || !isNotBoysStatus) return false;
         const reached = p.principalApproval?.approved === true || p.status === 'Pending Girls Warden';

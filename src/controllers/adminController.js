@@ -199,8 +199,24 @@ async function findCounselorForRoll(rollNo) {
  */
 async function getStudents(req, res) {
   try {
-    const { search, dept, academicYear, year, yearSec, accommodation, page = 1, limit = 100, all } = req.query;
+    const { search, dept, academicYear, year, yearSec, accommodation, page = 1, limit = 100, all, role, gender } = req.query;
     const filter = {};
+
+    // Strict gender & accommodation isolation for Wardens at backend data level
+    const cleanRole = String(role || '').toLowerCase().trim().replace(/[\s-]+/g, '_');
+    if (cleanRole === 'boys_warden' || cleanRole === 'warden_boys' || cleanRole.includes('boys')) {
+      filter.gender = { $regex: /^male$/i };
+      filter.accommodation = { $regex: /hoste?l|^h$/i, $not: /day\s*scholar/i };
+    } else if (cleanRole === 'girls_warden' || cleanRole === 'warden_girls' || cleanRole.includes('girls')) {
+      filter.gender = { $regex: /^female$/i };
+      filter.accommodation = { $regex: /hoste?l|^h$/i, $not: /day\s*scholar/i };
+    } else if (gender && gender !== 'ALL') {
+      if (/^male$/i.test(gender)) {
+        filter.gender = { $regex: /^male$/i };
+      } else if (/^female$/i.test(gender)) {
+        filter.gender = { $regex: /^female$/i };
+      }
+    }
 
     if (dept && dept !== 'ALL') filter.dept = dept.toUpperCase().trim();
     const targetYear = academicYear || year;

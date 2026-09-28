@@ -34,35 +34,23 @@ async function getPasses(req, res) {
 
     const cleanDept = dept ? dept.toUpperCase().trim() : '';
 
-    if (role === 'hod' && cleanDept) {
+    if (role === 'principal') {
+      filter.requestCategory = { $nin: ['leave', 'onduty'] };
+    } else if (role === 'hod' && cleanDept) {
       filter.dept = cleanDept;
     } else if (role === 'advisor' && cleanDept) {
       filter.dept = cleanDept;
       if (yearSec) filter.yearSec = extractSection(yearSec);
     } else if (role === 'boys_warden') {
       filter.accommodation = { $regex: /hoste?l|^h$/i, $not: /day\s*scholar/i };
-      filter.$and = [
-        {
-          $or: [
-            { gender: { $regex: /^male$/i } },
-            { status: 'Pending Boys Warden' }
-          ]
-        },
-        { gender: { $not: { $regex: /^female$/i } } },
-        { status: { $ne: 'Pending Girls Warden' } }
-      ];
+      filter.requestCategory = { $nin: ['leave', 'onduty'] };
+      filter.gender = { $regex: /^male$/i };
+      filter.status = { $ne: 'Pending Girls Warden' };
     } else if (role === 'girls_warden') {
       filter.accommodation = { $regex: /hoste?l|^h$/i, $not: /day\s*scholar/i };
-      filter.$and = [
-        {
-          $or: [
-            { gender: { $regex: /^female$/i } },
-            { status: 'Pending Girls Warden' }
-          ]
-        },
-        { gender: { $not: { $regex: /^male$/i } } },
-        { status: { $ne: 'Pending Boys Warden' } }
-      ];
+      filter.requestCategory = { $nin: ['leave', 'onduty'] };
+      filter.gender = { $regex: /^female$/i };
+      filter.status = { $ne: 'Pending Boys Warden' };
     } else if (role === 'counselor') {
       const conditions = [];
       if (counselorName) {
@@ -134,9 +122,11 @@ async function getPasses(req, res) {
 
         // Principal (Tier 4):
         // Reviews both Day Scholar and Hosteller Gate Passes after HOD has approved!
-        // Leave requests end at HOD.
+        // Leave requests end at HOD. OD requests end at HOD. Gate Passes ONLY.
         if (role === 'principal') {
-          if (p.requestCategory === 'leave') return false;
+          if (p.requestCategory === 'leave' || p.type === 'leave' || p.isLeave) return false;
+          if (p.requestCategory === 'onduty' || p.type === 'onduty' || p._type === 'onduty') return false;
+          if (!p.departureDate && (p.fromDate || p.leaveDate)) return false;
 
           const reachedPrincipal = p.hodApproval?.approved === true || p.status === 'Pending Principal';
           if (!reachedPrincipal) return false;
@@ -145,12 +135,19 @@ async function getPasses(req, res) {
 
         // Boys Warden:
         // Hosteller Gate Passes only! Reaches Warden after Principal approval.
+        // Important Access Rule: Strictly male students only! Female students must not appear anywhere.
         if (role === 'boys_warden') {
-          if (p.requestCategory === 'leave') return false;
+          if (p.requestCategory === 'leave' || p.type === 'leave' || p.isLeave) return false;
+          if (p.requestCategory === 'onduty' || p.type === 'onduty' || p._type === 'onduty') return false;
           const isHostel = /hoste?l|^h$/i.test(p.accommodation) && !/day\s*scholar/i.test(p.accommodation);
-          const isNotFemale = !/^female$/i.test(String(p.gender || '').trim());
-          const isNotGirlsStatus = p.status !== 'Pending Girls Warden';
-          if (!isHostel || !isNotFemale || !isNotGirlsStatus) return false;
+          if (!isHostel) return false;
+
+          const st = studentMap[p.rollNo];
+          const stGender = String(st?.gender || '').trim().toLowerCase();
+          const passGender = String(p.gender || '').trim().toLowerCase();
+          if (stGender === 'female' || passGender === 'female') return false;
+          if (stGender !== 'male' && passGender !== 'male') return false;
+          if (p.status === 'Pending Girls Warden') return false;
 
           const reachedWarden = p.principalApproval?.approved === true || p.status === 'Pending Boys Warden' || p.status === 'Pending Warden';
           if (!reachedWarden) return false;
@@ -159,12 +156,19 @@ async function getPasses(req, res) {
 
         // Girls Warden:
         // Hosteller Gate Passes only! Reaches Warden after Principal approval.
+        // Important Access Rule: Strictly female students only! Male students must not appear anywhere.
         if (role === 'girls_warden') {
-          if (p.requestCategory === 'leave') return false;
+          if (p.requestCategory === 'leave' || p.type === 'leave' || p.isLeave) return false;
+          if (p.requestCategory === 'onduty' || p.type === 'onduty' || p._type === 'onduty') return false;
           const isHostel = /hoste?l|^h$/i.test(p.accommodation) && !/day\s*scholar/i.test(p.accommodation);
-          const isFemale = /^female$/i.test(String(p.gender || '').trim()) || p.status === 'Pending Girls Warden';
-          const isNotBoysStatus = p.status !== 'Pending Boys Warden';
-          if (!isHostel || !isFemale || !isNotBoysStatus) return false;
+          if (!isHostel) return false;
+
+          const st = studentMap[p.rollNo];
+          const stGender = String(st?.gender || '').trim().toLowerCase();
+          const passGender = String(p.gender || '').trim().toLowerCase();
+          if (stGender === 'male' || passGender === 'male') return false;
+          if (stGender !== 'female' && passGender !== 'female') return false;
+          if (p.status === 'Pending Boys Warden') return false;
 
           const reachedWarden = p.principalApproval?.approved === true || p.status === 'Pending Girls Warden' || p.status === 'Pending Warden';
           if (!reachedWarden) return false;
@@ -422,26 +426,22 @@ async function clearAllPasses(req, res) {
       } else if (cleanRole === 'boys_warden') {
         passConditions.push({
           accommodation: { $regex: /hoste?l|^h$/i, $not: /day\s*scholar/i },
-          $and: [
-            { $or: [{ gender: { $regex: /^male$/i } }, { status: 'Pending Boys Warden' }] },
-            { gender: { $not: { $regex: /^female$/i } } },
-            { status: { $ne: 'Pending Girls Warden' } }
-          ]
+          requestCategory: { $nin: ['leave', 'onduty'] },
+          gender: { $regex: /^male$/i },
+          status: { $ne: 'Pending Girls Warden' }
         });
       } else if (cleanRole === 'girls_warden') {
         passConditions.push({
           accommodation: { $regex: /hoste?l|^h$/i, $not: /day\s*scholar/i },
-          $and: [
-            { $or: [{ gender: { $regex: /^female$/i } }, { status: 'Pending Girls Warden' }] },
-            { gender: { $not: { $regex: /^male$/i } } },
-            { status: { $ne: 'Pending Boys Warden' } }
-          ]
+          requestCategory: { $nin: ['leave', 'onduty'] },
+          gender: { $regex: /^female$/i },
+          status: { $ne: 'Pending Boys Warden' }
         });
       }
 
       let passFilter = {};
       if (cleanRole === 'principal') {
-        passFilter = {};
+        passFilter = { requestCategory: { $nin: ['leave', 'onduty'] } };
       } else if (passConditions.length > 0) {
         passFilter = { $or: passConditions };
       } else {
@@ -456,8 +456,8 @@ async function clearAllPasses(req, res) {
         odConditions.push({ _id: { $in: odIdList } });
       }
 
-      if (cleanRole === 'principal') {
-        odConditions.push({});
+      if (cleanRole === 'principal' || cleanRole.includes('warden')) {
+        // Principal and Warden portals never display or clear OD requests
       } else if (cleanRole === 'hod') {
         if (authDept) {
           odConditions.push({ dept: new RegExp(`^${authDept}$`, 'i') });

@@ -142,7 +142,12 @@ async function getOnDutyRequests(req, res) {
     const { status, dept, rollNo, counselorName, yearSec, role, startRoll, endRoll, authorityUserId, userId } = req.query;
     let filter = {};
 
-    const cleanRole = role ? role.toLowerCase().trim() : '';
+    const cleanRole = role ? role.toLowerCase().trim().replace(/[\s-]+/g, '_') : '';
+    // Principal and Wardens manage Gate Passes only - OD requests must never appear
+    if (cleanRole === 'principal' || cleanRole.includes('warden')) {
+      return res.json([]);
+    }
+
     const cleanAuthUid = (authorityUserId || userId || '').toLowerCase().trim();
     const authorityKey = (cleanRole && cleanAuthUid) ? `${cleanRole}:${cleanAuthUid}` : '';
 
