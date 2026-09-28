@@ -857,6 +857,481 @@ function renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64
 }
 
 /**
+ * Dynamic Content Generator for Formal Leave Letter
+ * Automatically adapts subject, formal body, dates, and authority address
+ * based on student's entered reason and leave details.
+ */
+function generateDynamicLeaveContent(pass) {
+  const rawReason = String(pass.reason || pass.leaveReason || 'Personal reasons').trim();
+  const lowerReason = rawReason.toLowerCase();
+
+  const fromDate = pass.fromDate || pass.departureDate || pass.leaveDate || '-';
+  const toDate = pass.toDate || pass.expectedReturnDate || pass.returnDate || fromDate;
+
+  let daysText = '';
+  try {
+    const parseDate = (s) => {
+      if (!s || s === '-') return null;
+      const parts = String(s).split(/[-/]/);
+      if (parts.length === 3) {
+        if (parts[0].length === 4) return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        return new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+      }
+      const d = new Date(s);
+      return isNaN(d.getTime()) ? null : d;
+    };
+    const d1 = parseDate(fromDate);
+    const d2 = parseDate(toDate);
+    if (d1 && d2) {
+      const diffTime = d2.getTime() - d1.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1;
+      if (diffDays > 0) {
+        daysText = diffDays > 1 ? ` (${diffDays} days)` : ' (1 day)';
+      }
+    }
+  } catch (e) {}
+
+  let category = 'general';
+  let subject = 'Application for Leave of Absence - Regarding.';
+  let bodyPara1 = '';
+  let bodyPara2 = '';
+
+  if (/\b(medic(al)?|fever|ill(ness)?|sick|doctor|hospital|clinic|treatment|health|injury|surgery|cold|headache|stomach|infection|pain)\b/i.test(lowerReason)) {
+    category = 'medical';
+    subject = 'Application for Sanction of Medical Leave - Regarding.';
+    bodyPara1 = `I am writing this application to respectfully request you to grant me medical leave of absence from college for the period from ${fromDate} to ${toDate}${daysText} as I am suffering from ${rawReason} and have been advised medical rest and treatment.`;
+    bodyPara2 = `I have informed my parents regarding my health condition, and their consent has been obtained. I assure you that I will submit the requisite medical certificate upon rejoining and will take diligent efforts to cover all academic lessons, lecture notes, and laboratory assignments missed during this period.`;
+  } else if (/\b(function|marri(age)?|wed(ding)?|ceremony|festival|puja|pooja|reception|family event|relative)\b/i.test(lowerReason)) {
+    category = 'family_function';
+    subject = 'Application for Leave of Absence for Family Function - Regarding.';
+    bodyPara1 = `I am writing this application to respectfully request permission to avail leave of absence from college for the period from ${fromDate} to ${toDate}${daysText} to participate in an important family function (${rawReason}) along with my parents and family members at my hometown.`;
+    bodyPara2 = `My parents are fully aware of this commitment and have sanctioned my travel. I undertake to resume regular academic sessions on the scheduled return date and assure you that I will complete all coursework and assignments diligently without delay.`;
+  } else if (/\b(emerg(ency)?|urgent|critical|unavoidable|casualty|bereavement|hospitalized)\b/i.test(lowerReason)) {
+    category = 'emergency';
+    subject = 'Application for Urgent Leave of Absence due to Family Emergency - Regarding.';
+    bodyPara1 = `I am writing to formally request urgent leave of absence from college for the period from ${fromDate} to ${toDate}${daysText} on account of an unavoidable emergency situation: "${rawReason}".`;
+    bodyPara2 = `My parents have communicated this emergency requirement. I undertake to return to the campus immediately upon resolution of the matter and will ensure prompt completion of any missed syllabus and academic duties.`;
+  } else if (/\b(personal|native|home|domestic|private|own|family reason)\b/i.test(lowerReason)) {
+    category = 'personal';
+    subject = 'Application for Leave of Absence for Personal Reasons - Regarding.';
+    bodyPara1 = `I am writing to respectfully request permission to avail leave of absence from college for the period from ${fromDate} to ${toDate}${daysText} on account of an important personal commitment: "${rawReason}".`;
+    bodyPara2 = `I have discussed this leave request thoroughly with my parents who have given their complete consent. I assure you that I will maintain full discipline, report back to college punctually on ${toDate}, and make up for all academic classes.`;
+  } else {
+    category = 'general';
+    const cleanSnippet = rawReason.length > 50 ? (rawReason.slice(0, 47) + '...') : rawReason;
+    subject = `Application for Leave of Absence (${cleanSnippet}) - Regarding.`;
+    bodyPara1 = `I am writing this application to respectfully request permission to take leave of absence from college for the period from ${fromDate} to ${toDate}${daysText} due to the following legitimate reason: "${rawReason}".`;
+    bodyPara2 = `I have informed my parents regarding this leave requirement and have obtained their prior permission. I assure you that I will be regular in my attendance upon return and will promptly complete all academic work, records, and tests.`;
+  }
+
+  return {
+    category,
+    subject,
+    fromDate,
+    toDate,
+    daysText,
+    reason: rawReason,
+    bodyPara1,
+    bodyPara2
+  };
+}
+
+/**
+ * Renders an official formal Leave Request Letter onto a jsPDF doc page
+ * Contains:
+ * - GRT Logo & Institutional Header (Autonomous, NAAC A++, Tiruttani)
+ * - Subtle page watermark seal
+ * - From: Student details
+ * - Through: Counselor, Advisor, HOD
+ * - To: Head of the Department
+ * - Date & Ref No
+ * - Dynamic Subject adapted to leave reason
+ * - Formal Respected Sir/Madam & structured body
+ * - Highlighted Leave Schedule & Purpose box
+ * - Thank You & Yours obediently
+ * - Student details & Academic Multi-Tier Endorsements
+ * - Pure white background, zero black fill bugs
+ * @param {jsPDF} doc
+ * @param {object} pass
+ * @param {string|null} [logoBase64]
+ * @param {string|null} [watermarkBase64]
+ * @param {string|null} [bannerBase64]
+ */
+function renderOfficialLeaveLetterPage(doc, pass, logoBase64, watermarkBase64, bannerBase64) {
+  if (!pass) return;
+
+  const logo = logoBase64 || (typeof cachedCollegeLogoBase64 !== 'undefined' ? cachedCollegeLogoBase64 : null);
+  const watermark = watermarkBase64 || (typeof cachedCollegeLogoWatermarkBase64 !== 'undefined' ? cachedCollegeLogoWatermarkBase64 : null);
+
+  const deptUpper = String(pass.dept || 'COMPUTER SCIENCE AND ENGINEERING').toUpperCase();
+  const studentName = String(pass.studentName || pass.name || 'Student').trim();
+  const rollNo = String(pass.rollNo || pass.registrationNumber || '-').trim();
+  const fatherName = pass.fatherName || pass.parentName || '-';
+  const parentContact = pass.parentContact || pass.parentPhone || pass.contactNumber || '-';
+  const academicYear = pass.academicYear || 'III Year';
+  const yearSec = pass.yearSec || 'A';
+
+  const isHosteller = (/hoste?l|^h$/i.test(pass.accommodation || '') && !/day/i.test(pass.accommodation || ''));
+  const accommodationStr = isHosteller ? 'Hosteller (Resident Student)' : 'Day Scholar';
+
+  // Ensure pure white background
+  doc.setFillColor(255, 255, 255);
+  doc.rect(0, 0, 210, 297, 'F');
+
+  // 1. Elegant Double Institutional Border (Stroke only)
+  doc.setDrawColor(203, 213, 225);
+  doc.setLineWidth(0.4);
+  doc.rect(10, 10, 190, 277, 'S');
+
+  doc.setDrawColor(241, 245, 249);
+  doc.setLineWidth(0.2);
+  doc.rect(12, 12, 186, 273, 'S');
+
+  // Render Subtle Institutional College Logo Watermark
+  if (watermark) {
+    renderPageWatermark(doc, watermark, 95);
+  }
+
+  // 2. Official College Letterhead Masthead
+  if (logo) {
+    try {
+      doc.addImage(logo, 'PNG', 15, 14.5, 22, 22);
+    } catch (e) {
+      console.warn('Could not render logo in Leave Letter PDF:', e);
+    }
+  }
+
+  const headerCenterX = 114;
+  doc.setFont('times', 'bold');
+  doc.setFontSize(13.8);
+  doc.setTextColor(15, 23, 42); // Deep Navy
+  doc.text('GRT INSTITUTE OF ENGINEERING AND TECHNOLOGY', headerCenterX, 18.5, { align: 'center' });
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(8.2);
+  doc.setTextColor(71, 85, 105);
+  doc.text('(Approved by AICTE, New Delhi | Affiliated to Anna University, Chennai)', headerCenterX, 23.2, { align: 'center' });
+
+  doc.setFont('times', 'bold');
+  doc.setFontSize(8.2);
+  doc.setTextColor(185, 28, 28); // Official Maroon Accent
+  doc.text('(An Autonomous Institution | Accredited by NAAC with \'A++\' Grade)', headerCenterX, 27.6, { align: 'center' });
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(7.8);
+  doc.setTextColor(100, 116, 139);
+  doc.text('GRT Mahalakshmi Nagar, Chennai-Tirupati Highway, Tiruttani - 631 209.', headerCenterX, 31.8, { align: 'center' });
+
+  doc.setFont('times', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(15, 23, 42);
+  doc.text(`DEPARTMENT OF ${deptUpper}`, headerCenterX, 36.2, { align: 'center' });
+
+  // Clearly mention OFFICIAL LEAVE REQUISITION LETTER
+  doc.setFont('times', 'bold');
+  doc.setFontSize(10.5);
+  doc.setTextColor(15, 23, 42);
+  doc.text('OFFICIAL LEAVE REQUISITION LETTER', headerCenterX, 41.5, { align: 'center' });
+
+  // Letterhead Horizontal Divider Line
+  doc.setDrawColor(15, 23, 42);
+  doc.setLineWidth(0.6);
+  doc.line(14, 45, 196, 45);
+
+  doc.setDrawColor(147, 51, 234); // Royal Purple Accent Line
+  doc.setLineWidth(0.3);
+  doc.line(14, 46, 196, 46);
+
+  // 3. Date & Reference Number
+  let curY = 52.5;
+  const appliedDate = formatLetterDate(pass.appliedTime || pass.createdAt);
+  const refNum = `GRTIET/${deptUpper.slice(0, 4)}/LEAVE/2026/${rollNo}`;
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(9.5);
+  doc.setTextColor(51, 65, 85);
+  doc.text(`Ref: ${refNum}`, 16, curY);
+
+  doc.setFont('times', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(15, 23, 42);
+  doc.text(`Date: ${appliedDate}`, 194, curY, { align: 'right' });
+
+  // 4. From Section
+  curY = 57.5;
+  doc.setFont('times', 'bold');
+  doc.setFontSize(10);
+  doc.setTextColor(15, 23, 42);
+  doc.text('From:', 16, curY);
+
+  curY += 4.5;
+  doc.setFont('times', 'normal');
+  doc.setFontSize(9.5);
+  doc.setTextColor(30, 41, 59);
+  doc.text(`${studentName} (Register No: ${rollNo}),`, 20, curY);
+  curY += 4.5;
+  doc.text(`Father's Name: ${fatherName}   |   Parent Phone: ${parentContact},`, 20, curY);
+  curY += 4.5;
+  doc.text(`${academicYear}, Department of ${pass.dept || 'Engineering'} (Section '${yearSec}'),`, 20, curY);
+  curY += 4.5;
+  doc.text(`Accommodation: ${accommodationStr},`, 20, curY);
+  curY += 4.5;
+  doc.text('GRT Institute of Engineering and Technology, Tiruttani - 631 209.', 20, curY);
+
+  // 5. Through Section
+  curY += 5.5;
+  doc.setFont('times', 'bolditalic');
+  doc.setFontSize(9);
+  doc.setTextColor(71, 85, 105);
+  doc.text('(Through: Respective Class Counselor, Class Advisor, and Head of Department)', 20, curY);
+
+  // 6. To Section
+  curY += 5.5;
+  doc.setFont('times', 'bold');
+  doc.setFontSize(10);
+  doc.setTextColor(15, 23, 42);
+  doc.text('To:', 16, curY);
+
+  curY += 4.5;
+  doc.setFont('times', 'normal');
+  doc.setFontSize(9.5);
+  doc.setTextColor(30, 41, 59);
+  doc.text('The Head of the Department,', 20, curY);
+  curY += 4.5;
+  doc.text(`Department of ${deptUpper},`, 20, curY);
+  curY += 4.5;
+  doc.text('GRT Institute of Engineering and Technology,', 20, curY);
+  curY += 4.5;
+  doc.text('Tiruttani - 631 209.', 20, curY);
+
+  // 7. Salutation & Dynamic Subject
+  curY += 6.5;
+  doc.setFont('times', 'bold');
+  doc.setFontSize(10);
+  doc.setTextColor(15, 23, 42);
+  doc.text('Respected Sir / Madam,', 16, curY);
+
+  curY += 5.5;
+  const dyn = generateDynamicLeaveContent(pass);
+  doc.setFont('times', 'bold');
+  doc.setFontSize(9.8);
+  doc.text(`Subject: ${dyn.subject}`, 20, curY);
+
+  // 8. Dynamic Formal Body Paragraph 1
+  curY += 6.5;
+  doc.setFont('times', 'normal');
+  doc.setFontSize(9.8);
+  doc.setTextColor(30, 41, 59);
+  const body1Lines = doc.splitTextToSize(dyn.bodyPara1, 178);
+  doc.text(body1Lines, 16, curY, { lineHeightFactor: 1.3 });
+  curY += body1Lines.length * 4.6 + 3.5;
+
+  // 9. Highlighted Leave Schedule & Stated Reason Box (Stroke-only 'S', pure white interior)
+  doc.setDrawColor(203, 213, 225);
+  doc.setLineWidth(0.3);
+  doc.rect(16, curY, 178, 17, 'S');
+
+  doc.setFont('times', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(15, 23, 42);
+  doc.text(`Leave Schedule : From ${dyn.fromDate} to ${dyn.toDate}${dyn.daysText}`, 20, curY + 5.2);
+  doc.text(`Stated Reason  : "${dyn.reason}"`, 20, curY + 10.2);
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(71, 85, 105);
+  doc.text(`Parental Intimation : Confirmed & Verified with Parent Contact (${parentContact})`, 20, curY + 14.6);
+  curY += 21;
+
+  // 10. Dynamic Formal Body Paragraph 2
+  doc.setFont('times', 'normal');
+  doc.setFontSize(9.8);
+  doc.setTextColor(30, 41, 59);
+  const body2Lines = doc.splitTextToSize(dyn.bodyPara2, 178);
+  doc.text(body2Lines, 16, curY, { lineHeightFactor: 1.3 });
+  curY += body2Lines.length * 4.6 + 3.5;
+
+  // 11. Concluding Request
+  const body3 = 'Kindly consider my request favorably and sanction my leave application for the specified duration.';
+  doc.text(body3, 16, curY);
+  curY += 6.5;
+
+  // 12. Thank You & Yours obediently
+  doc.setFont('times', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(15, 23, 42);
+  doc.text('Thanking You,', 16, curY);
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(9.5);
+  doc.setTextColor(30, 41, 59);
+  doc.text('Yours obediently,', 148, curY);
+  curY += 7;
+
+  doc.setFont('times', 'bold');
+  doc.text(`(${studentName})`, 148, curY);
+  curY += 4.2;
+  doc.setFont('times', 'normal');
+  doc.setFontSize(9);
+  doc.text(`Roll No: ${rollNo}`, 148, curY);
+  curY += 4;
+  doc.text(`Department of ${deptUpper.slice(0, 16)} (${yearSec})`, 148, curY);
+
+  // 13. Official Multi-Tier Clearance & Endorsement Section
+  curY = Math.max(curY + 4, 216);
+
+  doc.setDrawColor(203, 213, 225);
+  doc.setLineWidth(0.4);
+  doc.line(16, curY, 194, curY);
+  curY += 4.5;
+
+  doc.setFont('times', 'bold');
+  doc.setFontSize(8.8);
+  doc.setTextColor(71, 85, 105);
+  doc.text('OFFICIAL ACADEMIC MULTI-TIER CLEARANCE & APPROVAL ENDORSEMENT', 16, curY);
+
+  const cApp = pass.counselorApproval?.approved || !!pass.parentCallTime;
+  const aApp = pass.advisorApproval?.approved;
+  const hApp = pass.hodApproval?.approved || pass.status === 'Approved' || pass.status === 'Completed';
+
+  const counselorName = pass.counselorApproval?.counselorName || pass.counselorName || 'Mrs shanmugavalli';
+  const advisorName = pass.advisorApproval?.advisorName || pass.advisorName || 'shanmugavalli';
+  const hodName = pass.hodApproval?.hodName || pass.hodName || 'Dr kamal';
+
+  const counselorStatus = cApp ? 'Verified (Parent Call)' : (pass.status === 'Rejected' && /counselor/i.test(pass.rejection?.role || '') ? 'REJECTED' : 'Pending');
+  const advisorStatus = aApp ? 'Endorsed' : (pass.status === 'Rejected' && /advisor/i.test(pass.rejection?.role || '') ? 'REJECTED' : (cApp ? 'Pending' : 'Queued'));
+  const hodStatus = hApp ? 'Sanctioned & Approved' : (pass.status === 'Rejected' && /hod/i.test(pass.rejection?.role || '') ? 'REJECTED' : (aApp ? 'Pending' : 'Queued'));
+
+  const cDate = pass.counselorApproval?.time ? formatLetterDate(pass.counselorApproval.time) : '-';
+  const aDate = pass.advisorApproval?.time ? formatLetterDate(pass.advisorApproval.time) : '-';
+  const hDate = pass.hodApproval?.time ? formatLetterDate(pass.hodApproval.time) : '-';
+
+  const sigY = curY + 16;
+  const colW = 41.5;
+  const colGap = 3.5;
+
+  const cols = [
+    { title: 'Student Signature', name: studentName, status: 'Submitted', isApproved: true, date: appliedDate, x: 16 },
+    { title: 'Class Counselor', name: counselorName, status: counselorStatus, isApproved: cApp, date: cDate, x: 16 + (colW + colGap) },
+    { title: 'Class Advisor', name: advisorName, status: advisorStatus, isApproved: aApp, date: aDate, x: 16 + (colW + colGap) * 2 },
+    { title: 'Head of Dept (HOD)', name: hodName, status: hodStatus, isApproved: hApp, date: hDate, x: 16 + (colW + colGap) * 3 }
+  ];
+
+  cols.forEach(col => {
+    doc.setDrawColor(148, 163, 184);
+    doc.setLineWidth(0.3);
+    doc.line(col.x, sigY, col.x + colW, sigY);
+    doc.setFont('times', 'bold');
+    doc.setFontSize(7.8);
+    doc.setTextColor(15, 23, 42);
+    doc.text(col.title, col.x, sigY + 3.8);
+
+    doc.setFont('times', 'bold');
+    doc.setFontSize(7.2);
+    if (col.isApproved) doc.setTextColor(22, 101, 52);
+    else if (col.status === 'REJECTED') doc.setTextColor(190, 18, 60);
+    else doc.setTextColor(100, 116, 139);
+    doc.text(col.status, col.x, sigY + 7.4);
+
+    doc.setFont('times', 'normal');
+    doc.setFontSize(7.2);
+    doc.setTextColor(71, 85, 105);
+    doc.text(col.name, col.x, sigY + 10.8, { maxWidth: colW });
+    if (col.isApproved && col.date !== '-') doc.text(`Date: ${col.date}`, col.x, sigY + 14.2);
+  });
+
+  // Endorsement clearance box
+  const endY = sigY + 17;
+  if (pass.status === 'Rejected') {
+    doc.setDrawColor(244, 63, 94);
+    doc.rect(16, endY, 178, 10, 'S');
+    doc.setFont('times', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(159, 18, 57);
+    const rejMsg = `Rejection Endorsement: Requisition declined by ${pass.rejection?.roleTitle || pass.rejectedBy || 'Authority'}. Reason: "${pass.rejection?.reason || pass.rejectionReason || 'Not approved'}"`;
+    const rejLines = doc.splitTextToSize(rejMsg, 172);
+    doc.text(rejLines, 19, endY + 4.8);
+  } else {
+    doc.setDrawColor(34, 197, 94);
+    doc.rect(16, endY, 178, 10, 'S');
+    doc.setFont('times', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(22, 101, 52);
+    const appMsg = hApp 
+      ? 'Official Endorsement: Academic Leave of Absence sanctioned under GRT Institutional Academic Regulations.'
+      : 'Official Status: Academic Leave Request recorded and in review under GRT Institutional Academic Regulations.';
+    doc.text(appMsg, 19, endY + 4.5);
+    doc.setFont('times', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(71, 85, 105);
+    doc.text(
+      `Leave Docket ID: GRTIET-LEAVE-${rollNo}-${String(pass._id || '').slice(-6).toUpperCase() || 'REF'} | Recorded in Academic Attendance System`,
+      19,
+      endY + 8.2
+    );
+  }
+
+  // 14. Institutional Footer
+  doc.setFont('times', 'italic');
+  doc.setFontSize(7.5);
+  doc.setTextColor(148, 163, 184);
+  doc.text(
+    'GRT Institute of Engineering and Technology • Official Academic Leave Requisition Letter • Campus PassPro',
+    105,
+    281,
+    { align: 'center' }
+  );
+}
+
+/**
+ * Downloads single official formal Leave Request Letter PDF
+ * @param {object} pass
+ */
+async function downloadLeaveLetterPDF(pass) {
+  if (!pass) return showToast('No pass record provided for Leave Letter download.', 'warning');
+
+  // If passed an ID or roll number string, resolve the pass object
+  if (typeof pass === 'string') {
+    if (window.cachedAllRecords && Array.isArray(window.cachedAllRecords)) {
+      const found = window.cachedAllRecords.find(p => p._id === pass || p.id === pass || p.rollNo === pass);
+      if (found) pass = found;
+    }
+  }
+
+  // Refresh pass record from API if possible
+  const targetId = pass._id || pass.id;
+  const targetRoll = pass.rollNo || pass.registrationNumber;
+  if (targetId || targetRoll) {
+    try {
+      const q = targetId ? `_id=${encodeURIComponent(targetId)}` : `rollNo=${encodeURIComponent(targetRoll)}`;
+      const res = await fetch(`/api/passes?${q}`);
+      if (res.ok) {
+        const json = await res.json();
+        const records = Array.isArray(json) ? json : (json.data || json.passes || []);
+        const fresh = (targetId && records.find(p => String(p._id) === String(targetId))) || records[0];
+        if (fresh) {
+          pass = { ...pass, ...fresh };
+        }
+      }
+    } catch (e) {
+      console.warn('Could not refresh pass from API, using current record:', e);
+    }
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const logoBase64 = await getCollegeLogoBase64();
+  const watermarkBase64 = await getCollegeLogoWatermarkBase64();
+  const bannerBase64 = await getCollegeBannerBase64();
+
+  renderOfficialLeaveLetterPage(doc, pass, logoBase64, watermarkBase64, bannerBase64);
+
+  const rollStr = pass.rollNo || 'Student';
+  doc.save(`GRTIET_Leave_Letter_${rollStr}.pdf`);
+  showToast(`Official Leave Letter PDF downloaded for Roll No: ${rollStr}`, 'success');
+}
+
+/**
  * Downloads a unified dossier of all official requisition letters in current jurisdiction
  * (One single PDF containing both Gate Pass Letters and OD Letters)
  */
@@ -920,11 +1395,15 @@ function getGatePassQrBase64(pass, gatePassId, rollNo, finalAuth, depDate, depTi
         clearTimeout(timeoutId);
         try {
           const canvas = document.createElement('canvas');
-          canvas.width = img.naturalWidth || 140;
-          canvas.height = img.naturalHeight || 140;
+          const w = img.naturalWidth || 140;
+          const h = img.naturalHeight || 140;
+          canvas.width = w;
+          canvas.height = h;
           const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0);
-          resolve(canvas.toDataURL('image/png'));
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', 0.95));
         } catch (e) {
           resolve(null);
         }
@@ -948,28 +1427,33 @@ function getGatePassQrBase64(pass, gatePassId, rollNo, finalAuth, depDate, depTi
  * - Fully incorporates all 16 required particulars and movement details
  */
 function renderProfessionalGatePassCardPage(doc, pass, logoBase64, watermarkBase64, bannerBase64, qrBase64) {
-  const logo = logoBase64 || cachedCollegeLogoBase64;
-  const watermark = watermarkBase64 || cachedCollegeLogoWatermarkBase64;
+  const logo = logoBase64 || (typeof cachedCollegeLogoBase64 !== 'undefined' ? cachedCollegeLogoBase64 : null);
+  const watermark = watermarkBase64 || (typeof cachedCollegeLogoWatermarkBase64 !== 'undefined' ? cachedCollegeLogoWatermarkBase64 : null);
 
   const isHosteller = (/hoste?l|^h$/i.test(pass.accommodation || '') && !/day\s*scholar/i.test(pass.accommodation || ''));
   const deptUpper = String(pass.dept || 'ENGINEERING').toUpperCase();
-  const studentName = pass.studentName || pass.name || 'Student';
-  const rollNo = pass.rollNo || pass.registrationNumber || '-';
+  const studentName = String(pass.studentName || pass.name || 'Student').trim();
+  const rollNo = String(pass.rollNo || pass.registrationNumber || '-').trim();
 
   // Gate Pass ID
   const yr = new Date(pass.createdAt || Date.now()).getFullYear();
   const fallbackId = `GRT-GP-${yr}-${String(pass._id || '').slice(-4).toUpperCase() || '1048'}`;
   const gatePassId = pass.gatePassId || fallbackId;
 
-  // Final Approving Authority
+  // Dynamic Approver Names from Database Records (Principal and Warden preserved)
+  const counselorName = String(pass.counselorApproval?.counselorName || pass.counselorName || 'Mrs shanmugavalli').trim();
+  const advisorName = String(pass.advisorApproval?.advisorName || pass.advisorName || 'shanmugavalli').trim();
+  const hodName = String(pass.hodApproval?.hodName || pass.hodName || 'Dr kamal').trim();
+  const principalName = String(pass.principalApproval?.principalName || 'Dr Arumugam').trim();
+  const wardenName = String(pass.wardenApproval?.wardenName || (pass.gender === 'Female' ? 'Mrs Kanya' : 'Mr Arul Prasad')).trim();
+
+  // Final Approving Authority string
   let finalAuth = pass.finalApprovingAuthority;
   if (!finalAuth) {
     if (isHosteller) {
-      const wName = pass.wardenApproval?.wardenName || (pass.gender === 'Female' ? 'Girls Hostel Warden' : 'Boys Hostel Warden');
-      finalAuth = `${wName} (Hostel Warden)`;
+      finalAuth = `${wardenName} (Hostel Warden)`;
     } else {
-      const pName = pass.principalApproval?.principalName || 'Principal';
-      finalAuth = `Principal (${pName})`;
+      finalAuth = `Principal (${principalName})`;
     }
   }
 
@@ -996,390 +1480,421 @@ function renderProfessionalGatePassCardPage(doc, pass, logoBase64, watermarkBase
   const approvalTime = pass.finalApprovalTime || pass.approvalTime || pass.principalApproval?.time || pass.wardenApproval?.time || pass.appliedTime || '-';
   const verifyCode = `GRT-VERIFY-${rollNo}-${String(gatePassId).replace(/[^A-Za-z0-9]/g, '')}`;
 
-  // 1. Page & Border Geometry
+  // 1. Page Geometry & Dual Frame Borders (Pure White Background, Crisp Black Lines)
   const cardX = 14;
-  const cardY = 13;
+  const cardY = 12;
   const cardWidth = 182;
-  const cardHeight = 271;
-  const centerX = cardX + cardWidth / 2;
+  const cardHeight = 273;
+  const centerX = cardX + cardWidth / 2; // 105mm
 
-  // Outer Deep Border
-  doc.setDrawColor(15, 23, 42); // Formal Slate-900
-  doc.setLineWidth(0.8);
-  doc.roundedRect(cardX, cardY, cardWidth, cardHeight, 2, 2, 'D');
+  // Ensure 100% pure white background across the entire A4 page
+  doc.setFillColor(255, 255, 255);
+  doc.rect(0, 0, 210, 297, 'F');
 
-  // Inner Hairline Frame
-  doc.setDrawColor(203, 213, 225); // Slate-300
+  // Outer Crisp Black Border (Stroke ONLY - Never fill black)
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.7);
+  doc.rect(cardX, cardY, cardWidth, cardHeight, 'S');
+
+  // Inner Fine Hairline Border (Stroke ONLY)
   doc.setLineWidth(0.25);
-  doc.roundedRect(cardX + 1.2, cardY + 1.2, cardWidth - 2.4, cardHeight - 2.4, 1.5, 1.5, 'D');
-
-  // Watermark
-  if (watermark) {
-    renderPageWatermark(doc, watermark, 85);
-  }
+  doc.rect(cardX + 1.2, cardY + 1.2, cardWidth - 2.4, cardHeight - 2.4, 'S');
 
   // 2. Official College Masthead Header
   if (logo) {
     try {
-      doc.addImage(logo, 'PNG', cardX + 4, cardY + 4, 21, 21);
+      doc.addImage(logo, 'JPEG', cardX + 3.5, cardY + 3.5, 20, 20);
     } catch (e) {
-      console.warn('Could not add logo to Gate Pass PDF:', e);
+      try {
+        doc.addImage(logo, cardX + 3.5, cardY + 3.5, 20, 20);
+      } catch (err) {
+        console.warn('Could not add logo to Gate Pass PDF:', err);
+      }
     }
   }
 
-  // QR Code on top right (if available)
+  // Security Verification QR Code (Top Right)
+  const qrX = cardX + cardWidth - 23.5;
+  const qrY = cardY + 3.5;
+  const qrSize = 20;
   if (qrBase64) {
     try {
-      doc.addImage(qrBase64, 'PNG', cardX + cardWidth - 25, cardY + 4, 21, 21);
+      doc.addImage(qrBase64, 'JPEG', qrX, qrY, qrSize, qrSize);
+      doc.setFont('courier', 'bold');
+      doc.setFontSize(5.8);
+      doc.setTextColor(0, 0, 0);
+      doc.text('GATE VERIFIED', qrX + qrSize / 2, qrY + qrSize + 2.8, { align: 'center' });
     } catch (e) {
-      console.warn('Could not add QR to Gate Pass PDF:', e);
+      try {
+        doc.addImage(qrBase64, qrX, qrY, qrSize, qrSize);
+        doc.setFont('courier', 'bold');
+        doc.setFontSize(5.8);
+        doc.setTextColor(0, 0, 0);
+        doc.text('GATE VERIFIED', qrX + qrSize / 2, qrY + qrSize + 2.8, { align: 'center' });
+      } catch (err) {
+        console.warn('Could not add QR to Gate Pass PDF:', err);
+      }
     }
   } else {
-    // Crisp formal security validation block if QR unavailable
-    const qBoxX = cardX + cardWidth - 25;
-    doc.setDrawColor(203, 213, 225);
-    doc.setFillColor(248, 250, 252);
-    doc.rect(qBoxX, cardY + 4, 21, 21, 'FD');
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.25);
+    doc.rect(qrX, qrY, qrSize, qrSize, 'S');
     doc.setFont('courier', 'bold');
     doc.setFontSize(6.5);
-    doc.setTextColor(30, 41, 59);
-    doc.text('INSTITUTE', qBoxX + 10.5, cardY + 11, { align: 'center' });
-    doc.text('GATE PASS', qBoxX + 10.5, cardY + 15, { align: 'center' });
-    doc.text('SECURITY', qBoxX + 10.5, cardY + 19, { align: 'center' });
+    doc.setTextColor(0, 0, 0);
+    doc.text('INSTITUTE', qrX + qrSize / 2, qrY + 7, { align: 'center' });
+    doc.text('GATE PASS', qrX + qrSize / 2, qrY + 11.5, { align: 'center' });
+    doc.text('SECURITY', qrX + qrSize / 2, qrY + 16, { align: 'center' });
   }
 
   // Centered Institution Text
   doc.setFont('times', 'bold');
   doc.setFontSize(12.5);
-  doc.setTextColor(15, 23, 42);
-  doc.text('GRT INSTITUTE OF ENGINEERING AND TECHNOLOGY', centerX, cardY + 8.5, { align: 'center' });
+  doc.setTextColor(0, 0, 0);
+  doc.text('GRT INSTITUTE OF ENGINEERING AND TECHNOLOGY', centerX, cardY + 7.5, { align: 'center' });
 
   doc.setFont('times', 'normal');
   doc.setFontSize(7.5);
-  doc.setTextColor(51, 65, 85);
-  doc.text('(An Autonomous Institution | Approved by AICTE, New Delhi | Affiliated to Anna University, Chennai)', centerX, cardY + 13, { align: 'center' });
+  doc.setTextColor(0, 0, 0);
+  doc.text('(An Autonomous Institution | Approved by AICTE, New Delhi | Affiliated to Anna University, Chennai)', centerX, cardY + 12, { align: 'center' });
 
   doc.setFont('times', 'bold');
   doc.setFontSize(7.8);
-  doc.setTextColor(30, 41, 59);
-  doc.text('Accredited by NAAC with \'A++\' Grade', centerX, cardY + 17, { align: 'center' });
+  doc.setTextColor(0, 0, 0);
+  doc.text('Accredited by NAAC with \'A++\' Grade', centerX, cardY + 16, { align: 'center' });
 
   doc.setFont('times', 'normal');
   doc.setFontSize(7);
-  doc.setTextColor(100, 116, 139);
-  doc.text('GRT Mahalaksmi Nagar, Tiruttani - 631 209, Tiruvallur District, Tamil Nadu', centerX, cardY + 21, { align: 'center' });
+  doc.setTextColor(0, 0, 0);
+  doc.text('GRT Mahalaksmi Nagar, Tiruttani - 631 209, Tiruvallur District, Tamil Nadu', centerX, cardY + 20, { align: 'center' });
 
-  // Divider Rules
-  doc.setDrawColor(15, 23, 42);
+  // Masthead Double Dividing Lines
+  const tblX = cardX + 3;
+  const tblW = cardWidth - 6; // 176mm
+  doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.6);
-  doc.line(cardX + 3, cardY + 27, cardX + cardWidth - 3, cardY + 27);
-
-  doc.setDrawColor(203, 213, 225);
+  doc.line(tblX, cardY + 25.5, tblX + tblW, cardY + 25.5);
   doc.setLineWidth(0.2);
-  doc.line(cardX + 3, cardY + 28, cardX + cardWidth - 3, cardY + 28);
+  doc.line(tblX, cardY + 26.5, tblX + tblW, cardY + 26.5);
 
   // 3. Document Title & Identity Bar
   doc.setFont('times', 'bold');
-  doc.setFontSize(13);
-  doc.setTextColor(15, 23, 42);
-  doc.text('GATE PASS', centerX, cardY + 34, { align: 'center' });
+  doc.setFontSize(12.5);
+  doc.setTextColor(0, 0, 0);
+  doc.text('OFFICIAL STUDENT GATE PASS', centerX, cardY + 32, { align: 'center' });
 
-  // Sub-bar Box
-  const subBoxY = cardY + 36.5;
-  const subBoxH = 7.5;
-  doc.setFillColor(248, 250, 252);
-  doc.setDrawColor(203, 213, 225);
+  // Identification Bar Box
+  const subBoxY = cardY + 34.5;
+  const subBoxH = 7;
+  doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.3);
-  doc.rect(cardX + 3, subBoxY, cardWidth - 6, subBoxH, 'FD');
+  doc.rect(tblX, subBoxY, tblW, subBoxH, 'S');
 
   doc.setFont('times', 'bold');
   doc.setFontSize(8);
-  doc.setTextColor(71, 85, 105);
-  doc.text('PASS ID: ', cardX + 6, subBoxY + 5.2);
+  doc.setTextColor(0, 0, 0);
+  doc.text('PASS ID: ', tblX + 3, subBoxY + 4.8);
   doc.setFont('courier', 'bold');
   doc.setFontSize(8.5);
-  doc.setTextColor(15, 23, 42);
-  doc.text(gatePassId, cardX + 22, subBoxY + 5.2);
+  doc.setTextColor(0, 0, 0);
+  doc.text(gatePassId, tblX + 18, subBoxY + 4.8);
 
-  doc.setFont('helvetica', 'bold');
+  doc.setFont('times', 'bold');
   doc.setFontSize(8);
-  doc.setTextColor(isHosteller ? 146 : 30, isHosteller ? 64 : 58, isHosteller ? 14 : 138);
-  doc.text(isHosteller ? 'CATEGORY: HOSTELLER' : 'CATEGORY: DAY SCHOLAR', centerX, subBoxY + 5.2, { align: 'center' });
+  doc.setTextColor(0, 0, 0);
+  doc.text(isHosteller ? 'CATEGORY: HOSTELLER' : 'CATEGORY: DAY SCHOLAR', centerX, subBoxY + 4.8, { align: 'center' });
 
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.5);
-  doc.setTextColor(22, 101, 52);
-  doc.text('OFFICIALLY APPROVED & ISSUED', cardX + cardWidth - 6, subBoxY + 5.2, { align: 'right' });
+  doc.setFont('times', 'bold');
+  doc.setFontSize(7.8);
+  doc.setTextColor(0, 0, 0);
+  doc.text('STATUS: OFFICIALLY APPROVED & ISSUED', tblX + tblW - 3, subBoxY + 4.8, { align: 'right' });
 
-  // 4. Tabular Particulars Grid (Official College Document Table)
-  const tblX = cardX + 3;
-  let curY = cardY + 47;
-  const tblW = cardWidth - 6; // 176mm
-  const col1W = 42;
-  const col2W = 46;
-  const col3W = 42;
-  const col4W = 46;
+  // 4. Tabular Particulars Grid with Automatic Dynamic Text Wrapping
+  let curY = subBoxY + subBoxH + 2.5; // ~44mm
+  const col1W = 39;
+  const col2W = 49;
+  const col3W = 39;
+  const col4W = 49; // 39 + 49 + 39 + 49 = 176mm
 
-  function renderTableRow(label1, val1, label2, val2, rowH, isFontMono1 = false, isFontMono2 = false) {
-    doc.setDrawColor(203, 213, 225);
+  function renderDynamicRow(label1, val1, label2, val2, isMono1 = false, isMono2 = false) {
+    const lines1 = doc.splitTextToSize(String(val1 || '-'), col2W - 4);
+    const lines2 = doc.splitTextToSize(String(val2 || '-'), col4W - 4);
+    const lineCount = Math.max(lines1.length, lines2.length, 1);
+    const rowH = Math.max(7.2, lineCount * 4 + 2.5);
+
+    doc.setDrawColor(0, 0, 0);
     doc.setLineWidth(0.25);
 
-    // Col 1 (Label)
-    doc.setFillColor(248, 250, 252);
-    doc.rect(tblX, curY, col1W, rowH, 'FD');
+    // Col 1: Label 1 (Stroke only - pure white background)
+    doc.rect(tblX, curY, col1W, rowH, 'S');
     doc.setFont('times', 'bold');
     doc.setFontSize(8);
-    doc.setTextColor(71, 85, 105);
-    doc.text(label1, tblX + 2.5, curY + rowH / 2 + 1.5);
+    doc.setTextColor(0, 0, 0);
+    doc.text(label1, tblX + 2.5, curY + 4.8);
 
-    // Col 2 (Value)
-    doc.setFillColor(255, 255, 255);
-    doc.rect(tblX + col1W, curY, col2W, rowH, 'FD');
-    doc.setFont(isFontMono1 ? 'courier' : 'times', 'bold');
-    doc.setFontSize(8.5);
-    doc.setTextColor(15, 23, 42);
-    doc.text(String(val1 || '-'), tblX + col1W + 2.5, curY + rowH / 2 + 1.5, { maxWidth: col2W - 4 });
+    // Col 2: Value 1 (Wrapped - Stroke only)
+    doc.rect(tblX + col1W, curY, col2W, rowH, 'S');
+    doc.setFont(isMono1 ? 'courier' : 'times', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(0, 0, 0);
+    doc.text(lines1, tblX + col1W + 2.5, curY + 4.8);
 
-    // Col 3 (Label)
-    doc.setFillColor(248, 250, 252);
-    doc.rect(tblX + col1W + col2W, curY, col3W, rowH, 'FD');
+    // Col 3: Label 2 (Stroke only)
+    doc.rect(tblX + col1W + col2W, curY, col3W, rowH, 'S');
     doc.setFont('times', 'bold');
     doc.setFontSize(8);
-    doc.setTextColor(71, 85, 105);
-    doc.text(label2, tblX + col1W + col2W + 2.5, curY + rowH / 2 + 1.5);
+    doc.setTextColor(0, 0, 0);
+    doc.text(label2, tblX + col1W + col2W + 2.5, curY + 4.8);
 
-    // Col 4 (Value)
-    doc.setFillColor(255, 255, 255);
-    doc.rect(tblX + col1W + col2W + col3W, curY, col4W, rowH, 'FD');
-    doc.setFont(isFontMono2 ? 'courier' : 'times', 'bold');
-    doc.setFontSize(8.5);
-    doc.setTextColor(15, 23, 42);
-    doc.text(String(val2 || '-'), tblX + col1W + col2W + col3W + 2.5, curY + rowH / 2 + 1.5, { maxWidth: col4W - 4 });
+    // Col 4: Value 2 (Wrapped - Stroke only)
+    doc.rect(tblX + col1W + col2W + col3W, curY, col4W, rowH, 'S');
+    doc.setFont(isMono2 ? 'courier' : 'times', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(0, 0, 0);
+    doc.text(lines2, tblX + col1W + col2W + col3W + 2.5, curY + 4.8);
 
     curY += rowH;
   }
 
   // Row 1: Student Name | Register Number
-  renderTableRow('Student Name', studentName, 'Register Number', rollNo, 7.8, false, true);
+  renderDynamicRow('Student Name', studentName, 'Register Number', rollNo, false, true);
 
   // Row 2: Department | Year and Section
-  renderTableRow('Department', `Dept of ${pass.dept || 'Engineering'}`, 'Year and Section', `${pass.academicYear || 'III Year'} / Sec '${pass.yearSec || 'A'}'`, 7.8);
+  const deptStr = pass.dept ? `Dept of ${pass.dept}` : 'Engineering';
+  const yearSecStr = `${pass.academicYear || 'III Year'} / Sec '${pass.yearSec || 'A'}'`;
+  renderDynamicRow('Department', deptStr, 'Year and Section', yearSecStr, false, false);
 
-  // Row 3: Day Scholar / Hosteller status | Parent Contact
-  renderTableRow('Student Status', isHosteller ? 'Hosteller (Resident)' : 'Day Scholar', 'Parent / Guardian Contact', parentContact, 7.8, false, true);
+  // Row 3: Student Status | Parent Contact
+  renderDynamicRow('Student Status', isHosteller ? 'Hosteller (Resident)' : 'Day Scholar', 'Parent / Guardian Contact', parentContact, false, true);
 
   // Row 4: Date of Leaving | Time of Leaving
-  renderTableRow('Date of Leaving', depDate, 'Time of Leaving', depTimeFormatted, 7.8, true, true);
+  renderDynamicRow('Date of Leaving', depDate, 'Time of Leaving', depTimeFormatted, true, true);
 
   // Row 5: Expected Return Time | Final Approving Authority
-  renderTableRow('Expected Return Time', retDisplay, 'Final Approving Authority', finalAuth, 7.8, true, false);
+  renderDynamicRow('Expected Return Time', retDisplay, 'Final Approving Authority', finalAuth, true, false);
 
-  // Row 6: Reason for Leaving (Spanning full width across Cols 2-4)
-  const reasonH = 12.5;
-  doc.setDrawColor(203, 213, 225);
-  doc.setLineWidth(0.25);
-  doc.setFillColor(248, 250, 252);
-  doc.rect(tblX, curY, col1W, reasonH, 'FD');
-  doc.setFont('times', 'bold');
-  doc.setFontSize(8);
-  doc.setTextColor(71, 85, 105);
-  doc.text('Reason for Leaving', tblX + 2.5, curY + 5);
-
-  doc.setFillColor(255, 255, 255);
-  doc.rect(tblX + col1W, curY, tblW - col1W, reasonH, 'FD');
-  doc.setFont('times', 'normal');
-  doc.setFontSize(8.2);
-  doc.setTextColor(15, 23, 42);
+  // Row 6: Reason for Leaving (Spanning full width across Cols 2-4 with automatic wrapping - Stroke only)
   const destStr = pass.destination || pass.placeOrEvent ? ` (Destination: ${pass.destination || pass.placeOrEvent})` : '';
   const fullReason = `${pass.reason || '-'}${destStr}`;
-  const rLines = doc.splitTextToSize(fullReason, tblW - col1W - 5);
-  doc.text(rLines, tblX + col1W + 2.5, curY + 4.5);
+  const rLines = doc.splitTextToSize(fullReason, tblW - col1W - 4);
+  const reasonH = Math.max(9, rLines.length * 4 + 3);
+
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.25);
+  doc.rect(tblX, curY, col1W, reasonH, 'S');
+  doc.setFont('times', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(0, 0, 0);
+  doc.text('Reason for Leaving', tblX + 2.5, curY + 4.8);
+
+  doc.rect(tblX + col1W, curY, tblW - col1W, reasonH, 'S');
+  doc.setFont('times', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(0, 0, 0);
+  doc.text(rLines, tblX + col1W + 2.5, curY + 4.8);
   curY += reasonH;
 
   // Row 7: Approval Date and Time | Verification Code
-  renderTableRow('Approval Date & Time', approvalTime, 'Verification Code', verifyCode, 7.8, true, true);
+  renderDynamicRow('Approval Date & Time', approvalTime, 'Verification Code', verifyCode, true, true);
 
-  // 5. Multi-Tier Institutional Clearance Badges
-  curY += 5;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
-  doc.setTextColor(71, 85, 105);
+  // 5. Multi-Tier Institutional Clearance Records (All 5 tiers for Hosteller, 4 for Day Scholar)
+  curY += 4;
+  doc.setFont('times', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(0, 0, 0);
   doc.text('INSTITUTIONAL CLEARANCES & DIGITAL VERIFICATIONS', tblX, curY);
 
-  curY += 3.5;
+  curY += 3;
   const numSigners = isHosteller ? 5 : 4;
-  const colW = (tblW - (numSigners - 1) * 3) / numSigners;
+  const boxGap = 2.5;
+  const colW = (tblW - (numSigners - 1) * boxGap) / numSigners;
+  const clearBoxH = 26;
 
-  const counselorName = pass.counselorApproval?.counselorName || pass.counselorName || 'Class Counselor';
-  const advisorName = pass.advisorApproval?.advisorName || 'Class Advisor';
-  const hodName = pass.hodApproval?.hodName || 'Head of Department';
-  const principalName = pass.principalApproval?.principalName || 'Principal Directorate';
-  const wardenName = pass.wardenApproval?.wardenName || (pass.gender === 'Female' ? 'Girls Warden' : 'Boys Warden');
+  function cleanDate(str) {
+    if (!str || str === '-') return '-';
+    const s = String(str).trim();
+    if (s.includes(',')) return s.split(',')[0].trim();
+    if (s.includes(' ')) return s.split(' ')[0].trim();
+    return s;
+  }
 
-  const cDate = pass.counselorApproval?.time || pass.parentCallTime ? formatLetterDate(pass.counselorApproval?.time || pass.parentCallTime) : '-';
-  const aDate = pass.advisorApproval?.time ? formatLetterDate(pass.advisorApproval.time) : '-';
-  const hDate = pass.hodApproval?.time ? formatLetterDate(pass.hodApproval.time) : '-';
-  const pDate = pass.principalApproval?.time || pass.approvalTime ? formatLetterDate(pass.principalApproval?.time || pass.approvalTime) : '-';
-  const wDate = pass.wardenApproval?.time ? formatLetterDate(pass.wardenApproval.time) : '-';
+  const cDate = cleanDate(pass.counselorApproval?.time || pass.parentCallTime);
+  const aDate = cleanDate(pass.advisorApproval?.time);
+  const hDate = cleanDate(pass.hodApproval?.time);
+  const pDate = cleanDate(pass.principalApproval?.time || pass.approvalTime);
+  const wDate = cleanDate(pass.wardenApproval?.time);
 
   const approvalBlocks = isHosteller
     ? [
-        { role: 'Counselor', name: counselorName, status: 'APPROVED', date: cDate },
-        { role: 'Advisor', name: advisorName, status: 'APPROVED', date: aDate },
-        { role: 'HOD', name: hodName, status: 'APPROVED', date: hDate },
+        { role: 'Class Counselor', name: counselorName, status: 'APPROVED', date: cDate },
+        { role: 'Class Advisor', name: advisorName, status: 'APPROVED', date: aDate },
+        { role: 'Head of Dept (HOD)', name: hodName, status: 'APPROVED', date: hDate },
         { role: 'Principal', name: principalName, status: 'APPROVED', date: pDate },
-        { role: 'Warden (Final)', name: wardenName, status: 'APPROVED', date: wDate }
+        { role: 'Hostel Warden (Final)', name: wardenName, status: 'APPROVED', date: wDate }
       ]
     : [
-        { role: 'Counselor', name: counselorName, status: 'APPROVED', date: cDate },
-        { role: 'Advisor', name: advisorName, status: 'APPROVED', date: aDate },
-        { role: 'HOD', name: hodName, status: 'APPROVED', date: hDate },
+        { role: 'Class Counselor', name: counselorName, status: 'APPROVED', date: cDate },
+        { role: 'Class Advisor', name: advisorName, status: 'APPROVED', date: aDate },
+        { role: 'Head of Dept (HOD)', name: hodName, status: 'APPROVED', date: hDate },
         { role: 'Principal (Final)', name: principalName, status: 'APPROVED', date: pDate }
       ];
 
   approvalBlocks.forEach((b, idx) => {
-    const bx = tblX + idx * (colW + 3);
-    doc.setFillColor(248, 250, 252);
-    doc.setDrawColor(203, 213, 225);
+    const bx = tblX + idx * (colW + boxGap);
+    doc.setDrawColor(0, 0, 0);
     doc.setLineWidth(0.25);
-    doc.rect(bx, curY, colW, 23, 'FD');
+    doc.rect(bx, curY, colW, clearBoxH, 'S');
 
-    doc.setFont('helvetica', 'bold');
+    // Role Label
+    doc.setFont('times', 'bold');
     doc.setFontSize(7.2);
-    doc.setTextColor(30, 41, 59);
-    doc.text(b.role, bx + colW / 2, curY + 4.8, { align: 'center' });
+    doc.setTextColor(0, 0, 0);
+    doc.text(b.role, bx + colW / 2, curY + 4.5, { align: 'center' });
 
-    doc.setFont('helvetica', 'bold');
+    // Status Label
+    doc.setFont('times', 'bold');
     doc.setFontSize(7.5);
-    doc.setTextColor(22, 101, 52);
-    doc.text('APPROVED', bx + colW / 2, curY + 9.5, { align: 'center' });
+    doc.setTextColor(0, 0, 0);
+    doc.text('APPROVED', bx + colW / 2, curY + 9, { align: 'center' });
 
+    // Approver Name with Automatic Multi-Line Wrapping (Never cut off or overflow)
+    const nameLines = doc.splitTextToSize(b.name, colW - 3);
     doc.setFont('times', 'normal');
     doc.setFontSize(7.2);
-    doc.setTextColor(71, 85, 105);
-    doc.text(b.name, bx + colW / 2, curY + 14.5, { align: 'center', maxWidth: colW - 2 });
+    doc.setTextColor(0, 0, 0);
+    doc.text(nameLines, bx + colW / 2, curY + 13.5, { align: 'center' });
 
+    // Clearance Date
     if (b.date !== '-') {
       doc.setFont('courier', 'bold');
-      doc.setFontSize(6.8);
-      doc.setTextColor(100, 116, 139);
-      doc.text(b.date, bx + colW / 2, curY + 19.5, { align: 'center' });
+      doc.setFontSize(6.5);
+      doc.setTextColor(0, 0, 0);
+      doc.text(b.date, bx + colW / 2, curY + clearBoxH - 2.5, { align: 'center' });
     }
   });
 
-  curY += 28;
+  curY += clearBoxH + 4;
 
-  // 6. Security Gate Ingress & Egress Clearance Records
-  const secBoxW = (tblW - 4) / 2;
-  doc.setFillColor(255, 255, 255);
-  doc.setDrawColor(203, 213, 225);
-  doc.setLineWidth(0.3);
-  doc.rect(tblX, curY, secBoxW, 25, 'FD');
+  // 6. Security Gate Ingress & Egress Clearance Records (Stroke only)
+  const secBoxW = (tblW - 3) / 2;
+  const secBoxH = 22;
 
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.8);
-  doc.setTextColor(71, 85, 105);
-  doc.text('CAMPUS EXIT CLEARANCE (MAIN GATE OUT)', tblX + 3.5, curY + 5.5);
+  // Gate Exit Box
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.25);
+  doc.rect(tblX, curY, secBoxW, secBoxH, 'S');
 
-  doc.setFont('times', 'normal');
-  doc.setFontSize(7.5);
-  if (pass.exitTime && pass.exitTime !== '-') {
-    doc.setTextColor(15, 23, 42);
-    doc.text(`Actual Departure Time: ${pass.exitTime}`, tblX + 3.5, curY + 12.5);
-  } else {
-    doc.setTextColor(148, 163, 184);
-    doc.text('Actual Departure: ___________________________', tblX + 3.5, curY + 12.5);
-  }
-  doc.setTextColor(148, 163, 184);
-  doc.text('Security Officer Signature: __________________', tblX + 3.5, curY + 20);
-
-  // Return Box
-  doc.rect(tblX + secBoxW + 4, curY, secBoxW, 25, 'FD');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.8);
-  doc.setTextColor(71, 85, 105);
-  doc.text('CAMPUS RE-ENTRY CLEARANCE (MAIN GATE IN)', tblX + secBoxW + 7.5, curY + 5.5);
-
-  doc.setFont('times', 'normal');
-  doc.setFontSize(7.5);
-  if (pass.returnTime && pass.returnTime !== '-') {
-    doc.setTextColor(15, 23, 42);
-    doc.text(`Actual Return Time: ${pass.returnTime}`, tblX + secBoxW + 7.5, curY + 12.5);
-  } else {
-    doc.setTextColor(148, 163, 184);
-    doc.text('Actual Return: ______________________________', tblX + secBoxW + 7.5, curY + 12.5);
-  }
-  doc.setTextColor(148, 163, 184);
-  doc.text('Security Officer Signature: __________________', tblX + secBoxW + 7.5, curY + 20);
-
-  curY += 30;
-
-  // 7. Authorized Signature Section (3-Column Authentic College Layout)
-  const sigColW = (tblW - 6) / 3;
-
-  // Column 1: Student Signature
-  doc.setDrawColor(203, 213, 225);
-  doc.setFillColor(255, 255, 255);
-  doc.rect(tblX, curY, sigColW, 24, 'FD');
-  doc.setFont('times', 'italic');
-  doc.setFontSize(8.5);
-  doc.setTextColor(51, 65, 85);
-  doc.text(studentName, tblX + sigColW / 2, curY + 9, { align: 'center', maxWidth: sigColW - 4 });
-  doc.setDrawColor(148, 163, 184);
-  doc.line(tblX + 5, curY + 14, tblX + sigColW - 5, curY + 14);
   doc.setFont('times', 'bold');
   doc.setFontSize(7.5);
-  doc.setTextColor(30, 41, 59);
-  doc.text('Signature of Student', tblX + sigColW / 2, curY + 19, { align: 'center' });
+  doc.setTextColor(0, 0, 0);
+  doc.text('CAMPUS EXIT CLEARANCE (MAIN GATE OUT)', tblX + 3, curY + 4.8);
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(7.2);
+  doc.setTextColor(0, 0, 0);
+  const exitText = (pass.exitTime && pass.exitTime !== '-') ? `Actual Departure Time: ${pass.exitTime}` : 'Actual Departure Time: ___________________________';
+  doc.text(exitText, tblX + 3, curY + 11);
+  doc.text('Security Officer Signature: __________________', tblX + 3, curY + 17.5);
+
+  // Gate Return Box
+  const rBoxX = tblX + secBoxW + 3;
+  doc.rect(rBoxX, curY, secBoxW, secBoxH, 'S');
+  doc.setFont('times', 'bold');
+  doc.setFontSize(7.5);
+  doc.setTextColor(0, 0, 0);
+  doc.text('CAMPUS RE-ENTRY CLEARANCE (MAIN GATE IN)', rBoxX + 3, curY + 4.8);
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(7.2);
+  doc.setTextColor(0, 0, 0);
+  const returnText = (pass.returnTime && pass.returnTime !== '-') ? `Actual Return Time: ${pass.returnTime}` : 'Actual Return Time: ______________________________';
+  doc.text(returnText, rBoxX + 3, curY + 11);
+  doc.text('Security Officer Signature: __________________', rBoxX + 3, curY + 17.5);
+
+  curY += secBoxH + 4;
+
+  // 7. Authorized Signature Section (3-Column Authentic College Document Layout - Stroke only)
+  const sigColW = (tblW - 6) / 3;
+  const sigColH = 23;
+
+  // Column 1: Student Signature
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.25);
+  doc.rect(tblX, curY, sigColW, sigColH, 'S');
+  const sLines = doc.splitTextToSize(studentName, sigColW - 4);
+  doc.setFont('times', 'italic');
+  doc.setFontSize(8);
+  doc.setTextColor(0, 0, 0);
+  doc.text(sLines, tblX + sigColW / 2, curY + 7.5, { align: 'center' });
+  doc.line(tblX + 4, curY + 13.5, tblX + sigColW - 4, curY + 13.5);
+  doc.setFont('times', 'bold');
+  doc.setFontSize(7.5);
+  doc.setTextColor(0, 0, 0);
+  doc.text('Signature of Student', tblX + sigColW / 2, curY + 18.5, { align: 'center' });
 
   // Column 2: Final Approving Authority
   const col2X = tblX + sigColW + 3;
-  doc.setDrawColor(203, 213, 225);
-  doc.setFillColor(248, 250, 252);
-  doc.rect(col2X, curY, sigColW, 24, 'FD');
-
-  doc.setFont('helvetica', 'bold');
+  doc.rect(col2X, curY, sigColW, sigColH, 'S');
+  doc.setFont('times', 'bold');
   doc.setFontSize(7.5);
-  doc.setTextColor(22, 101, 52);
-  doc.text('DIGITALLY AUTHENTICATED', col2X + sigColW / 2, curY + 6.5, { align: 'center' });
+  doc.setTextColor(0, 0, 0);
+  doc.text('DIGITALLY AUTHENTICATED', col2X + sigColW / 2, curY + 5.5, { align: 'center' });
+  const authLines = doc.splitTextToSize(finalAuth, sigColW - 4);
   doc.setFont('times', 'normal');
   doc.setFontSize(7.2);
-  doc.setTextColor(71, 85, 105);
-  doc.text(finalAuth, col2X + sigColW / 2, curY + 11.5, { align: 'center', maxWidth: sigColW - 4 });
-  doc.setDrawColor(148, 163, 184);
-  doc.line(col2X + 5, curY + 14, col2X + sigColW - 5, curY + 14);
+  doc.setTextColor(0, 0, 0);
+  doc.text(authLines, col2X + sigColW / 2, curY + 9.5, { align: 'center' });
+  doc.line(col2X + 4, curY + 13.5, col2X + sigColW - 4, curY + 13.5);
   doc.setFont('times', 'bold');
   doc.setFontSize(7.5);
-  doc.setTextColor(30, 41, 59);
-  doc.text(isHosteller ? 'Warden Final Approval' : 'Principal Final Approval', col2X + sigColW / 2, curY + 19, { align: 'center' });
+  doc.setTextColor(0, 0, 0);
+  doc.text(isHosteller ? 'Warden Final Approval' : 'Principal Final Approval', col2X + sigColW / 2, curY + 18.5, { align: 'center' });
 
-  // Column 3: Security Gate Officer
+  // Column 3: Main Gate Security Officer
   const col3X = col2X + sigColW + 3;
-  doc.setDrawColor(203, 213, 225);
-  doc.setFillColor(255, 255, 255);
-  doc.rect(col3X, curY, sigColW, 24, 'FD');
-  doc.setFont('times', 'normal');
-  doc.setFontSize(7);
-  doc.setTextColor(148, 163, 184);
-  doc.text('Gate Clearance Seal / Stamp', col3X + sigColW / 2, curY + 9, { align: 'center' });
-  doc.setDrawColor(148, 163, 184);
-  doc.line(col3X + 5, curY + 14, col3X + sigColW - 5, curY + 14);
+  doc.rect(col3X, curY, sigColW, sigColH, 'S');
+  doc.setFont('times', 'italic');
+  doc.setFontSize(7.2);
+  doc.setTextColor(0, 0, 0);
+  doc.text('Gate Clearance Seal / Stamp', col3X + sigColW / 2, curY + 7.5, { align: 'center' });
+  doc.line(col3X + 4, curY + 13.5, col3X + sigColW - 4, curY + 13.5);
   doc.setFont('times', 'bold');
   doc.setFontSize(7.5);
-  doc.setTextColor(30, 41, 59);
-  doc.text('Main Gate Security Officer', col3X + sigColW / 2, curY + 19, { align: 'center' });
+  doc.setTextColor(0, 0, 0);
+  doc.text('Main Gate Security Officer', col3X + sigColW / 2, curY + 18.5, { align: 'center' });
 
-  // 8. Institutional Footer Notice
+  curY += sigColH + 3.5;
+
+  // 8. Institutional Instructions & Terms Box (Formal College Standard - Stroke only)
+  const instBoxH = 15;
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.25);
+  doc.rect(tblX, curY, tblW, instBoxH, 'S');
+
+  doc.setFont('times', 'bold');
+  doc.setFontSize(7);
+  doc.setTextColor(0, 0, 0);
+  doc.text('TERMS & CONDITIONS OF ISSUANCE:', tblX + 2.5, curY + 3.8);
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(6.5);
+  doc.setTextColor(0, 0, 0);
+  doc.text('1. This Gate Pass must be presented to the Security Officer on duty at the Main Security Gate upon exit and return.', tblX + 2.5, curY + 7.2);
+  doc.text('2. Pass is non-transferable and strictly valid for the named student for authorized institutional dates and timings only.', tblX + 2.5, curY + 10.5);
+  doc.text('3. Day Scholars must exit during permitted departure hours. Hostellers must report to the Hostel Warden immediately upon return.', tblX + 2.5, curY + 13.8);
+
+  // 9. Institutional Footer Notice
   doc.setFont('times', 'italic');
-  doc.setFontSize(6.8);
-  doc.setTextColor(100, 116, 139);
-  const noticeText = 'NOTICE: This Gate Pass is official institutional property of GRT Institute of Engineering and Technology. It is non-transferable and strictly valid for the named student. Present this pass at the Main Security Gate upon exit and return.';
-  const nLines = doc.splitTextToSize(noticeText, tblW);
-  doc.text(nLines, centerX, cardY + cardHeight - 5, { align: 'center' });
+  doc.setFontSize(6.5);
+  doc.setTextColor(0, 0, 0);
+  const noticeText = 'NOTICE: This Gate Pass is official institutional property of GRT Institute of Engineering and Technology. It is non-transferable and strictly valid for the named student.';
+  doc.text(noticeText, centerX, cardY + cardHeight - 3.5, { align: 'center' });
 }
 
 /**
  * Downloads official professional Gate Pass (Pass card design, NOT a letter)
+ * Refreshes pass directly from MongoDB records before generating PDF to guarantee
+ * 100% dynamic, authentic approval details.
  * @param {object} pass
  */
 async function downloadGatePassCardPDF(pass) {
@@ -1393,6 +1908,26 @@ async function downloadGatePassCardPDF(pass) {
     }
   }
 
+  // Guarantee dynamic fetching of latest approval records from MongoDB database
+  const targetId = pass._id || pass.id;
+  const targetRoll = pass.rollNo || pass.registrationNumber;
+  if (targetId || targetRoll) {
+    try {
+      const q = targetId ? `_id=${encodeURIComponent(targetId)}` : `rollNo=${encodeURIComponent(targetRoll)}`;
+      const res = await fetch(`/api/passes?${q}`);
+      if (res.ok) {
+        const json = await res.json();
+        const records = Array.isArray(json) ? json : (json.data || json.passes || []);
+        const fresh = (targetId && records.find(p => String(p._id) === String(targetId))) || records[0];
+        if (fresh) {
+          pass = { ...pass, ...fresh };
+        }
+      }
+    } catch (e) {
+      console.warn('Could not refresh pass from API, using current record:', e);
+    }
+  }
+
   const u = window.loggedUser;
   const isApprovedChecker = window.isPassFullyApproved || (typeof isPassFullyApproved === 'function' ? isPassFullyApproved : null);
   if (u?.role === 'student' && isApprovedChecker && !isApprovedChecker(pass)) {
@@ -1402,7 +1937,6 @@ async function downloadGatePassCardPDF(pass) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const logoBase64 = await getCollegeLogoBase64();
-  const watermarkBase64 = await getCollegeLogoWatermarkBase64();
   const bannerBase64 = await getCollegeBannerBase64();
 
   const isHosteller = (/hoste?l|^h$/i.test(pass.accommodation || '') && !/day\s*scholar/i.test(pass.accommodation || ''));
@@ -1419,7 +1953,7 @@ async function downloadGatePassCardPDF(pass) {
   // Fetch QR Code for authentic college document
   const qrBase64 = await getGatePassQrBase64(pass, gatePassId, rollNo, finalAuth, depDate, depTime);
 
-  renderProfessionalGatePassCardPage(doc, pass, logoBase64, watermarkBase64, bannerBase64, qrBase64);
+  renderProfessionalGatePassCardPage(doc, pass, logoBase64, null, bannerBase64, qrBase64);
 
   doc.save(`GRTIET_Gate_Pass_${gatePassId}_${pass.rollNo || 'Student'}.pdf`);
   showToast(`Official Gate Pass PDF downloaded (${gatePassId})`, 'success');
@@ -1442,6 +1976,20 @@ async function downloadOfficialLetterOnlyPDF(pass) {
     }
   }
 
+  if (pass.requestCategory === 'leave' || pass.type === 'leave' || pass.isLeave) {
+    return await downloadLeaveLetterPDF(pass);
+  }
+  if (pass.isOD || pass.requestCategory === 'onduty') {
+    if (typeof downloadOnDutyLetterPDF === 'function') {
+      return await downloadOnDutyLetterPDF(pass);
+    }
+  }
+
+  // Gate Pass Request -> Gate Pass Card PDF
+  if (typeof downloadGatePassCardPDF === 'function') {
+    return await downloadGatePassCardPDF(pass);
+  }
+
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const logoBase64 = await getCollegeLogoBase64();
@@ -1451,7 +1999,7 @@ async function downloadOfficialLetterOnlyPDF(pass) {
   renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64, bannerBase64);
 
   doc.save(`GRTIET_Gate_Pass_Letter_${pass.rollNo || 'Letter'}.pdf`);
-  showToast(`Official Gate Pass letter PDF downloaded for Roll No: ${pass.rollNo || ''}`, 'success');
+  showToast(`Official Gate Pass PDF downloaded for Roll No: ${pass.rollNo || ''}`, 'success');
 }
 
 /**
@@ -1513,11 +2061,15 @@ function getCollegeLogoBase64() {
     img.onload = () => {
       try {
         const canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth || img.width || 200;
-        canvas.height = img.naturalHeight || img.height || 200;
+        const w = img.naturalWidth || img.width || 200;
+        const h = img.naturalHeight || img.height || 200;
+        canvas.width = w;
+        canvas.height = h;
         const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        cachedCollegeLogoBase64 = canvas.toDataURL('image/png');
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        cachedCollegeLogoBase64 = canvas.toDataURL('image/jpeg', 0.95);
         resolve(cachedCollegeLogoBase64);
       } catch (e) {
         resolve(null);
@@ -2101,7 +2653,7 @@ async function downloadAllLeaveLettersPDF() {
 
   leaves.forEach((leave, idx) => {
     if (idx > 0) doc.addPage();
-    renderOfficialGatePassLetterPage(doc, leave, logoBase64, watermarkBase64, bannerBase64);
+    renderOfficialLeaveLetterPage(doc, leave, logoBase64, watermarkBase64, bannerBase64);
   });
 
   const uRole = window.loggedUser?.role || 'leave_letters';
@@ -2123,8 +2675,11 @@ window.downloadAllODLettersPDF = downloadAllODLettersPDF;
 window.downloadAllGatePassLettersPDF = downloadAllGatePassLettersPDF;
 window.downloadAllLeaveLettersPDF = downloadAllLeaveLettersPDF;
 window.downloadOfficialLetterOnlyPDF = downloadOfficialLetterOnlyPDF;
+window.downloadLeaveLetterPDF = downloadLeaveLetterPDF;
 window.downloadGatePassCardPDF = downloadGatePassCardPDF;
 window.downloadGatePassPDF = downloadGatePassCardPDF;
+window.generateDynamicLeaveContent = generateDynamicLeaveContent;
+window.renderOfficialLeaveLetterPage = renderOfficialLeaveLetterPage;
 window.renderProfessionalGatePassCardPage = renderProfessionalGatePassCardPage;
 window.renderOfficialGatePassLetterPage = renderOfficialGatePassLetterPage;
 window.renderOfficialODLetterPage = renderOfficialODLetterPage;

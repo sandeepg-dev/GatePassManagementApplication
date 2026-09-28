@@ -1,0 +1,230 @@
+<!-- OFFICIAL STUDENT LEAVE REQUEST LETTER MODAL (AUTHENTIC INSTITUTIONAL LETTERHEAD) -->
+<div id="leaveLetterModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div class="bg-white rounded-2xl border border-slate-300 shadow-2xl max-w-3xl w-full p-4 sm:p-6 text-black space-y-4 my-auto max-h-[95vh] overflow-y-auto">
+    
+    <!-- Modal Control Header -->
+    <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-purple-700 text-white flex items-center justify-center font-bold text-sm shadow-xs">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-slate-900 tracking-tight">Official Student Leave Request Letter</h3>
+          <p class="text-[11px] text-purple-700 font-semibold font-mono">Formal Academic Requisition Dossier &bull; Institutional Letterhead</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button 
+          id="leaveLetterModalTopDlBtn" 
+          type="button"
+          onclick="if (window.currentActiveLeave && typeof window.downloadLeaveLetterPDF === 'function') window.downloadLeaveLetterPDF(window.currentActiveLeave);"
+          class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-lg text-xs font-semibold shadow-xs transition active:scale-95"
+          title="Download Leave Letter PDF"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          <span>Download PDF</span>
+        </button>
+        <button type="button" onclick="closeLeaveLetterModal()" class="w-8 h-8 rounded-lg text-slate-500 hover:text-black hover:bg-slate-100 flex items-center justify-center transition" title="Close">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- AUTHENTIC FORMAL DOCUMENT PAPER PREVIEW (PRINT-READY DOCUMENT FORMAT) -->
+    <div id="leaveLetterDocumentPaper" class="bg-white border-2 border-slate-300 rounded-lg p-5 sm:p-8 text-black space-y-4 shadow-sm relative font-serif">
+      
+      <!-- College Letterhead Masthead -->
+      <div class="border-b-2 border-slate-900 pb-3 text-center">
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <img 
+            id="leaveLetterDocLogo" 
+            src="/public/grt-logo.png" 
+            alt="GRT College Logo" 
+            class="w-16 h-16 object-contain shrink-0"
+            onerror="this.onerror=null; this.src='/grt-logo.png';"
+          />
+          <div>
+            <h1 class="text-base sm:text-lg font-black tracking-tight text-slate-900 uppercase">
+              GRT INSTITUTE OF ENGINEERING AND TECHNOLOGY
+            </h1>
+            <p class="text-[10px] text-slate-600 font-medium">
+              (Approved by AICTE, New Delhi | Affiliated to Anna University, Chennai)
+            </p>
+            <p class="text-[10px] text-rose-700 font-bold">
+              (An Autonomous Institution | Accredited by NAAC with &lsquo;A++&rsquo; Grade)
+            </p>
+            <p class="text-[9.5px] text-slate-500 font-sans">
+              GRT Mahalakshmi Nagar, Chennai-Tirupati Highway, Tiruttani - 631 209.
+            </p>
+            <div id="leaveLetterDocDept" class="text-xs sm:text-sm font-bold text-slate-900 mt-1 uppercase font-sans">
+              DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-3 pt-1 border-t border-slate-300 font-sans text-xs font-black tracking-widest uppercase text-slate-900 bg-slate-100/60 py-1">
+          OFFICIAL LEAVE REQUISITION LETTER
+        </div>
+      </div>
+
+      <!-- Ref & Date Bar -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs font-sans pb-2 border-b border-slate-200">
+        <div class="text-slate-600 font-mono">
+          <span class="font-bold text-slate-800">Ref:</span> <span id="leaveLetterDocRef">GRTIET/DEPT/LEAVE/2026/0000</span>
+        </div>
+        <div class="text-slate-800 font-semibold font-mono">
+          <span>Date:</span> <span id="leaveLetterDocDate">-</span>
+        </div>
+      </div>
+
+      <!-- From Section -->
+      <div class="text-xs sm:text-sm leading-relaxed text-slate-900 space-y-0.5">
+        <div class="font-bold text-xs uppercase tracking-wider text-slate-700 font-sans">From:</div>
+        <div class="pl-3 sm:pl-4">
+          <div class="font-bold text-slate-950">
+            <span id="leaveLetterDocStudentName">Student Name</span> 
+            <span class="font-mono text-xs font-normal text-slate-700">(Register No: <span id="leaveLetterDocRollNo">-</span>)</span>
+          </div>
+          <div class="text-xs text-slate-700">
+            <span id="leaveLetterDocClassInfo">III Year, Department of Computer Science and Engineering (Section 'A')</span>
+          </div>
+          <div class="text-xs text-slate-700">
+            Accommodation: <span id="leaveLetterDocAccom" class="font-semibold">Day Scholar</span> &bull; Parent Contact: <span id="leaveLetterDocParentContact" class="font-mono font-semibold">-</span>
+          </div>
+          <div class="text-[11px] text-slate-500 font-sans">
+            GRT Institute of Engineering and Technology, Tiruttani - 631 209.
+          </div>
+        </div>
+      </div>
+
+      <!-- Through Section -->
+      <div class="text-xs italic text-slate-600 pl-3 sm:pl-4 font-sans font-medium">
+        (Through: Respective Class Counselor, Class Advisor, and Head of Department)
+      </div>
+
+      <!-- To Section -->
+      <div class="text-xs sm:text-sm leading-relaxed text-slate-900 space-y-0.5">
+        <div class="font-bold text-xs uppercase tracking-wider text-slate-700 font-sans">To:</div>
+        <div class="pl-3 sm:pl-4">
+          <div class="font-bold text-slate-950">The Head of the Department,</div>
+          <div id="leaveLetterDocToDept" class="text-xs text-slate-700">Department of Computer Science and Engineering,</div>
+          <div class="text-xs text-slate-700">GRT Institute of Engineering and Technology,</div>
+          <div class="text-[11px] text-slate-500 font-sans">Tiruttani - 631 209.</div>
+        </div>
+      </div>
+
+      <!-- Salutation & Subject -->
+      <div class="space-y-1.5 pt-1">
+        <div class="font-bold text-xs sm:text-sm text-slate-900">Respected Sir / Madam,</div>
+        <div id="leaveLetterDocSubject" class="font-bold text-xs sm:text-sm text-slate-950 pl-3 sm:pl-4 border-l-2 border-purple-600 py-0.5 leading-snug">
+          Subject: Application for Sanction of Medical Leave - Regarding.
+        </div>
+      </div>
+
+      <!-- Formal Body Paragraph 1 -->
+      <div id="leaveLetterDocBody1" class="text-xs sm:text-sm text-slate-800 leading-relaxed text-justify">
+        I am writing this application to respectfully request permission to avail leave of absence from college...
+      </div>
+
+      <!-- Highlighted Leave Schedule & Purpose Box -->
+      <div class="border border-slate-300 rounded-lg p-3 bg-purple-50/40 text-xs font-sans space-y-1.5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Sanctioned Leave Period:</span>
+            <span class="font-bold text-purple-950 font-mono text-xs">
+              <span id="leaveLetterDocFromDate">-</span> to <span id="leaveLetterDocToDate">-</span>
+              <span id="leaveLetterDocTotalDays" class="text-purple-700 font-semibold text-[11px]">(1 day)</span>
+            </span>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Parental Verification:</span>
+            <span id="leaveLetterDocParentVerify" class="font-semibold text-slate-800 text-xs">Acknowledged &amp; Verified by Class Counselor</span>
+          </div>
+        </div>
+        <div class="pt-1 border-t border-purple-100">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Stated Reason for Leave:</span>
+          <span id="leaveLetterDocReason" class="font-medium text-slate-900 block italic">&ldquo;-&rdquo;</span>
+        </div>
+      </div>
+
+      <!-- Formal Body Paragraph 2 -->
+      <div id="leaveLetterDocBody2" class="text-xs sm:text-sm text-slate-800 leading-relaxed text-justify">
+        I have informed my parents regarding this leave requirement...
+      </div>
+
+      <!-- Concluding Request -->
+      <div class="text-xs sm:text-sm text-slate-800">
+        Kindly consider my circumstances favorably and grant me sanctioned leave for the specified duration.
+      </div>
+
+      <!-- Closing & Signatures -->
+      <div class="flex items-start justify-between pt-3 font-sans">
+        <div class="text-xs font-bold text-slate-800">
+          Thanking You,
+        </div>
+        <div class="text-right text-xs space-y-0.5">
+          <div class="text-slate-600 italic">Yours obediently,</div>
+          <div id="leaveLetterDocSignName" class="font-bold text-slate-950 font-serif text-sm pt-2">(Student Name)</div>
+          <div class="font-mono text-[11px] text-slate-600">Roll No: <span id="leaveLetterDocSignRoll">-</span></div>
+          <div id="leaveLetterDocSignDept" class="text-[11px] text-slate-600">Department of CSE (Section 'A')</div>
+        </div>
+      </div>
+
+      <!-- Multi-Tier Approval Endorsement Block -->
+      <div class="pt-3 border-t border-slate-300 font-sans space-y-2">
+        <div class="text-[11px] font-bold uppercase tracking-wider text-slate-600">
+          Institutional Clearance &amp; Endorsement Record:
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+          <div class="p-2 border border-slate-200 rounded-md bg-slate-50">
+            <span class="text-[9px] text-slate-400 font-bold block uppercase">Student Signature</span>
+            <span id="leaveLetterClearanceStudent" class="font-bold text-slate-900 block truncate">Submitted</span>
+            <span id="leaveLetterClearanceStudentDate" class="text-[9.5px] text-slate-500 font-mono block">-</span>
+          </div>
+          <div class="p-2 border border-slate-200 rounded-md bg-slate-50">
+            <span class="text-[9px] text-slate-400 font-bold block uppercase">Class Counselor</span>
+            <span id="leaveLetterClearanceCounselor" class="font-bold text-slate-900 block truncate">Pending</span>
+            <span id="leaveLetterClearanceCounselorDate" class="text-[9.5px] text-slate-500 font-mono block">-</span>
+          </div>
+          <div class="p-2 border border-slate-200 rounded-md bg-slate-50">
+            <span class="text-[9px] text-slate-400 font-bold block uppercase">Class Advisor</span>
+            <span id="leaveLetterClearanceAdvisor" class="font-bold text-slate-900 block truncate">Pending</span>
+            <span id="leaveLetterClearanceAdvisorDate" class="text-[9.5px] text-slate-500 font-mono block">-</span>
+          </div>
+          <div class="p-2 border border-slate-200 rounded-md bg-slate-50">
+            <span class="text-[9px] text-slate-400 font-bold block uppercase">Head of Dept (HOD)</span>
+            <span id="leaveLetterClearanceHOD" class="font-bold text-slate-900 block truncate">Pending</span>
+            <span id="leaveLetterClearanceHODDate" class="text-[9.5px] text-slate-500 font-mono block">-</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Footer Actions -->
+    <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200">
+      <div class="text-xs text-slate-500 font-medium">
+        Official document generated under GRT College Academic Regulations
+      </div>
+      <div class="flex items-center gap-2">
+        <button 
+          type="button" 
+          onclick="closeLeaveLetterModal()" 
+          class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition"
+        >
+          Close
+        </button>
+        <button 
+          id="leaveLetterModalBottomDlBtn" 
+          type="button"
+          onclick="if (window.currentActiveLeave && typeof window.downloadLeaveLetterPDF === 'function') window.downloadLeaveLetterPDF(window.currentActiveLeave);"
+          class="px-5 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-bold shadow-xs transition active:scale-95 flex items-center gap-1.5"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          <span>Download Leave Letter (PDF)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

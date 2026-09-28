@@ -1233,6 +1233,10 @@ document.addEventListener('keydown', (e) => {
     if (formalModal && !formalModal.classList.contains('hidden')) {
       if (typeof closeLetterModal === 'function') closeLetterModal();
     }
+    const leaveLModal = document.getElementById('leaveLetterModal');
+    if (leaveLModal && !leaveLModal.classList.contains('hidden')) {
+      if (typeof closeLeaveLetterModal === 'function') closeLeaveLetterModal();
+    }
   }
   if ((e.key === 'a' || e.key === 'A') && !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
     const bar = document.getElementById('batchActionBar');

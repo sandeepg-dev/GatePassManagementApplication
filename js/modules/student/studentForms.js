@@ -155,19 +155,34 @@
     try {
       const data = await Api.post('/api/apply-pass', payload);
       if (data.success) {
-        showToast(data.message || 'Leave request submitted successfully!', 'success');
+        showToast(data.message || 'Leave request submitted successfully! Formal Leave Letter generated.', 'success');
         if (typeof window.closeLeaveRequestModal === 'function') {
           window.closeLeaveRequestModal();
         }
         if (typeof window.loadStudentPersonalStatus === 'function') {
           window.loadStudentPersonalStatus();
         }
+
+        // Immediately open the generated Leave Letter preview in proper document format
+        const createdLeaveRecord = data.pass || data.data || payload;
+        const leaveToPreview = {
+          ...payload,
+          studentName: u.name || 'Student',
+          dept: u.dept || 'CSE',
+          academicYear: u.academicYear || 'III Year',
+          yearSec: u.yearSec || 'A',
+          parentContact: u.parentContact || '',
+          fatherName: u.fatherName || u.parentName || '',
+          accommodation: u.accommodation || '',
+          appliedTime: 'Just now',
+          status: 'Pending Counselor Review',
+          ...createdLeaveRecord
+        };
+        if (typeof window.openLeaveLetterModal === 'function') {
+          window.openLeaveLetterModal(leaveToPreview);
+        }
         if (typeof window.switchStudentPage === 'function') {
-          window.switchStudentPage('requests', {
-            title: 'Processing Leave Request',
-            subtitle: 'Leave request recorded. Opening My Requests...',
-            duration: 1500
-          });
+          window.switchStudentPage('requests');
         }
       } else {
         showToast(data.message || data.error || 'Failed to submit leave request.', 'error');

@@ -12,8 +12,17 @@ const { generateFormalLetter } = require('../utils/letterGenerator');
  */
 async function getPasses(req, res) {
   try {
-    const { status, dept, rollNo, counselorName, yearSec, role: queryRole, startRoll, endRoll, authorityUserId, userId } = req.query;
+    const { status, dept, rollNo, counselorName, yearSec, role: queryRole, startRoll, endRoll, authorityUserId, userId, _id, id } = req.query;
     let filter = {};
+
+    if (_id || id) {
+      const targetId = _id || id;
+      if (mongoose.Types.ObjectId.isValid(targetId)) {
+        filter._id = new mongoose.Types.ObjectId(targetId);
+      } else {
+        filter._id = targetId;
+      }
+    }
 
     const rawRole = Array.isArray(queryRole) ? queryRole[0] : queryRole;
     let cleanRole = rawRole ? String(rawRole).toLowerCase().trim().replace(/[\s-]+/g, '_') : '';

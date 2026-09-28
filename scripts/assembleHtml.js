@@ -67,6 +67,7 @@ function assembleIndexHtml() {
   const modals = [
     readComponent('components/modals/gatePassModal.html'),
     readComponent('components/modals/leaveModal.html'),
+    readComponent('components/modals/leaveLetterModal.html'),
     readComponent('components/modals/odModal.html'),
     readComponent('components/modals/studentProfileModal.html'),
     readComponent('components/modals/requestDetailModal.html'),
@@ -84,27 +85,27 @@ function assembleIndexHtml() {
   </script>
 
   <!-- Application Modular Components -->
-  <script src="/js/utils.js?v=3.2.0"></script>
-  <script src="/js/services/notificationService.js?v=3.2.0"></script>
-  <script src="/js/api.js?v=3.2.0"></script>
-  <script src="/js/services/pdfService.js?v=3.2.0"></script>
-  <script src="/js/services/attendanceExcelService.js?v=3.2.0"></script>
-  <script src="/js/modules/student/studentNavigation.js?v=3.2.0"></script>
-  <script src="/js/modules/student/studentForms.js?v=3.2.0"></script>
-  <script src="/js/modules/student/studentRequests.js?v=3.2.0"></script>
-  <script src="/js/modules/student/studentModals.js?v=3.2.0"></script>
-  <script src="/js/modules/studentPortal.js?v=3.2.0"></script>
-  <script src="/js/modules/onDutyPortal.js?v=3.2.0"></script>
-  <script src="/js/modules/counselorQueue.js?v=3.2.0"></script>
-  <script src="/js/modules/advisorQueue.js?v=3.2.0"></script>
-  <script src="/js/modules/hodQueue.js?v=3.2.0"></script>
-  <script src="/js/modules/principalQueue.js?v=3.2.0"></script>
-  <script src="/js/modules/wardenQueue.js?v=3.2.0"></script>
-  <script src="/js/modules/auditLogs.js?v=3.2.0"></script>
-  <script src="/js/modules/authorityPortal.js?v=3.2.0"></script>
-  <script src="/js/dashboard.js?v=3.2.0"></script>
-  <script src="/js/auth.js?v=3.2.0"></script>
-  <script src="/js/main.js?v=3.2.0"></script>
+  <script src="/js/utils.js?v=3.3.0"></script>
+  <script src="/js/services/notificationService.js?v=3.3.0"></script>
+  <script src="/js/api.js?v=3.3.0"></script>
+  <script src="/js/services/pdfService.js?v=3.3.0"></script>
+  <script src="/js/services/attendanceExcelService.js?v=3.3.0"></script>
+  <script src="/js/modules/student/studentNavigation.js?v=3.3.0"></script>
+  <script src="/js/modules/student/studentForms.js?v=3.3.0"></script>
+  <script src="/js/modules/student/studentRequests.js?v=3.3.0"></script>
+  <script src="/js/modules/student/studentModals.js?v=3.3.0"></script>
+  <script src="/js/modules/studentPortal.js?v=3.3.0"></script>
+  <script src="/js/modules/onDutyPortal.js?v=3.3.0"></script>
+  <script src="/js/modules/counselorQueue.js?v=3.3.0"></script>
+  <script src="/js/modules/advisorQueue.js?v=3.3.0"></script>
+  <script src="/js/modules/hodQueue.js?v=3.3.0"></script>
+  <script src="/js/modules/principalQueue.js?v=3.3.0"></script>
+  <script src="/js/modules/wardenQueue.js?v=3.3.0"></script>
+  <script src="/js/modules/auditLogs.js?v=3.3.0"></script>
+  <script src="/js/modules/authorityPortal.js?v=3.3.0"></script>
+  <script src="/js/dashboard.js?v=3.3.0"></script>
+  <script src="/js/auth.js?v=3.3.0"></script>
+  <script src="/js/main.js?v=3.3.0"></script>
 </body>
 
 </html>

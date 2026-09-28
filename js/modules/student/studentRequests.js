@@ -674,6 +674,14 @@
                   >
                     View Gate Pass
                   </button>
+                ` : (item.category === 'leave' ? `
+                  <button
+                    type="button"
+                    onclick="openLeaveLetterModal(${escapeAttr(item.raw)})"
+                    class="px-2.5 py-1 text-xs font-semibold text-purple-700 bg-white border border-purple-200 rounded-lg hover:bg-purple-50 transition shadow-2xs"
+                  >
+                    View Leave Letter
+                  </button>
                 ` : `
                   <button
                     type="button"
@@ -682,7 +690,7 @@
                   >
                     View Status
                   </button>
-                `}
+                `)}
               </div>
             </div>
           `;
@@ -741,38 +749,24 @@
             >
               View Details
             </button>
-            <button
-              type="button"
-              onclick="viewFormalLetter(${escapeAttr(item.raw)})"
-              class="px-2.5 py-1 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 shadow-2xs transition active:scale-95"
-              title="View Official Letter"
-            >
-              View Letter
-            </button>
-            <button
-              type="button"
-              onclick="downloadOfficialLetterOnlyPDF(${escapeAttr(item.raw)})"
-              class="px-2 py-1 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg text-xs font-semibold text-blue-700 shadow-2xs transition active:scale-95"
-              title="Download PDF"
-            >
-              Download PDF
-            </button>
             ${item.statusInfo.isApproved ? `
               <button
                 type="button"
                 onclick="openGatePassCardModal(${escapeAttr(item.raw)})"
-                class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs transition active:scale-95"
+                class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs transition active:scale-95 flex items-center gap-1"
                 title="View Approved Official Gate Pass"
               >
-                View Gate Pass
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                <span>View Gate Pass</span>
               </button>
               <button
                 type="button"
                 onclick="downloadGatePassCardPDF(${escapeAttr(item.raw)})"
-                class="px-2.5 py-1 bg-slate-900 hover:bg-black text-white rounded-lg text-xs font-bold shadow-xs transition active:scale-95"
+                class="px-2.5 py-1 bg-slate-900 hover:bg-black text-white rounded-lg text-xs font-bold shadow-xs transition active:scale-95 flex items-center gap-1"
                 title="Download Official Gate Pass PDF"
               >
-                Download Pass
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <span>Download Pass</span>
               </button>
             ` : ''}
           </div>
@@ -790,19 +784,21 @@
             </button>
             <button
               type="button"
-              onclick="viewFormalLetter(${escapeAttr(item.raw)})"
-              class="px-2.5 py-1 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 shadow-2xs transition active:scale-95"
-              title="View Formal Letter"
+              onclick="openLeaveLetterModal(${escapeAttr(item.raw)})"
+              class="px-2.5 py-1 bg-white hover:bg-slate-50 border border-purple-300 rounded-lg text-xs font-semibold text-purple-700 shadow-2xs transition active:scale-95 flex items-center gap-1"
+              title="View Formal Leave Letter"
             >
-              View Letter
+              <svg class="w-3.5 h-3.5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              <span>View Leave Letter</span>
             </button>
             <button
               type="button"
-              onclick="downloadOfficialLetterOnlyPDF(${escapeAttr(item.raw)})"
-              class="px-2 py-1 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg text-xs font-semibold text-purple-700 shadow-2xs transition active:scale-95"
-              title="Download PDF"
+              onclick="downloadLeaveLetterPDF(${escapeAttr(item.raw)})"
+              class="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 border border-purple-300 rounded-lg text-xs font-semibold text-purple-800 shadow-2xs transition active:scale-95 flex items-center gap-1"
+              title="Download Leave Letter PDF"
             >
-              Download PDF
+              <svg class="w-3.5 h-3.5 text-purple-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Download PDF</span>
             </button>
           </div>
         `;
@@ -989,38 +985,24 @@
               >
                 View Request
               </button>
-              <button
-                type="button"
-                onclick="viewFormalLetter(${escapeAttr(p)})"
-                class="px-2.5 py-1 bg-white hover:bg-slate-50 border border-slate-300 rounded text-xs font-semibold text-slate-700 shadow-2xs transition active:scale-95"
-                title="View generated official formal letter"
-              >
-                View Letter
-              </button>
-              <button
-                type="button"
-                onclick="downloadOfficialLetterOnlyPDF(${escapeAttr(p)})"
-                class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded text-xs font-semibold text-blue-700 shadow-2xs transition active:scale-95"
-                title="Download official formal letter as PDF"
-              >
-                Download Letter
-              </button>
               ${statusInfo.isApproved ? `
                 <button
                   type="button"
                   onclick="openGatePassCardModal(${escapeAttr(p)})"
-                  class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-bold shadow-xs transition active:scale-95"
+                  class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-bold shadow-xs transition active:scale-95 flex items-center gap-1"
                   title="View Approved Official Gate Pass Card"
                 >
-                  View Gate Pass
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  <span>View Gate Pass</span>
                 </button>
                 <button
                   type="button"
                   onclick="downloadGatePassCardPDF(${escapeAttr(p)})"
-                  class="px-2 py-1 bg-emerald-800 hover:bg-emerald-900 text-white rounded text-xs font-bold shadow-xs transition active:scale-95"
+                  class="px-2 py-1 bg-emerald-800 hover:bg-emerald-900 text-white rounded text-xs font-bold shadow-xs transition active:scale-95 flex items-center gap-1"
                   title="Download Official Gate Pass PDF"
                 >
-                  Download Pass
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                  <span>Download Pass</span>
                 </button>
               ` : ''}
             </div>
@@ -1087,13 +1069,26 @@
           <td>${statusPill}</td>
           <td class="text-slate-500 whitespace-nowrap text-xs">${appliedOnDisplay}</td>
           <td class="text-right whitespace-nowrap">
-            <button
-              type="button"
-              onclick="viewFormalLetter(${escapeAttr(p)})"
-              class="px-3 py-1 bg-white hover:bg-slate-50 border border-slate-300 rounded text-xs font-semibold text-slate-700 shadow-2xs transition active:scale-95"
-            >
-              View Letter
-            </button>
+            <div class="inline-flex items-center gap-1.5">
+              <button
+                type="button"
+                onclick="openLeaveLetterModal(${escapeAttr(p)})"
+                class="px-2.5 py-1 bg-white hover:bg-slate-50 border border-purple-300 rounded text-xs font-semibold text-purple-700 shadow-2xs transition active:scale-95 flex items-center gap-1"
+                title="View Formal Leave Letter"
+              >
+                <svg class="w-3.5 h-3.5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                <span>View Leave Letter</span>
+              </button>
+              <button
+                type="button"
+                onclick="downloadLeaveLetterPDF(${escapeAttr(p)})"
+                class="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 border border-purple-300 rounded text-xs font-semibold text-purple-800 shadow-2xs transition active:scale-95 flex items-center gap-1"
+                title="Download Leave Letter PDF"
+              >
+                <svg class="w-3.5 h-3.5 text-purple-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <span>Download PDF</span>
+              </button>
+            </div>
           </td>
         </tr>
       `;
@@ -1168,7 +1163,7 @@
         <td class="text-xs">${p.requestCategory === 'leave' ? 'Leave' : 'Gate Pass'}</td>
         <td class="text-xs">${p.status}</td>
         <td class="text-right">
-          <button onclick="viewFormalLetter(${escapeAttr(p)})" class="px-2 py-1 bg-slate-100 rounded text-xs">View</button>
+          <button onclick="${p.requestCategory === 'leave' ? `openLeaveLetterModal(${escapeAttr(p)})` : `openGatePassCardModal(${escapeAttr(p)})`}" class="px-2 py-1 bg-slate-100 rounded text-xs">View</button>
         </td>
       </tr>
     `).join('');

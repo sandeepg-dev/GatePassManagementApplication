@@ -287,6 +287,9 @@ if (typeof formatClassSection !== 'undefined') window.formatClassSection = forma
 if (typeof downloadMasterPDF !== 'undefined') window.downloadMasterPDF = downloadMasterPDF;
 if (typeof downloadAllCompleteLettersPDF !== 'undefined') window.downloadAllCompleteLettersPDF = downloadAllCompleteLettersPDF;
 if (typeof downloadOfficialLetterOnlyPDF !== 'undefined') window.downloadOfficialLetterOnlyPDF = downloadOfficialLetterOnlyPDF;
+if (typeof downloadLeaveLetterPDF !== 'undefined') window.downloadLeaveLetterPDF = downloadLeaveLetterPDF;
+if (typeof openLeaveLetterModal !== 'undefined') window.openLeaveLetterModal = openLeaveLetterModal;
+if (typeof closeLeaveLetterModal !== 'undefined') window.closeLeaveLetterModal = closeLeaveLetterModal;
 if (typeof downloadGatePassCardPDF !== 'undefined') window.downloadGatePassCardPDF = downloadGatePassCardPDF;
 if (typeof downloadGatePassPDF !== 'undefined') window.downloadGatePassPDF = downloadGatePassPDF;
 if (typeof downloadSinglePassPDF !== 'undefined') window.downloadSinglePassPDF = downloadSinglePassPDF;

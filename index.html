@@ -1766,6 +1766,238 @@
 </div>
 
 
+<!-- OFFICIAL STUDENT LEAVE REQUEST LETTER MODAL (AUTHENTIC INSTITUTIONAL LETTERHEAD) -->
+<div id="leaveLetterModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div class="bg-white rounded-2xl border border-slate-300 shadow-2xl max-w-3xl w-full p-4 sm:p-6 text-black space-y-4 my-auto max-h-[95vh] overflow-y-auto">
+    
+    <!-- Modal Control Header -->
+    <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-purple-700 text-white flex items-center justify-center font-bold text-sm shadow-xs">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-slate-900 tracking-tight">Official Student Leave Request Letter</h3>
+          <p class="text-[11px] text-purple-700 font-semibold font-mono">Formal Academic Requisition Dossier &bull; Institutional Letterhead</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button 
+          id="leaveLetterModalTopDlBtn" 
+          type="button"
+          onclick="if (window.currentActiveLeave && typeof window.downloadLeaveLetterPDF === 'function') window.downloadLeaveLetterPDF(window.currentActiveLeave);"
+          class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-lg text-xs font-semibold shadow-xs transition active:scale-95"
+          title="Download Leave Letter PDF"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          <span>Download PDF</span>
+        </button>
+        <button type="button" onclick="closeLeaveLetterModal()" class="w-8 h-8 rounded-lg text-slate-500 hover:text-black hover:bg-slate-100 flex items-center justify-center transition" title="Close">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- AUTHENTIC FORMAL DOCUMENT PAPER PREVIEW (PRINT-READY DOCUMENT FORMAT) -->
+    <div id="leaveLetterDocumentPaper" class="bg-white border-2 border-slate-300 rounded-lg p-5 sm:p-8 text-black space-y-4 shadow-sm relative font-serif">
+      
+      <!-- College Letterhead Masthead -->
+      <div class="border-b-2 border-slate-900 pb-3 text-center">
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <img 
+            id="leaveLetterDocLogo" 
+            src="/public/grt-logo.png" 
+            alt="GRT College Logo" 
+            class="w-16 h-16 object-contain shrink-0"
+            onerror="this.onerror=null; this.src='/grt-logo.png';"
+          />
+          <div>
+            <h1 class="text-base sm:text-lg font-black tracking-tight text-slate-900 uppercase">
+              GRT INSTITUTE OF ENGINEERING AND TECHNOLOGY
+            </h1>
+            <p class="text-[10px] text-slate-600 font-medium">
+              (Approved by AICTE, New Delhi | Affiliated to Anna University, Chennai)
+            </p>
+            <p class="text-[10px] text-rose-700 font-bold">
+              (An Autonomous Institution | Accredited by NAAC with &lsquo;A++&rsquo; Grade)
+            </p>
+            <p class="text-[9.5px] text-slate-500 font-sans">
+              GRT Mahalakshmi Nagar, Chennai-Tirupati Highway, Tiruttani - 631 209.
+            </p>
+            <div id="leaveLetterDocDept" class="text-xs sm:text-sm font-bold text-slate-900 mt-1 uppercase font-sans">
+              DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-3 pt-1 border-t border-slate-300 font-sans text-xs font-black tracking-widest uppercase text-slate-900 bg-slate-100/60 py-1">
+          OFFICIAL LEAVE REQUISITION LETTER
+        </div>
+      </div>
+
+      <!-- Ref & Date Bar -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs font-sans pb-2 border-b border-slate-200">
+        <div class="text-slate-600 font-mono">
+          <span class="font-bold text-slate-800">Ref:</span> <span id="leaveLetterDocRef">GRTIET/DEPT/LEAVE/2026/0000</span>
+        </div>
+        <div class="text-slate-800 font-semibold font-mono">
+          <span>Date:</span> <span id="leaveLetterDocDate">-</span>
+        </div>
+      </div>
+
+      <!-- From Section -->
+      <div class="text-xs sm:text-sm leading-relaxed text-slate-900 space-y-0.5">
+        <div class="font-bold text-xs uppercase tracking-wider text-slate-700 font-sans">From:</div>
+        <div class="pl-3 sm:pl-4">
+          <div class="font-bold text-slate-950">
+            <span id="leaveLetterDocStudentName">Student Name</span> 
+            <span class="font-mono text-xs font-normal text-slate-700">(Register No: <span id="leaveLetterDocRollNo">-</span>)</span>
+          </div>
+          <div class="text-xs text-slate-700">
+            <span id="leaveLetterDocClassInfo">III Year, Department of Computer Science and Engineering (Section 'A')</span>
+          </div>
+          <div class="text-xs text-slate-700">
+            Accommodation: <span id="leaveLetterDocAccom" class="font-semibold">Day Scholar</span> &bull; Parent Contact: <span id="leaveLetterDocParentContact" class="font-mono font-semibold">-</span>
+          </div>
+          <div class="text-[11px] text-slate-500 font-sans">
+            GRT Institute of Engineering and Technology, Tiruttani - 631 209.
+          </div>
+        </div>
+      </div>
+
+      <!-- Through Section -->
+      <div class="text-xs italic text-slate-600 pl-3 sm:pl-4 font-sans font-medium">
+        (Through: Respective Class Counselor, Class Advisor, and Head of Department)
+      </div>
+
+      <!-- To Section -->
+      <div class="text-xs sm:text-sm leading-relaxed text-slate-900 space-y-0.5">
+        <div class="font-bold text-xs uppercase tracking-wider text-slate-700 font-sans">To:</div>
+        <div class="pl-3 sm:pl-4">
+          <div class="font-bold text-slate-950">The Head of the Department,</div>
+          <div id="leaveLetterDocToDept" class="text-xs text-slate-700">Department of Computer Science and Engineering,</div>
+          <div class="text-xs text-slate-700">GRT Institute of Engineering and Technology,</div>
+          <div class="text-[11px] text-slate-500 font-sans">Tiruttani - 631 209.</div>
+        </div>
+      </div>
+
+      <!-- Salutation & Subject -->
+      <div class="space-y-1.5 pt-1">
+        <div class="font-bold text-xs sm:text-sm text-slate-900">Respected Sir / Madam,</div>
+        <div id="leaveLetterDocSubject" class="font-bold text-xs sm:text-sm text-slate-950 pl-3 sm:pl-4 border-l-2 border-purple-600 py-0.5 leading-snug">
+          Subject: Application for Sanction of Medical Leave - Regarding.
+        </div>
+      </div>
+
+      <!-- Formal Body Paragraph 1 -->
+      <div id="leaveLetterDocBody1" class="text-xs sm:text-sm text-slate-800 leading-relaxed text-justify">
+        I am writing this application to respectfully request permission to avail leave of absence from college...
+      </div>
+
+      <!-- Highlighted Leave Schedule & Purpose Box -->
+      <div class="border border-slate-300 rounded-lg p-3 bg-purple-50/40 text-xs font-sans space-y-1.5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Sanctioned Leave Period:</span>
+            <span class="font-bold text-purple-950 font-mono text-xs">
+              <span id="leaveLetterDocFromDate">-</span> to <span id="leaveLetterDocToDate">-</span>
+              <span id="leaveLetterDocTotalDays" class="text-purple-700 font-semibold text-[11px]">(1 day)</span>
+            </span>
+          </div>
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Parental Verification:</span>
+            <span id="leaveLetterDocParentVerify" class="font-semibold text-slate-800 text-xs">Acknowledged &amp; Verified by Class Counselor</span>
+          </div>
+        </div>
+        <div class="pt-1 border-t border-purple-100">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Stated Reason for Leave:</span>
+          <span id="leaveLetterDocReason" class="font-medium text-slate-900 block italic">&ldquo;-&rdquo;</span>
+        </div>
+      </div>
+
+      <!-- Formal Body Paragraph 2 -->
+      <div id="leaveLetterDocBody2" class="text-xs sm:text-sm text-slate-800 leading-relaxed text-justify">
+        I have informed my parents regarding this leave requirement...
+      </div>
+
+      <!-- Concluding Request -->
+      <div class="text-xs sm:text-sm text-slate-800">
+        Kindly consider my circumstances favorably and grant me sanctioned leave for the specified duration.
+      </div>
+
+      <!-- Closing & Signatures -->
+      <div class="flex items-start justify-between pt-3 font-sans">
+        <div class="text-xs font-bold text-slate-800">
+          Thanking You,
+        </div>
+        <div class="text-right text-xs space-y-0.5">
+          <div class="text-slate-600 italic">Yours obediently,</div>
+          <div id="leaveLetterDocSignName" class="font-bold text-slate-950 font-serif text-sm pt-2">(Student Name)</div>
+          <div class="font-mono text-[11px] text-slate-600">Roll No: <span id="leaveLetterDocSignRoll">-</span></div>
+          <div id="leaveLetterDocSignDept" class="text-[11px] text-slate-600">Department of CSE (Section 'A')</div>
+        </div>
+      </div>
+
+      <!-- Multi-Tier Approval Endorsement Block -->
+      <div class="pt-3 border-t border-slate-300 font-sans space-y-2">
+        <div class="text-[11px] font-bold uppercase tracking-wider text-slate-600">
+          Institutional Clearance &amp; Endorsement Record:
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+          <div class="p-2 border border-slate-200 rounded-md bg-slate-50">
+            <span class="text-[9px] text-slate-400 font-bold block uppercase">Student Signature</span>
+            <span id="leaveLetterClearanceStudent" class="font-bold text-slate-900 block truncate">Submitted</span>
+            <span id="leaveLetterClearanceStudentDate" class="text-[9.5px] text-slate-500 font-mono block">-</span>
+          </div>
+          <div class="p-2 border border-slate-200 rounded-md bg-slate-50">
+            <span class="text-[9px] text-slate-400 font-bold block uppercase">Class Counselor</span>
+            <span id="leaveLetterClearanceCounselor" class="font-bold text-slate-900 block truncate">Pending</span>
+            <span id="leaveLetterClearanceCounselorDate" class="text-[9.5px] text-slate-500 font-mono block">-</span>
+          </div>
+          <div class="p-2 border border-slate-200 rounded-md bg-slate-50">
+            <span class="text-[9px] text-slate-400 font-bold block uppercase">Class Advisor</span>
+            <span id="leaveLetterClearanceAdvisor" class="font-bold text-slate-900 block truncate">Pending</span>
+            <span id="leaveLetterClearanceAdvisorDate" class="text-[9.5px] text-slate-500 font-mono block">-</span>
+          </div>
+          <div class="p-2 border border-slate-200 rounded-md bg-slate-50">
+            <span class="text-[9px] text-slate-400 font-bold block uppercase">Head of Dept (HOD)</span>
+            <span id="leaveLetterClearanceHOD" class="font-bold text-slate-900 block truncate">Pending</span>
+            <span id="leaveLetterClearanceHODDate" class="text-[9.5px] text-slate-500 font-mono block">-</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Footer Actions -->
+    <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200">
+      <div class="text-xs text-slate-500 font-medium">
+        Official document generated under GRT College Academic Regulations
+      </div>
+      <div class="flex items-center gap-2">
+        <button 
+          type="button" 
+          onclick="closeLeaveLetterModal()" 
+          class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition"
+        >
+          Close
+        </button>
+        <button 
+          id="leaveLetterModalBottomDlBtn" 
+          type="button"
+          onclick="if (window.currentActiveLeave && typeof window.downloadLeaveLetterPDF === 'function') window.downloadLeaveLetterPDF(window.currentActiveLeave);"
+          class="px-5 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-bold shadow-xs transition active:scale-95 flex items-center gap-1.5"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          <span>Download Leave Letter (PDF)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <!-- POPUP MODAL 3: OD (ON DUTY) REQUEST -->
 <div id="modalODRequest" class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto modal-backdrop-animate">
   <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full p-6 sm:p-7 space-y-5 modal-content-animate my-auto max-h-[92vh] overflow-y-auto">
@@ -2108,41 +2340,41 @@
 
 
 <!-- OFFICIAL COLLEGE GATE PASS MODAL (AUTHENTIC ISSUED DOCUMENT) -->
-<div id="gatePassCardModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
-  <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-2xl w-full p-4 sm:p-6 text-slate-800 space-y-4 my-auto max-h-[95vh] overflow-y-auto">
+<div id="gatePassCardModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+  <div class="bg-white rounded-2xl border border-neutral-300 shadow-2xl max-w-2xl w-full p-4 sm:p-6 text-black space-y-4 my-auto max-h-[95vh] overflow-y-auto">
     
     <!-- Modal Control Header -->
-    <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+    <div class="flex items-center justify-between pb-3 border-b border-neutral-300">
       <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-sm">
+        <div class="w-8 h-8 rounded-lg bg-black text-white flex items-center justify-center font-bold text-sm">
           ✓
         </div>
         <div>
-          <h3 class="text-sm font-bold text-slate-900 tracking-tight">Official Student Gate Pass</h3>
-          <p class="text-[11px] text-emerald-700 font-semibold font-mono">Approved &amp; Issued &bull; Authorized for Campus Gate Clearance</p>
+          <h3 class="text-sm font-bold text-black tracking-tight">Official Student Gate Pass</h3>
+          <p class="text-[11px] text-neutral-700 font-medium font-mono">Approved &amp; Issued &bull; Authorized for Campus Gate Clearance</p>
         </div>
       </div>
       <div class="flex items-center gap-2">
         <button 
           id="gpCardModalDownloadTopBtn" 
           onclick="if (window.currentActivePass && typeof window.downloadGatePassCardPDF === 'function') window.downloadGatePassCardPDF(window.currentActivePass);"
-          class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-semibold shadow-xs transition"
+          class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-black hover:bg-neutral-800 text-white rounded-lg text-xs font-semibold shadow-xs transition"
           title="Download PDF"
         >
           <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
           <span>Download PDF</span>
         </button>
-        <button onclick="closeGatePassCardModal()" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition" title="Close">
+        <button onclick="closeGatePassCardModal()" class="w-8 h-8 rounded-lg text-neutral-500 hover:text-black hover:bg-neutral-100 flex items-center justify-center transition" title="Close">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
     </div>
 
-    <!-- AUTHENTIC COLLEGE GATE PASS DOCUMENT (HUMAN-DESIGNED OFFICIAL COLLEGE DOCUMENT STYLE) -->
-    <div id="gatePassDocumentPreview" class="bg-white border-2 border-slate-900 ring-1 ring-slate-300 rounded-xl p-4 sm:p-6 text-slate-900 space-y-4 shadow-sm relative">
+    <!-- AUTHENTIC COLLEGE GATE PASS DOCUMENT (CLEAN WHITE BACKGROUND, BLACK TEXT ONLY) -->
+    <div id="gatePassDocumentPreview" class="bg-white border-2 border-black rounded-lg p-4 sm:p-6 text-black space-y-4 shadow-sm relative">
       
       <!-- College Header & Masthead -->
-      <div class="border-b-2 border-slate-900 pb-3">
+      <div class="border-b-2 border-black pb-3">
         <div class="flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
           
           <!-- College Logo -->
@@ -2155,16 +2387,16 @@
               onerror="this.onerror=null; this.src='/grt-logo.png';"
             />
             <div class="text-center sm:text-left">
-              <h1 class="text-base sm:text-lg font-black tracking-tight text-slate-950 font-serif leading-tight">
+              <h1 class="text-base sm:text-lg font-black tracking-tight text-black font-serif leading-tight">
                 GRT INSTITUTE OF ENGINEERING AND TECHNOLOGY
               </h1>
-              <p class="text-[10px] text-slate-600 font-medium leading-tight">
-                (Autonomous Institution &bull; Approved by AICTE, New Delhi &bull; Affiliated to Anna University, Chennai)
+              <p class="text-[10px] text-black font-medium leading-tight">
+                (An Autonomous Institution | Approved by AICTE, New Delhi | Affiliated to Anna University, Chennai)
               </p>
-              <p class="text-[10px] text-slate-600 font-semibold leading-tight">
+              <p class="text-[10px] text-black font-bold leading-tight">
                 Accredited by NAAC with &lsquo;A++&rsquo; Grade
               </p>
-              <p class="text-[9.5px] text-slate-500 font-mono">
+              <p class="text-[9.5px] text-black font-mono">
                 GRT Mahalaksmi Nagar, Tiruttani - 631 209, Tiruvallur District, Tamil Nadu
               </p>
             </div>
@@ -2172,7 +2404,7 @@
 
           <!-- Dynamic Verification QR Code -->
           <div class="shrink-0 flex flex-col items-center">
-            <div class="w-16 h-16 border border-slate-300 bg-white p-1 rounded-sm shadow-2xs flex items-center justify-center">
+            <div class="w-16 h-16 border border-black bg-white p-1 rounded-xs flex items-center justify-center">
               <img 
                 id="gpDocQrImage" 
                 src="" 
@@ -2180,74 +2412,74 @@
                 class="w-full h-full object-contain"
               />
             </div>
-            <span class="text-[8.5px] font-mono text-slate-500 mt-0.5 tracking-tight">GATE VERIFIED</span>
+            <span class="text-[8.5px] font-mono font-bold text-black mt-0.5 tracking-tight">GATE VERIFIED</span>
           </div>
         </div>
       </div>
 
       <!-- Document Title & Identity Banner -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-300 pb-2.5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-black pb-2.5">
         <div>
-          <div class="text-xs font-bold uppercase tracking-wider text-slate-500 font-mono">Official Campus Document</div>
-          <div class="text-lg font-black tracking-widest text-slate-900 font-serif">GATE PASS</div>
+          <div class="text-[11px] font-bold uppercase tracking-wider text-black font-mono">Official Campus Document</div>
+          <div class="text-lg font-black tracking-widest text-black font-serif">GATE PASS</div>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-          <div class="px-2.5 py-1 bg-slate-100 border border-slate-300 rounded font-mono text-xs">
-            <span class="text-slate-500 font-semibold">PASS ID:</span>
-            <span id="gpDocPassId" class="font-bold text-slate-900 ml-1">GRT-GP-2026-0000</span>
+          <div class="px-2.5 py-1 bg-white border border-black rounded-xs font-mono text-xs">
+            <span class="font-bold text-black">PASS ID:</span>
+            <span id="gpDocPassId" class="font-bold text-black ml-1">GRT-GP-2026-0000</span>
           </div>
-          <div id="gpDocAccomBadge" class="px-2.5 py-1 bg-blue-50 border border-blue-200 text-blue-800 rounded font-mono text-xs font-bold">
+          <div id="gpDocAccomBadge" class="px-2.5 py-1 bg-white border border-black text-black rounded-xs font-mono text-xs font-bold">
             DAY SCHOLAR
           </div>
-          <div class="px-2 py-1 bg-emerald-50 border border-emerald-300 text-emerald-800 rounded font-mono text-xs font-bold">
-            APPROVED
+          <div class="px-2.5 py-1 bg-white border border-black text-black rounded-xs font-mono text-xs font-bold">
+            APPROVED &amp; ISSUED
           </div>
         </div>
       </div>
 
-      <!-- Tabular Student & Movement Particulars -->
-      <div class="border border-slate-300 rounded-lg overflow-hidden text-xs">
+      <!-- Tabular Student & Movement Particulars (Automatic Line Wrapping, No Overflow) -->
+      <div class="border border-black rounded-xs overflow-hidden text-xs">
         <table class="w-full border-collapse">
           <tbody>
-            <tr class="border-b border-slate-200">
-              <td class="w-1/4 py-2 px-3 bg-slate-50 font-semibold text-slate-600 border-r border-slate-200">Student Name</td>
-              <td class="w-1/4 py-2 px-3 font-bold text-slate-900 border-r border-slate-200" id="gpDocName">-</td>
-              <td class="w-1/4 py-2 px-3 bg-slate-50 font-semibold text-slate-600 border-r border-slate-200">Register Number</td>
-              <td class="w-1/4 py-2 px-3 font-mono font-bold text-slate-900" id="gpDocRoll">-</td>
+            <tr class="border-b border-black">
+              <td class="w-1/4 py-2 px-3 bg-white font-bold text-black border-r border-black">Student Name</td>
+              <td class="w-1/4 py-2 px-3 font-bold text-black border-r border-black break-words" id="gpDocName">-</td>
+              <td class="w-1/4 py-2 px-3 bg-white font-bold text-black border-r border-black">Register Number</td>
+              <td class="w-1/4 py-2 px-3 font-mono font-bold text-black break-words" id="gpDocRoll">-</td>
             </tr>
-            <tr class="border-b border-slate-200">
-              <td class="py-2 px-3 bg-slate-50 font-semibold text-slate-600 border-r border-slate-200">Department</td>
-              <td class="py-2 px-3 font-semibold text-slate-900 border-r border-slate-200" id="gpDocDept">-</td>
-              <td class="py-2 px-3 bg-slate-50 font-semibold text-slate-600 border-r border-slate-200">Year &amp; Section</td>
-              <td class="py-2 px-3 font-semibold text-slate-900" id="gpDocYearSec">-</td>
+            <tr class="border-b border-black">
+              <td class="py-2 px-3 bg-white font-bold text-black border-r border-black">Department</td>
+              <td class="py-2 px-3 text-black border-r border-black break-words" id="gpDocDept">-</td>
+              <td class="py-2 px-3 bg-white font-bold text-black border-r border-black">Year &amp; Section</td>
+              <td class="py-2 px-3 text-black break-words" id="gpDocYearSec">-</td>
             </tr>
-            <tr class="border-b border-slate-200">
-              <td class="py-2 px-3 bg-slate-50 font-semibold text-slate-600 border-r border-slate-200">Student Type</td>
-              <td class="py-2 px-3 font-semibold text-slate-900 border-r border-slate-200" id="gpDocAccom">-</td>
-              <td class="py-2 px-3 bg-slate-50 font-semibold text-slate-600 border-r border-slate-200">Parent / Guardian Contact</td>
-              <td class="py-2 px-3 font-mono font-semibold text-slate-900" id="gpDocParentContact">-</td>
+            <tr class="border-b border-black">
+              <td class="py-2 px-3 bg-white font-bold text-black border-r border-black">Student Category</td>
+              <td class="py-2 px-3 text-black border-r border-black break-words" id="gpDocAccom">-</td>
+              <td class="py-2 px-3 bg-white font-bold text-black border-r border-black">Parent / Guardian Contact</td>
+              <td class="py-2 px-3 font-mono text-black break-words" id="gpDocParentContact">-</td>
             </tr>
-            <tr class="border-b border-slate-200">
-              <td class="py-2 px-3 bg-slate-50 font-semibold text-slate-600 border-r border-slate-200">Date of Leaving</td>
-              <td class="py-2 px-3 font-semibold text-slate-900 border-r border-slate-200" id="gpDocDate">-</td>
-              <td class="py-2 px-3 bg-slate-50 font-semibold text-slate-600 border-r border-slate-200">Time of Leaving</td>
-              <td class="py-2 px-3 font-semibold text-slate-900" id="gpDocTime">-</td>
+            <tr class="border-b border-black">
+              <td class="py-2 px-3 bg-white font-bold text-black border-r border-black">Date of Leaving</td>
+              <td class="py-2 px-3 font-mono text-black border-r border-black break-words" id="gpDocDate">-</td>
+              <td class="py-2 px-3 bg-white font-bold text-black border-r border-black">Time of Leaving</td>
+              <td class="py-2 px-3 font-mono text-black break-words" id="gpDocTime">-</td>
             </tr>
-            <tr class="border-b border-slate-200">
-              <td class="py-2 px-3 bg-slate-50 font-semibold text-slate-600 border-r border-slate-200">Expected Return Time</td>
-              <td class="py-2 px-3 font-semibold text-slate-900 border-r border-slate-200" id="gpDocReturnTime">-</td>
-              <td class="py-2 px-3 bg-slate-50 font-semibold text-slate-600 border-r border-slate-200">Final Approving Authority</td>
-              <td class="py-2 px-3 font-semibold text-slate-900" id="gpDocFinalAuthority">-</td>
+            <tr class="border-b border-black">
+              <td class="py-2 px-3 bg-white font-bold text-black border-r border-black">Expected Return Time</td>
+              <td class="py-2 px-3 font-mono text-black border-r border-black break-words" id="gpDocReturnTime">-</td>
+              <td class="py-2 px-3 bg-white font-bold text-black border-r border-black">Final Approving Authority</td>
+              <td class="py-2 px-3 font-medium text-black break-words" id="gpDocFinalAuthority">-</td>
             </tr>
-            <tr class="border-b border-slate-200">
-              <td class="py-2 px-3 bg-slate-50 font-semibold text-slate-600 border-r border-slate-200">Reason for Leaving</td>
-              <td colspan="3" class="py-2 px-3 text-slate-900 font-medium" id="gpDocReason">-</td>
+            <tr class="border-b border-black">
+              <td class="py-2 px-3 bg-white font-bold text-black border-r border-black">Reason for Leaving</td>
+              <td colspan="3" class="py-2 px-3 text-black font-medium break-words leading-relaxed" id="gpDocReason">-</td>
             </tr>
             <tr>
-              <td class="py-2 px-3 bg-slate-50 font-semibold text-slate-600 border-r border-slate-200">Approval Date &amp; Time</td>
-              <td class="py-2 px-3 font-mono text-slate-900" id="gpDocApprovalTime">-</td>
-              <td class="py-2 px-3 bg-slate-50 font-semibold text-slate-600 border-r border-slate-200">Verification Code</td>
-              <td class="py-2 px-3 font-mono font-bold text-slate-800" id="gpDocVerifyCode">-</td>
+              <td class="py-2 px-3 bg-white font-bold text-black border-r border-black">Approval Date &amp; Time</td>
+              <td class="py-2 px-3 font-mono text-black border-r border-black break-words" id="gpDocApprovalTime">-</td>
+              <td class="py-2 px-3 bg-white font-bold text-black border-r border-black">Verification Code</td>
+              <td class="py-2 px-3 font-mono font-bold text-black break-words" id="gpDocVerifyCode">-</td>
             </tr>
           </tbody>
         </table>
@@ -2264,44 +2496,127 @@
         <span id="gpCardReason"></span>
       </div>
 
+      <!-- Multi-Tier Institutional Clearance Records (All Dynamic Approvers) -->
+      <div class="space-y-2">
+        <div class="text-[11px] font-bold text-black uppercase tracking-wider font-serif">
+          Institutional Clearances &amp; Digital Verifications
+        </div>
+        <div id="gpDocClearanceGrid" class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-xs">
+          
+          <!-- Tier 1: Counselor -->
+          <div class="p-2 border border-black rounded-xs bg-white flex flex-col justify-between min-h-[72px]">
+            <div>
+              <div class="font-bold text-[10px] text-black">Class Counselor</div>
+              <div class="font-bold text-[9.5px] text-black mt-0.5">APPROVED</div>
+            </div>
+            <div class="mt-1">
+              <div id="gpDocCounselorName" class="text-[10px] font-normal text-black break-words leading-tight">-</div>
+              <div id="gpDocCounselorTime" class="text-[8.5px] font-mono text-black mt-0.5">-</div>
+            </div>
+          </div>
+
+          <!-- Tier 2: Class Advisor -->
+          <div class="p-2 border border-black rounded-xs bg-white flex flex-col justify-between min-h-[72px]">
+            <div>
+              <div class="font-bold text-[10px] text-black">Class Advisor</div>
+              <div class="font-bold text-[9.5px] text-black mt-0.5">APPROVED</div>
+            </div>
+            <div class="mt-1">
+              <div id="gpDocAdvisorName" class="text-[10px] font-normal text-black break-words leading-tight">-</div>
+              <div id="gpDocAdvisorTime" class="text-[8.5px] font-mono text-black mt-0.5">-</div>
+            </div>
+          </div>
+
+          <!-- Tier 3: HOD -->
+          <div class="p-2 border border-black rounded-xs bg-white flex flex-col justify-between min-h-[72px]">
+            <div>
+              <div class="font-bold text-[10px] text-black">Head of Dept (HOD)</div>
+              <div class="font-bold text-[9.5px] text-black mt-0.5">APPROVED</div>
+            </div>
+            <div class="mt-1">
+              <div id="gpDocHodName" class="text-[10px] font-normal text-black break-words leading-tight">-</div>
+              <div id="gpDocHodTime" class="text-[8.5px] font-mono text-black mt-0.5">-</div>
+            </div>
+          </div>
+
+          <!-- Tier 4: Principal -->
+          <div class="p-2 border border-black rounded-xs bg-white flex flex-col justify-between min-h-[72px]">
+            <div>
+              <div class="font-bold text-[10px] text-black">Principal</div>
+              <div class="font-bold text-[9.5px] text-black mt-0.5">APPROVED</div>
+            </div>
+            <div class="mt-1">
+              <div id="gpDocPrincipalName" class="text-[10px] font-normal text-black break-words leading-tight">Dr Arumugam</div>
+              <div id="gpDocPrincipalTime" class="text-[8.5px] font-mono text-black mt-0.5">-</div>
+            </div>
+          </div>
+
+          <!-- Tier 5: Hostel Warden (Hidden for Day Scholars) -->
+          <div id="gpDocWardenBox" class="p-2 border border-black rounded-xs bg-white flex flex-col justify-between min-h-[72px]">
+            <div>
+              <div class="font-bold text-[10px] text-black">Hostel Warden (Final)</div>
+              <div class="font-bold text-[9.5px] text-black mt-0.5">APPROVED</div>
+            </div>
+            <div class="mt-1">
+              <div id="gpDocWardenName" class="text-[10px] font-normal text-black break-words leading-tight">Mr Arul Prasad</div>
+              <div id="gpDocWardenTime" class="text-[8.5px] font-mono text-black mt-0.5">-</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Security Gate Egress & Ingress Clearances -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+        <div class="p-2.5 border border-black rounded-xs bg-white space-y-1">
+          <div class="font-bold text-[10px] text-black uppercase">Campus Exit Clearance (Main Gate Out)</div>
+          <div class="text-[10px] text-black" id="gpDocGateExitTime">Actual Departure Time: ___________________________</div>
+          <div class="text-[10px] text-black">Security Officer Signature: __________________</div>
+        </div>
+        <div class="p-2.5 border border-black rounded-xs bg-white space-y-1">
+          <div class="font-bold text-[10px] text-black uppercase">Campus Re-Entry Clearance (Main Gate In)</div>
+          <div class="text-[10px] text-black" id="gpDocGateReturnTime">Actual Return Time: ______________________________</div>
+          <div class="text-[10px] text-black">Security Officer Signature: __________________</div>
+        </div>
+      </div>
+
       <!-- Authorized Signature Section (3-Column Authentic College Layout) -->
-      <div class="pt-3 border-t border-slate-300">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+      <div class="pt-2 border-t border-black">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
           
           <!-- Column 1: Student Signature -->
-          <div class="p-3 border border-dashed border-slate-300 rounded-lg flex flex-col justify-between min-h-[90px]">
-            <div class="h-9 flex items-center justify-center">
-              <span id="gpDocStudentSignName" class="font-serif italic text-slate-700 font-semibold text-xs">-</span>
+          <div class="p-2.5 border border-black rounded-xs flex flex-col justify-between min-h-[82px] bg-white">
+            <div class="h-8 flex items-center justify-center">
+              <span id="gpDocStudentSignName" class="font-serif italic text-black font-semibold text-xs break-words">-</span>
             </div>
-            <div class="border-t border-slate-400 pt-1">
-              <div class="text-[10px] font-bold text-slate-800 uppercase tracking-tight">Student Signature</div>
-              <div class="text-[9px] text-slate-500">Self Endorsement</div>
+            <div class="border-t border-black pt-1">
+              <div class="text-[10px] font-bold text-black uppercase tracking-tight">Student Signature</div>
+              <div class="text-[9px] text-black">Self Endorsement</div>
             </div>
           </div>
 
           <!-- Column 2: Final Approving Authority -->
-          <div class="p-3 border border-slate-300 bg-slate-50/60 rounded-lg flex flex-col justify-between min-h-[90px]">
-            <div class="h-9 flex flex-col items-center justify-center">
-              <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded text-[9.5px] font-bold font-mono uppercase">
-                DIGITALLY VERIFIED
+          <div class="p-2.5 border border-black rounded-xs flex flex-col justify-between min-h-[82px] bg-white">
+            <div class="h-8 flex flex-col items-center justify-center">
+              <span class="text-[9.5px] font-bold font-mono uppercase text-black">
+                DIGITALLY AUTHENTICATED
               </span>
-              <span id="gpDocFinalAuthoritySign" class="text-[10px] font-semibold text-slate-700 mt-0.5">-</span>
+              <span id="gpDocFinalAuthoritySign" class="text-[9.5px] text-black mt-0.5 break-words">-</span>
             </div>
-            <div class="border-t border-slate-400 pt-1">
-              <div class="text-[10px] font-bold text-slate-800 uppercase tracking-tight">Approving Authority</div>
-              <div class="text-[9px] text-slate-500" id="gpDocApproverRoleLabel">Principal / Warden</div>
+            <div class="border-t border-black pt-1">
+              <div class="text-[10px] font-bold text-black uppercase tracking-tight">Approving Authority</div>
+              <div class="text-[9px] text-black" id="gpDocApproverRoleLabel">Principal / Warden</div>
             </div>
           </div>
 
           <!-- Column 3: Security Gate Clearance -->
-          <div class="p-3 border border-dashed border-slate-300 rounded-lg flex flex-col justify-between min-h-[90px]">
-            <div class="h-9 flex flex-col items-center justify-center">
-              <div class="text-[9.5px] font-mono text-slate-400">Exit: _____ / Return: _____</div>
-              <div class="text-[9px] font-mono text-slate-400">Gate Stamp: [ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ]</div>
+          <div class="p-2.5 border border-black rounded-xs flex flex-col justify-between min-h-[82px] bg-white">
+            <div class="h-8 flex flex-col items-center justify-center">
+              <div class="text-[9.5px] font-mono text-black">Gate Seal / Verification Stamp</div>
             </div>
-            <div class="border-t border-slate-400 pt-1">
-              <div class="text-[10px] font-bold text-slate-800 uppercase tracking-tight">Main Gate Security</div>
-              <div class="text-[9px] text-slate-500">Departure &amp; Entry Stamp</div>
+            <div class="border-t border-black pt-1">
+              <div class="text-[10px] font-bold text-black uppercase tracking-tight">Main Gate Security</div>
+              <div class="text-[9px] text-black">Clearance Officer</div>
             </div>
           </div>
 
@@ -2309,24 +2624,23 @@
       </div>
 
       <!-- Institutional Instructions & Notice -->
-      <div class="text-[9.5px] text-slate-500 text-center leading-relaxed pt-2 border-t border-slate-200">
-        <span class="font-semibold text-slate-700">INSTRUCTIONS:</span> 
-        1. Present this officially issued Gate Pass at the Main Campus Gate before exiting. 
-        2. Hostellers must report to the Hostel Warden immediately upon return. 
-        3. Pass details are read-only and authenticated against college records.
+      <div class="text-[9px] text-black text-center leading-relaxed pt-2 border-t border-black">
+        <span class="font-bold">NOTICE:</span> 
+        This Gate Pass is official institutional property of GRT Institute of Engineering and Technology. 
+        It is non-transferable and strictly valid for the named student. Present this pass at the Main Security Gate upon exit and return.
       </div>
 
     </div>
 
     <!-- Modal Action Buttons (Non-editable, View and Download PDF) -->
-    <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-slate-200">
-      <div class="text-xs text-slate-500">
-        Document Status: <span class="font-bold text-emerald-700">Official College Record (Read-Only)</span>
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-neutral-300">
+      <div class="text-xs text-neutral-600">
+        Document Status: <span class="font-bold text-black">Official College Record (Read-Only)</span>
       </div>
       <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
         <button 
           id="gpCardDownloadBtn" 
-          class="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs w-full sm:w-auto"
+          class="px-4 py-2 bg-black hover:bg-neutral-800 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs w-full sm:w-auto"
         >
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
           <span>Download Gate Pass (PDF)</span>
@@ -2334,7 +2648,7 @@
         <button 
           type="button" 
           onclick="closeGatePassCardModal()" 
-          class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition w-full sm:w-auto text-center"
+          class="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-black border border-neutral-300 rounded-lg text-xs font-semibold transition w-full sm:w-auto text-center"
         >
           Close
         </button>
@@ -2446,27 +2760,27 @@
   </script>
 
   <!-- Application Modular Components -->
-  <script src="/js/utils.js?v=3.2.0"></script>
-  <script src="/js/services/notificationService.js?v=3.2.0"></script>
-  <script src="/js/api.js?v=3.2.0"></script>
-  <script src="/js/services/pdfService.js?v=3.2.0"></script>
-  <script src="/js/services/attendanceExcelService.js?v=3.2.0"></script>
-  <script src="/js/modules/student/studentNavigation.js?v=3.2.0"></script>
-  <script src="/js/modules/student/studentForms.js?v=3.2.0"></script>
-  <script src="/js/modules/student/studentRequests.js?v=3.2.0"></script>
-  <script src="/js/modules/student/studentModals.js?v=3.2.0"></script>
-  <script src="/js/modules/studentPortal.js?v=3.2.0"></script>
-  <script src="/js/modules/onDutyPortal.js?v=3.2.0"></script>
-  <script src="/js/modules/counselorQueue.js?v=3.2.0"></script>
-  <script src="/js/modules/advisorQueue.js?v=3.2.0"></script>
-  <script src="/js/modules/hodQueue.js?v=3.2.0"></script>
-  <script src="/js/modules/principalQueue.js?v=3.2.0"></script>
-  <script src="/js/modules/wardenQueue.js?v=3.2.0"></script>
-  <script src="/js/modules/auditLogs.js?v=3.2.0"></script>
-  <script src="/js/modules/authorityPortal.js?v=3.2.0"></script>
-  <script src="/js/dashboard.js?v=3.2.0"></script>
-  <script src="/js/auth.js?v=3.2.0"></script>
-  <script src="/js/main.js?v=3.2.0"></script>
+  <script src="/js/utils.js?v=3.3.0"></script>
+  <script src="/js/services/notificationService.js?v=3.3.0"></script>
+  <script src="/js/api.js?v=3.3.0"></script>
+  <script src="/js/services/pdfService.js?v=3.3.0"></script>
+  <script src="/js/services/attendanceExcelService.js?v=3.3.0"></script>
+  <script src="/js/modules/student/studentNavigation.js?v=3.3.0"></script>
+  <script src="/js/modules/student/studentForms.js?v=3.3.0"></script>
+  <script src="/js/modules/student/studentRequests.js?v=3.3.0"></script>
+  <script src="/js/modules/student/studentModals.js?v=3.3.0"></script>
+  <script src="/js/modules/studentPortal.js?v=3.3.0"></script>
+  <script src="/js/modules/onDutyPortal.js?v=3.3.0"></script>
+  <script src="/js/modules/counselorQueue.js?v=3.3.0"></script>
+  <script src="/js/modules/advisorQueue.js?v=3.3.0"></script>
+  <script src="/js/modules/hodQueue.js?v=3.3.0"></script>
+  <script src="/js/modules/principalQueue.js?v=3.3.0"></script>
+  <script src="/js/modules/wardenQueue.js?v=3.3.0"></script>
+  <script src="/js/modules/auditLogs.js?v=3.3.0"></script>
+  <script src="/js/modules/authorityPortal.js?v=3.3.0"></script>
+  <script src="/js/dashboard.js?v=3.3.0"></script>
+  <script src="/js/auth.js?v=3.3.0"></script>
+  <script src="/js/main.js?v=3.3.0"></script>
 </body>
 
 </html>

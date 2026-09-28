@@ -1092,6 +1092,11 @@ function viewFormalLetter(pass) {
       return viewOnDutyLetter(pass);
     }
   }
+  if (pass && (pass.requestCategory === 'leave' || pass.type === 'leave' || pass.isLeave)) {
+    if (typeof openLeaveLetterModal === 'function') {
+      return openLeaveLetterModal(pass);
+    }
+  }
   currentModalPass = pass;
   const contentEl = document.getElementById('letterModalContent');
   const btnEl = document.getElementById('modalDownloadLetterBtn');
