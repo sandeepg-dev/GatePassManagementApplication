@@ -64,13 +64,15 @@
     const retTime = document.getElementById('gpRetTime')?.value || '';
     const reason = document.getElementById('gatePassReason')?.value.trim() || '';
 
+    const isH = (/hoste?l|^h$/i.test(u.accommodation || '') && !/day\s*scholar/i.test(u.accommodation || ''));
+
     if (!depDate) return showToast('Please select Departure Date.', 'warning');
     if (!depTime) return showToast('Please select Departure Time.', 'warning');
-    if (!retDate) return showToast('Please select Return Date.', 'warning');
-    if (!retTime) return showToast('Please select Return Time.', 'warning');
+    if (isH) {
+      if (!retDate) return showToast('Please select Return Date.', 'warning');
+      if (!retTime) return showToast('Please select Return Time.', 'warning');
+    }
     if (!reason) return showToast('Please enter your reason for gate pass.', 'warning');
-
-    const isH = (/hoste?l|^h$/i.test(u.accommodation || '') && !/day\s*scholar/i.test(u.accommodation || ''));
 
     const payload = {
       rollNo: u.userId,
@@ -79,17 +81,17 @@
       parentPhone: u.parentContact || '',
       departureDate: depDate,
       departureTime: depTime,
-      expectedReturnDate: retDate,
-      expectedReturnTime: retTime,
-      returnDate: retDate,
-      returnTime: retTime,
-      expectedReturnDateTime: `${retDate} ${retTime}`,
+      expectedReturnDate: isH ? retDate : '',
+      expectedReturnTime: isH ? retTime : '',
+      returnDate: isH ? retDate : '',
+      returnTime: isH ? retTime : '',
+      expectedReturnDateTime: isH && retDate && retTime ? `${retDate} ${retTime}` : '',
       reason,
       destination: 'Authorized Destination',
       placeOrEvent: 'Authorized Destination',
       accommodation: isH ? 'Hosteller' : 'Day Scholar',
-      hostelBlock: u.hostelBlock || '',
-      hostelRoom: u.hostelRoom || '',
+      hostelBlock: isH ? (u.hostelBlock || '') : '',
+      hostelRoom: isH ? (u.hostelRoom || '') : '',
       requestCategory: 'gate_pass'
     };
 
@@ -376,17 +378,19 @@
     const hostelRoomBlock = document.getElementById('gpHostelRoomBlock')?.value.trim() || '';
     const hostelNotes = document.getElementById('gpHostelNotes')?.value.trim() || '';
 
+    const isH = (/hoste?l|^h$/i.test(loggedUser.accommodation || '') && !/day/i.test(loggedUser.accommodation || ''));
+
     if (!regNo) return showToast('Please enter your Registration Number.', 'warning');
     if (!studentName) return showToast('Please enter your Student Name.', 'warning');
     if (!fatherName) return showToast("Please enter Father's Name.", 'warning');
     if (!parentPhone) return showToast("Please enter Parent's Phone Number.", 'warning');
     if (!depDate) return showToast('Please select Departure Date.', 'warning');
     if (!depTime) return showToast('Please select Departure Time.', 'warning');
-    if (!retDate) return showToast('Please select Return Date.', 'warning');
-    if (!retTime) return showToast('Please select Return Time.', 'warning');
+    if (isH) {
+      if (!retDate) return showToast('Please select Return Date.', 'warning');
+      if (!retTime) return showToast('Please select Return Time.', 'warning');
+    }
     if (!reason) return showToast('Please state your Reason / Purpose for gate pass.', 'warning');
-
-    const isH = (/hoste?l|^h$/i.test(loggedUser.accommodation || '') && !/day/i.test(loggedUser.accommodation || ''));
 
     const payload = {
       rollNo: regNo,
@@ -395,19 +399,19 @@
       parentPhone,
       departureDate: depDate,
       departureTime: depTime,
-      expectedReturnDate: retDate,
-      expectedReturnTime: retTime,
-      returnDate: retDate,
-      returnTime: retTime,
-      expectedReturnDateTime: `${retDate} ${retTime}`,
+      expectedReturnDate: isH ? retDate : '',
+      expectedReturnTime: isH ? retTime : '',
+      returnDate: isH ? retDate : '',
+      returnTime: isH ? retTime : '',
+      expectedReturnDateTime: isH && retDate && retTime ? `${retDate} ${retTime}` : '',
       reason,
       destination,
       placeOrEvent: destination,
       accommodation: isH ? 'Hosteller' : 'Day Scholar',
-      hostelBlock: hostelRoomBlock,
-      hostelRoom: hostelRoomBlock,
-      hostelDepartureInfo: hostelNotes,
-      hostelReturnInfo: hostelNotes,
+      hostelBlock: isH ? hostelRoomBlock : '',
+      hostelRoom: isH ? hostelRoomBlock : '',
+      hostelDepartureInfo: isH ? hostelNotes : '',
+      hostelReturnInfo: isH ? hostelNotes : '',
       requestCategory: 'gate_pass'
     };
 

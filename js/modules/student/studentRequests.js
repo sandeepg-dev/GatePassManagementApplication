@@ -147,9 +147,11 @@
     }
 
     if (s === 'Approved' || s === 'Approved – Gate Pass Ready' || s === 'Completed') {
+      const isLeave = (p.requestCategory === 'leave' || p.type === 'leave' || p.isLeave);
+      const isOD = (p.requestCategory === 'onduty' || p.type === 'onduty' || p._type === 'onduty' || p.mode || p.placeEvent);
       return {
-        statusText: 'Approved',
-        authorityText: 'All Authorities Approved • Awaiting Gate Exit Scan',
+        statusText: isLeave || isOD ? 'Completed' : 'Approved',
+        authorityText: isLeave || isOD ? 'HOD Authorized • Request Completed' : 'All Authorities Approved • Gate Pass Ready',
         statusClass: 'px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-300 rounded-lg text-xs font-bold font-mono inline-flex items-center gap-1',
         authorityClass: 'text-emerald-700 font-semibold',
         isApproved: true,
@@ -248,10 +250,10 @@
     const cOk = od.counselorApproval?.approved;
     const aOk = od.advisorApproval?.approved;
     const hOk = od.hodApproval?.approved;
-    if (s === 'Approved' || (cOk && aOk && hOk)) {
+    if (s === 'Completed' || s === 'Approved' || (cOk && aOk && hOk)) {
       return {
-        statusText: '✓ Approved',
-        authorityText: '✓ Department Approved',
+        statusText: 'Completed',
+        authorityText: 'HOD Authorized • Request Completed',
         statusClass: 'px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-300 rounded-lg text-xs font-bold font-mono inline-flex items-center gap-1',
         authorityClass: 'text-emerald-700 font-semibold',
         isApproved: true,
@@ -290,6 +292,14 @@
 
   /**
    * Build dynamic HTML for sequential approval workflow stepper
+   *
+   * Workflows:
+   * 1. Gate Pass (Day Scholar):
+   *    Student -> Counselor -> Class Advisor -> HOD -> Principal -> Final Approval
+   * 2. Gate Pass (Hosteller):
+   *    Student -> Counselor -> Class Advisor -> HOD -> Principal -> Warden -> Final Approval
+   * 3. Leave & OD:
+   *    Student -> Counselor -> Class Advisor -> HOD -> Completed (HOD is final authority)
    */
   function buildApprovalStepperHtml(p, isHosteller) {
     const s = String(p.status || '');
@@ -297,25 +307,39 @@
     const isRejected = s === 'Rejected' || p.rejection?.rejected;
     const rejRole = String(p.rejection?.role || p.rejection?.roleTitle || p.rejectedBy || '').toLowerCase();
 
+    const isLeave = (p.requestCategory === 'leave' || p.type === 'leave' || p.isLeave);
+    const isOD = (p.requestCategory === 'onduty' || p.type === 'onduty' || p._type === 'onduty' || p.mode || p.placeEvent);
+
     let steps = [];
-    if (isHosteller) {
+    if (isLeave || isOD) {
+      // Leave and OD Requests: Student -> Counselor -> Class Advisor -> HOD -> Completed
+      steps = [
+        { key: 'student', label: 'Student Requisition', authority: 'Student' },
+        { key: 'counselor', label: 'Counselor Review', authority: 'Class Counselor' },
+        { key: 'advisor', label: 'Advisor Review', authority: 'Class Advisor' },
+        { key: 'hod', label: 'HOD Approval', authority: 'Head of Department' },
+        { key: 'completed', label: 'Completed', authority: 'Final Authorization' }
+      ];
+    } else if (isHosteller) {
+      // Gate Pass Hosteller: Student -> Counselor -> Class Advisor -> HOD -> Principal -> Warden -> Final Approval
       steps = [
         { key: 'student', label: 'Student Requisition', authority: 'Student' },
         { key: 'counselor', label: 'Counselor Review', authority: 'Class Counselor' },
         { key: 'advisor', label: 'Advisor Review', authority: 'Class Advisor' },
         { key: 'hod', label: 'HOD Review', authority: 'Head of Department' },
         { key: 'principal', label: 'Principal Review', authority: 'Principal Directorate' },
-        { key: 'warden', label: 'Warden Review', authority: p.gender === 'Female' ? 'Girls Hostel Warden' : 'Boys Hostel Warden' },
-        { key: 'ready', label: 'Gate Pass Ready', authority: 'Clearance Granted' }
+        { key: 'warden', label: 'Warden Approval', authority: (/female/i.test(p.gender || '') ? 'Girls Hostel Warden' : 'Boys Hostel Warden') },
+        { key: 'ready', label: 'Final Approval', authority: 'Gate Pass Ready' }
       ];
     } else {
+      // Gate Pass Day Scholar: Student -> Counselor -> Class Advisor -> HOD -> Principal -> Final Approval
       steps = [
         { key: 'student', label: 'Student Requisition', authority: 'Student' },
         { key: 'counselor', label: 'Counselor Review', authority: 'Class Counselor' },
         { key: 'advisor', label: 'Advisor Review', authority: 'Class Advisor' },
         { key: 'hod', label: 'HOD Review', authority: 'Head of Department' },
-        { key: 'principal', label: 'Principal Review', authority: 'Principal Directorate' },
-        { key: 'ready', label: 'Gate Pass Ready', authority: 'Clearance Granted' }
+        { key: 'principal', label: 'Principal Approval', authority: 'Principal Directorate' },
+        { key: 'ready', label: 'Final Approval', authority: 'Gate Pass Ready' }
       ];
     }
 

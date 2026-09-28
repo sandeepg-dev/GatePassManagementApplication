@@ -85,11 +85,13 @@ Campus PassPro • Official Student Leave Requisition Letter`;
   const hostelBlock = schedule?.hostelBlock || student.hostelBlock || '';
   const hostelInfoText = isHosteller ? `\n- Hostel Particulars          : Block ${hostelBlock || 'A'}, Room ${hostelRoom || 'Resident'}` : '';
 
+  const returnScheduleText = isHosteller ? `- Expected Return Date & Time : ${retDateTime || '-'}\n` : '';
+  const destinationText = destination ? `- Place / Destination         : ${destination}\n` : '';
+
   scheduleDetailsText = `
 OFFICIAL GATE OUTPASS SCHEDULE:
 - Departure Date & Time       : ${depDate || '-'}${depTime ? ' at ' + depTime : ''}
-- Expected Return Date & Time : ${retDateTime || '-'}${destination ? `\n- Place / Destination         : ${destination}` : ''}${hostelInfoText}
-- Department, Year & Section  : Department of ${student.dept || 'Engineering'}, ${student.academicYear || '3 Year'} (Section '${student.yearSec || 'A'}')
+${returnScheduleText}${destinationText}${hostelInfoText ? hostelInfoText + '\n' : ''}- Department, Year & Section  : Department of ${student.dept || 'Engineering'}, ${student.academicYear || '3 Year'} (Section '${student.yearSec || 'A'}')
 `;
 
   // Approval audit trail

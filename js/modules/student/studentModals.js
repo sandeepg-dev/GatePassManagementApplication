@@ -35,7 +35,19 @@
       accomEl.className = isHosteller ? 'font-bold text-emerald-700 block' : 'font-bold text-blue-700 block';
     }
 
-    // Reset required input fields (ONLY Departure Date, Time, Return Date, Time, Reason)
+    // Student Type Specific Form Fields:
+    // Day Scholar -> Departure Date + Departure Time + Reason (Return Date & Return Time strictly hidden)
+    // Hosteller   -> Departure Date + Departure Time + Return Date + Return Time + Reason
+    const returnRow = document.getElementById('gpHostelReturnFields');
+    if (returnRow) {
+      if (isHosteller) {
+        returnRow.classList.remove('hidden');
+      } else {
+        returnRow.classList.add('hidden');
+      }
+    }
+
+    // Reset required input fields
     const dD = document.getElementById('gpDepDate');
     const dT = document.getElementById('gpDepTime');
     const rD = document.getElementById('gpRetDate');
