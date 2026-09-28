@@ -55,6 +55,7 @@ function assembleIndexHtml() {
 `;
 
   const toastContainer = readComponent('components/common/toastContainer.html');
+  const notificationDrawer = readComponent('components/common/notificationDrawer.html');
   const pageLoader = readComponent('components/common/pageLoader.html');
   const loginPortal = readComponent('components/auth/loginPortal.html');
 
@@ -84,6 +85,7 @@ function assembleIndexHtml() {
 
   <!-- Application Modular Components -->
   <script src="/js/utils.js?v=3.2.0"></script>
+  <script src="/js/services/notificationService.js?v=3.2.0"></script>
   <script src="/js/api.js?v=3.2.0"></script>
   <script src="/js/services/pdfService.js?v=3.2.0"></script>
   <script src="/js/services/attendanceExcelService.js?v=3.2.0"></script>
@@ -111,6 +113,7 @@ function assembleIndexHtml() {
   const assembledHtml = [
     headOpen.trim(),
     '\n\n  ' + toastContainer.trim(),
+    '\n\n  ' + notificationDrawer.trim(),
     '\n\n  ' + pageLoader.trim(),
     '\n\n  ' + loginPortal.trim(),
     '\n\n  <!-- SCREEN 2: WORKING DASHBOARD SCREEN (Multi-Role Dedicated Views) -->\n  <div id="dashScreen" class="hidden w-full mx-auto z-10">\n',

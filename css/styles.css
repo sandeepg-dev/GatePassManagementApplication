@@ -325,7 +325,7 @@ textarea:focus {
   background: #475569;
 }
 
-/* Toast Notifications */
+/* Toast Notifications - Clean Light / White Theme */
 #toastContainer {
   position: fixed;
   top: 1.25rem;
@@ -333,24 +333,100 @@ textarea:focus {
   z-index: 9999;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.625rem;
   pointer-events: none;
-  max-width: 22rem;
-  width: 100%;
+  max-width: 24rem;
+  width: calc(100% - 2.5rem);
 }
 
 .toast-message {
   pointer-events: auto;
   display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius-md);
-  background: #0f172a;
-  border: 1px solid #1e293b;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-  font-size: 0.8125rem;
-  color: #ffffff;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem 1.125rem;
+  border-radius: 1rem;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.06) !important;
+  font-size: 0.875rem;
+  color: #0f172a !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.toast-message::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #2563eb;
+}
+
+.toast-message.toast-success::before {
+  background: #10b981 !important;
+}
+
+.toast-message.toast-error::before {
+  background: #ef4444 !important;
+}
+
+.toast-message.toast-warning::before {
+  background: #f59e0b !important;
+}
+
+.toast-message.toast-info::before {
+  background: #2563eb !important;
+}
+
+.toast-message:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px -4px rgba(15, 23, 42, 0.16), 0 10px 12px -6px rgba(15, 23, 42, 0.08) !important;
+}
+
+.toast-leaving {
+  opacity: 0;
+  transform: translateX(24px) scale(0.96);
+  transition: all 0.25s ease;
+}
+
+/* ==========================================================================
+   NOTIFICATION SIDE DRAWER / PANEL (Clean White Theme & High Visibility)
+   ========================================================================== */
+#notifDrawerBackdrop {
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#notificationSideDrawer {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  background-color: #ffffff !important;
+}
+
+.notif-card {
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.notif-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+.notif-card.is-unread {
+  background-color: #f8faff !important;
+  border-color: #bfdbfe !important;
+  border-left-width: 4px !important;
+  border-left-color: #2563eb !important;
+}
+
+.notif-card.is-read {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  border-left-width: 4px !important;
+  border-left-color: #cbd5e1 !important;
 }
 
 /* Login Card White Theme Inputs */

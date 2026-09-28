@@ -1,0 +1,121 @@
+<!-- =========================================================================
+     NOTIFICATION SIDE DRAWER / PANEL (Clean White Theme & High Visibility)
+     ========================================================================= -->
+<div id="notificationDrawerWrapper" class="hidden relative z-50">
+  <!-- Semi-transparent backdrop -->
+  <div
+    id="notifDrawerBackdrop"
+    onclick="closeNotificationDrawer()"
+    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity duration-300"
+    aria-hidden="true"
+  ></div>
+
+  <!-- Slide-Over Side Panel (Right side) -->
+  <aside
+    id="notificationSideDrawer"
+    class="fixed inset-y-0 right-0 z-50 w-full max-w-sm sm:max-w-md bg-white border-l border-slate-200 shadow-2xl flex flex-col transform transition-transform duration-300 translate-x-full"
+    aria-labelledby="notifDrawerTitle"
+    role="dialog"
+    aria-modal="true"
+  >
+    <!-- 1. Drawer Header -->
+    <div class="p-4 sm:p-5 border-b border-slate-200 bg-white flex items-center justify-between shrink-0">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center font-bold shadow-2xs">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 id="notifDrawerTitle" class="text-base font-extrabold text-slate-900 tracking-tight">Notifications</h2>
+            <span id="notifDrawerUnreadBadge" class="px-2 py-0.5 text-[11px] font-bold font-mono rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+              0 Unread
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-500 font-medium">Official updates &amp; clearance alerts</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1">
+        <button
+          type="button"
+          onclick="markAllNotificationsAsRead()"
+          class="px-2.5 py-1 text-xs font-semibold text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition"
+          title="Mark all as read"
+        >
+          Mark all read
+        </button>
+        <button
+          type="button"
+          onclick="closeNotificationDrawer()"
+          class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition"
+          aria-label="Close notifications panel"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. Sub-Header: Filter Tabs & Clear Action -->
+    <div class="px-4 py-2.5 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between shrink-0">
+      <div class="flex items-center gap-1.5 text-xs font-semibold">
+        <button
+          type="button"
+          id="notifTabBtn_all"
+          onclick="setNotificationFilter('all')"
+          class="px-3 py-1 rounded-lg bg-white text-slate-900 shadow-2xs border border-slate-200 font-bold transition"
+        >
+          All <span id="notifCount_all" class="text-slate-500 font-mono font-normal">(0)</span>
+        </button>
+        <button
+          type="button"
+          id="notifTabBtn_unread"
+          onclick="setNotificationFilter('unread')"
+          class="px-3 py-1 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white/60 transition"
+        >
+          Unread <span id="notifCount_unread" class="text-blue-600 font-mono font-bold">(0)</span>
+        </button>
+      </div>
+
+      <button
+        type="button"
+        onclick="clearAllNotifications()"
+        class="text-[11px] font-medium text-slate-400 hover:text-rose-600 transition"
+        title="Clear read notifications"
+      >
+        Clear Read
+      </button>
+    </div>
+
+    <!-- 3. Notification Items List Container -->
+    <div
+      id="notifDrawerListContainer"
+      class="flex-1 overflow-y-auto p-4 space-y-3 bg-white"
+    >
+      <!-- Dynamically rendered or clean white empty state -->
+      <div class="p-8 text-center bg-slate-50/70 rounded-2xl border border-dashed border-slate-200 space-y-2 my-auto">
+        <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-500 border border-blue-200 flex items-center justify-center mx-auto mb-3 shadow-2xs">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          </svg>
+        </div>
+        <div class="text-sm font-bold text-slate-800">No notifications right now</div>
+        <p class="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
+          You're all caught up! Updates regarding gate passes, leaves, and approvals will appear here.
+        </p>
+      </div>
+    </div>
+
+    <!-- 4. Drawer Footer -->
+    <div class="p-3 border-t border-slate-200 bg-slate-50/80 flex items-center justify-between text-[11px] text-slate-500 shrink-0 font-medium">
+      <span class="flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span>Real-time System Active</span>
+      </span>
+      <span class="font-mono text-[10px] text-slate-400">Campus PassPro</span>
+    </div>
+  </aside>
+</div>

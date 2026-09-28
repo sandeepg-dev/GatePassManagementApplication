@@ -95,19 +95,45 @@ function showToast(message, type = 'info', duration = 3500) {
   toast.className = `toast-message toast-${type}`;
 
   const icons = {
-    success: `<div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs shrink-0"><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></div>`,
-    error: `<div class="w-6 h-6 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center font-bold text-xs shrink-0"><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></div>`,
-    info: `<div class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs shrink-0"><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg></div>`,
-    warning: `<div class="w-6 h-6 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs shrink-0"><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg></div>`
+    success: `<div class="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs"><svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></div>`,
+    error: `<div class="w-7 h-7 rounded-xl bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs"><svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></div>`,
+    info: `<div class="w-7 h-7 rounded-xl bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs"><svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg></div>`,
+    warning: `<div class="w-7 h-7 rounded-xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs"><svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg></div>`
   };
+
+  const typeConfig = {
+    success: { label: 'Success', color: 'text-emerald-700', dot: 'bg-emerald-500' },
+    error: { label: 'Alert', color: 'text-rose-700', dot: 'bg-rose-500' },
+    info: { label: 'Notice', color: 'text-blue-700', dot: 'bg-blue-500' },
+    warning: { label: 'Warning', color: 'text-amber-700', dot: 'bg-amber-500' }
+  };
+  const cfg = typeConfig[type] || typeConfig.info;
 
   toast.innerHTML = `
     ${icons[type] || icons.info}
-    <div class="flex-1 text-xs md:text-sm font-semibold text-slate-800 leading-snug">${escapeHtml(message)}</div>
-    <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-700 p-1 rounded-md transition" aria-label="Close notification"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+    <div class="flex-1 min-w-0 pr-1">
+      <div class="flex items-center gap-1.5 mb-0.5">
+        <span class="text-[10px] font-bold uppercase tracking-wider font-mono ${cfg.color}">${cfg.label}</span>
+        <span class="w-1.5 h-1.5 rounded-full ${cfg.dot}"></span>
+      </div>
+      <div class="text-xs sm:text-sm font-bold text-slate-900 leading-snug break-words">${escapeHtml(message)}</div>
+    </div>
+    <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-700 hover:bg-slate-100 p-1.5 rounded-lg transition shrink-0" aria-label="Close notification">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+    </button>
   `;
 
   container.appendChild(toast);
+
+  // Also record into side notification drawer if available
+  if (typeof window.addSystemNotification === 'function') {
+    window.addSystemNotification({
+      title: cfg.label,
+      message,
+      category: type === 'success' || type === 'info' ? 'system' : type,
+      timestamp: new Date()
+    });
+  }
 
   const removeTimer = setTimeout(() => {
     toast.classList.add('toast-leaving');
@@ -116,7 +142,8 @@ function showToast(message, type = 'info', duration = 3500) {
     }, 250);
   }, duration);
 
-  toast.onclick = () => {
+  toast.onclick = (e) => {
+    if (e.target.closest('button')) return;
     clearTimeout(removeTimer);
     toast.classList.add('toast-leaving');
     setTimeout(() => {
