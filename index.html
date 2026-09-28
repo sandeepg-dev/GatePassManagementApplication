@@ -14,7 +14,7 @@
   <script src="https://unpkg.com/@zxing/library@latest"></script>
 
   <!-- External Design System Stylesheet -->
-  <link rel="stylesheet" href="/css/styles.css?v=3.0.0">
+  <link rel="stylesheet" href="/css/styles.css?v=3.4.1">
   <style>
     body { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; }
     .font-mono { font-family: 'JetBrains Mono', monospace; }
@@ -313,9 +313,9 @@
       />
     </div>
     <div class="leading-tight text-left">
-      <div class="text-xs sm:text-sm font-black text-slate-900 tracking-wide font-serif">GRT INSTITUTE</div>
-      <div class="text-[9px] sm:text-[10px] font-bold text-slate-700 tracking-wider">OF ENGINEERING AND TECHNOLOGY</div>
-      <div class="text-[7px] sm:text-[8px] font-mono text-slate-500 uppercase tracking-widest">TIRUTTANI | AN AUTONOMOUS INSTITUTION</div>
+      <div class="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight">GRT INSTITUTE</div>
+      <div class="text-xs font-semibold text-slate-600 tracking-wide">OF ENGINEERING AND TECHNOLOGY</div>
+      <div class="text-[10px] font-mono text-slate-500 uppercase tracking-wider">TIRUTTANI &bull; AUTONOMOUS INSTITUTION</div>
     </div>
   </div>
 
@@ -343,11 +343,11 @@
 
     <!-- Student Profile Pill & Dropdown -->
     <div class="relative">
-      <button type="button" onclick="toggleStuProfileMenu()" class="flex items-center gap-2 cursor-pointer p-1 rounded-lg hover:bg-slate-100 transition">
+      <button type="button" onclick="toggleStuProfileMenu()" class="flex items-center gap-2.5 cursor-pointer p-1.5 rounded-xl hover:bg-slate-100 transition">
         <div id="stuAvatarInitials" class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0">-</div>
         <div class="hidden sm:block text-left leading-tight">
-          <div id="stuProfileName" class="text-xs font-bold text-slate-900">-</div>
-          <div id="stuProfileMeta" class="text-[10px] text-slate-500 font-mono">-</div>
+          <div id="stuProfileName" class="text-xs sm:text-sm font-bold text-slate-900">-</div>
+          <div id="stuProfileMeta" class="text-xs text-slate-500 font-mono">-</div>
         </div>
         <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
       </button>
@@ -604,45 +604,45 @@
   <section id="unifiedRequestsSection" class="stu-card p-6 sm:p-7 space-y-5">
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-100">
       <div>
-        <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">My Requests &amp; Approval Status</h2>
-        <p class="text-xs text-slate-500">Track all your submitted Gate Pass, Leave, and On-Duty requests with real-time review stages.</p>
+        <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">My Requests &amp; Approval Status</h2>
+        <p class="text-sm text-slate-500 mt-1">Track all your submitted Gate Pass, Leave, and On-Duty requests with real-time review stages.</p>
       </div>
 
       <!-- Search and Filter Controls -->
       <div class="flex flex-col sm:flex-row sm:items-center gap-3">
         <!-- Filter Tabs -->
-        <div class="flex items-center gap-1 p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs">
+        <div class="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200 text-sm">
           <button
             type="button"
             id="tabBtn_all"
             onclick="setUnifiedRequestFilter('all')"
-            class="px-3 py-1.5 rounded-lg font-bold bg-white text-slate-900 shadow-2xs transition"
+            class="px-3.5 py-1.5 rounded-lg font-bold bg-white text-slate-900 shadow-2xs transition"
           >
-            All <span id="unifiedCount_all" class="ml-1 text-[10px] text-slate-500 font-mono">(0)</span>
+            All <span id="unifiedCount_all" class="ml-1 text-xs text-slate-500 font-mono">(0)</span>
           </button>
           <button
             type="button"
             id="tabBtn_gatepass"
             onclick="setUnifiedRequestFilter('gatepass')"
-            class="px-3 py-1.5 rounded-lg font-medium text-slate-600 hover:text-slate-900 transition"
+            class="px-3.5 py-1.5 rounded-lg font-medium text-slate-600 hover:text-slate-900 transition"
           >
-            Gate Pass <span id="unifiedCount_gatepass" class="ml-1 text-[10px] text-slate-500 font-mono">(0)</span>
+            Gate Pass <span id="unifiedCount_gatepass" class="ml-1 text-xs text-slate-500 font-mono">(0)</span>
           </button>
           <button
             type="button"
             id="tabBtn_leave"
             onclick="setUnifiedRequestFilter('leave')"
-            class="px-3 py-1.5 rounded-lg font-medium text-slate-600 hover:text-slate-900 transition"
+            class="px-3.5 py-1.5 rounded-lg font-medium text-slate-600 hover:text-slate-900 transition"
           >
-            Leave <span id="unifiedCount_leave" class="ml-1 text-[10px] text-slate-500 font-mono">(0)</span>
+            Leave <span id="unifiedCount_leave" class="ml-1 text-xs text-slate-500 font-mono">(0)</span>
           </button>
           <button
             type="button"
             id="tabBtn_onduty"
             onclick="setUnifiedRequestFilter('onduty')"
-            class="px-3 py-1.5 rounded-lg font-medium text-slate-600 hover:text-slate-900 transition"
+            class="px-3.5 py-1.5 rounded-lg font-medium text-slate-600 hover:text-slate-900 transition"
           >
-            OD <span id="unifiedCount_onduty" class="ml-1 text-[10px] text-slate-500 font-mono">(0)</span>
+            OD <span id="unifiedCount_onduty" class="ml-1 text-xs text-slate-500 font-mono">(0)</span>
           </button>
         </div>
 
@@ -658,7 +658,7 @@
             id="unifiedSearchInput"
             oninput="onUnifiedSearchInput(this.value)"
             placeholder="Search requests..."
-            class="app-search-input w-full pl-10 pr-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-900 placeholder:text-slate-500 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 shadow-xs transition"
+            class="app-search-input w-full pl-10 pr-3.5 py-2 bg-white border border-slate-300 rounded-xl text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 shadow-xs transition"
           />
         </div>
       </div>
@@ -793,9 +793,9 @@
         <!-- Left Sidebar (Role Header & High-Readability Navigation) -->
         <aside class="w-full md:w-68 lg:w-72 shrink-0 space-y-4" id="authSidebarAside">
           <!-- Role & Jurisdiction Card -->
-          <div class="auth-card p-4 space-y-1">
-            <div id="authSidebarRoleTitle" class="text-sm font-bold text-slate-900 tracking-tight">-</div>
-            <div id="authSidebarJurisdictionBadge" class="text-[11px] font-mono text-slate-500 font-medium break-words">-</div>
+          <div class="auth-card p-4 sm:p-5 space-y-1.5">
+            <div id="authSidebarRoleTitle" class="text-base font-extrabold text-slate-900 tracking-tight">-</div>
+            <div id="authSidebarJurisdictionBadge" class="text-xs font-mono text-slate-500 font-medium break-words">-</div>
           </div>
 
           <!-- Vertical Navigation Menu with Increased Readable Font Size -->
@@ -937,44 +937,44 @@
                   type="button"
                   onclick="setAuthoritySubFilter('gatepass')"
                   id="authTabBtn_gatepass"
-                  class="auth-filter-tab px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 auth-tab-inactive"
+                  class="auth-filter-tab px-4 py-2.5 rounded-xl text-sm font-semibold transition flex items-center gap-2 auth-tab-inactive"
                 >
-                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                   <span>Gate Pass Requests</span>
-                  <span id="authCountBadge_gatepass" class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 font-mono">0</span>
+                  <span id="authCountBadge_gatepass" class="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 font-mono">0</span>
                 </button>
 
                 <button
                   type="button"
                   onclick="setAuthoritySubFilter('leave')"
                   id="authTabBtn_leave"
-                  class="auth-filter-tab px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 auth-tab-active shadow-sm"
+                  class="auth-filter-tab px-4 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2 auth-tab-active shadow-sm"
                 >
-                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                   <span>Leave Requests</span>
-                  <span id="authCountBadge_leave" class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-200 text-blue-900 font-mono">0</span>
+                  <span id="authCountBadge_leave" class="px-2 py-0.5 rounded-full text-xs font-bold bg-blue-200 text-blue-900 font-mono">0</span>
                 </button>
 
                 <button
                   type="button"
                   onclick="setAuthoritySubFilter('onduty')"
                   id="authTabBtn_onduty"
-                  class="auth-filter-tab px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 auth-tab-inactive"
+                  class="auth-filter-tab px-4 py-2.5 rounded-xl text-sm font-semibold transition flex items-center gap-2 auth-tab-inactive"
                 >
-                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                   <span>OD Requests</span>
-                  <span id="authCountBadge_onduty" class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 font-mono">0</span>
+                  <span id="authCountBadge_onduty" class="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 font-mono">0</span>
                 </button>
 
                 <button
                   type="button"
                   onclick="setAuthoritySubFilter('all')"
                   id="authTabBtn_all"
-                  class="auth-filter-tab px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 auth-tab-inactive"
+                  class="auth-filter-tab px-4 py-2.5 rounded-xl text-sm font-semibold transition flex items-center gap-2 auth-tab-inactive"
                 >
-                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
                   <span>All Requests</span>
-                  <span id="authCountBadge_all" class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 font-mono">0</span>
+                  <span id="authCountBadge_all" class="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 font-mono">0</span>
                 </button>
               </div>
 
@@ -991,16 +991,16 @@
                     id="authSearchInput"
                     oninput="onAuthoritySearchInput(this.value)"
                     placeholder="Search by roll number, name, reason..."
-                    class="app-search-input w-full pl-10 pr-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-900 placeholder:text-slate-500 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 shadow-xs transition"
+                    class="app-search-input w-full pl-10 pr-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 shadow-xs transition"
                   >
                 </div>
                 <button
                   type="button"
                   onclick="fetchAuthorityData()"
-                  class="px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs active:scale-95 cursor-pointer shrink-0"
+                  class="px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-sm font-semibold transition flex items-center gap-1.5 shadow-xs active:scale-95 cursor-pointer shrink-0"
                   title="Refresh records"
                 >
-                  <svg class="w-3.5 h-3.5 auth-refresh-icon text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                  <svg class="w-4 h-4 auth-refresh-icon text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                   <span class="hidden sm:inline">Refresh</span>
                 </button>
               </div>
@@ -1627,31 +1627,31 @@
       <!-- Departure Date & Time -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
         <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1">Departure Date <span class="text-rose-500">*</span></label>
-          <input type="date" id="gpDepDate" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-blue-600 transition" />
+          <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider font-mono">Departure Date <span class="text-rose-500">*</span></label>
+          <input type="date" id="gpDepDate" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition shadow-2xs" />
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1">Departure Time <span class="text-rose-500">*</span></label>
-          <input type="time" id="gpDepTime" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 font-mono focus:outline-none focus:border-blue-600 transition" />
+          <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider font-mono">Departure Time <span class="text-rose-500">*</span></label>
+          <input type="time" id="gpDepTime" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-800 font-mono focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition shadow-2xs" />
         </div>
       </div>
 
       <!-- Return Date & Time (Hostellers ONLY - Hidden for Day Scholars) -->
       <div id="gpHostelReturnFields" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
         <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1">Return Date <span class="text-rose-500">*</span></label>
-          <input type="date" id="gpRetDate" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-blue-600 transition" />
+          <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider font-mono">Return Date <span class="text-rose-500">*</span></label>
+          <input type="date" id="gpRetDate" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition shadow-2xs" />
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1">Return Time <span class="text-rose-500">*</span></label>
-          <input type="time" id="gpRetTime" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 font-mono focus:outline-none focus:border-blue-600 transition" />
+          <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider font-mono">Return Time <span class="text-rose-500">*</span></label>
+          <input type="time" id="gpRetTime" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-800 font-mono focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition shadow-2xs" />
         </div>
       </div>
 
       <!-- Reason / Purpose -->
       <div>
-        <label class="block text-xs font-semibold text-slate-700 mb-1">Reason <span class="text-rose-500">*</span></label>
-        <textarea id="gatePassReason" rows="3" placeholder="Enter reason for departure..." class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-blue-600 transition"></textarea>
+        <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider font-mono">Reason <span class="text-rose-500">*</span></label>
+        <textarea id="gatePassReason" rows="3" placeholder="Enter reason for departure..." class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition shadow-2xs"></textarea>
       </div>
 
       <!-- Hidden compatibility elements -->
@@ -1665,12 +1665,12 @@
 
     <!-- Modal Footer Actions -->
     <div class="flex items-center justify-end gap-3 pt-3.5 border-t border-slate-100">
-      <button type="button" onclick="closeGatePassRequestModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition">
+      <button type="button" onclick="closeGatePassRequestModal()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 rounded-xl text-sm font-bold transition">
         Cancel
       </button>
-      <button type="button" onclick="submitPopupGatePassRequest()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-2 active:scale-95">
+      <button type="button" onclick="submitPopupGatePassRequest()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-sm font-bold transition shadow-xs flex items-center gap-2 active:scale-95 cursor-pointer">
         <span>Submit Request</span>
-        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
       </button>
     </div>
   </div>
@@ -1732,18 +1732,18 @@
     <div class="space-y-4">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
         <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1">Leave From Date <span class="text-rose-500">*</span></label>
-          <input type="date" id="leaveFromDate" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-purple-600 transition" />
+          <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider font-mono">Leave From Date <span class="text-rose-500">*</span></label>
+          <input type="date" id="leaveFromDate" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100 transition shadow-2xs" />
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1">Leave To Date <span class="text-rose-500">*</span></label>
-          <input type="date" id="leaveToDate" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-purple-600 transition" />
+          <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider font-mono">Leave To Date <span class="text-rose-500">*</span></label>
+          <input type="date" id="leaveToDate" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100 transition shadow-2xs" />
         </div>
       </div>
 
       <div>
-        <label class="block text-xs font-semibold text-slate-700 mb-1">Reason <span class="text-rose-500">*</span></label>
-        <textarea id="leaveReason" rows="3" placeholder="Enter reason for leave..." class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-purple-600 transition"></textarea>
+        <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider font-mono">Reason <span class="text-rose-500">*</span></label>
+        <textarea id="leaveReason" rows="3" placeholder="Enter reason for leave..." class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100 transition shadow-2xs"></textarea>
       </div>
 
       <!-- Hidden compatibility elements -->
@@ -1754,12 +1754,12 @@
 
     <!-- Modal Footer Actions -->
     <div class="flex items-center justify-end gap-3 pt-3.5 border-t border-slate-100">
-      <button type="button" onclick="closeLeaveRequestModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition">
+      <button type="button" onclick="closeLeaveRequestModal()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 rounded-xl text-sm font-bold transition">
         Cancel
       </button>
-      <button type="button" onclick="submitPopupLeaveRequest()" class="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-2 active:scale-95">
+      <button type="button" onclick="submitPopupLeaveRequest()" class="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-xl text-sm font-bold transition shadow-xs flex items-center gap-2 active:scale-95 cursor-pointer">
         <span>Submit Request</span>
-        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
       </button>
     </div>
   </div>
@@ -2070,17 +2070,17 @@
       <!-- OPTION 1: Single Date / Time -->
       <div id="odSectionSingle" class="space-y-3.5">
         <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1">Date <span class="text-rose-500">*</span></label>
-          <input type="date" id="odSingleDate" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-emerald-600 transition" />
+          <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider font-mono">Date <span class="text-rose-500">*</span></label>
+          <input type="date" id="odSingleDate" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 transition shadow-2xs" />
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">From Time <span class="text-rose-500">*</span></label>
-            <input type="time" id="odSingleFromTime" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 font-mono focus:outline-none focus:border-emerald-600 transition" />
+            <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider font-mono">From Time <span class="text-rose-500">*</span></label>
+            <input type="time" id="odSingleFromTime" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-800 font-mono focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 transition shadow-2xs" />
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">To Time <span class="text-rose-500">*</span></label>
-            <input type="time" id="odSingleToTime" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 font-mono focus:outline-none focus:border-emerald-600 transition" />
+            <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider font-mono">To Time <span class="text-rose-500">*</span></label>
+            <input type="time" id="odSingleToTime" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-800 font-mono focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 transition shadow-2xs" />
           </div>
         </div>
       </div>
@@ -2089,30 +2089,30 @@
       <div id="odSectionRange" class="hidden space-y-3.5">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">From Date <span class="text-rose-500">*</span></label>
-            <input type="date" id="odRangeFromDate" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-emerald-600 transition" />
+            <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider font-mono">From Date <span class="text-rose-500">*</span></label>
+            <input type="date" id="odRangeFromDate" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 transition shadow-2xs" />
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">To Date <span class="text-rose-500">*</span></label>
-            <input type="date" id="odRangeToDate" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-emerald-600 transition" />
+            <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider font-mono">To Date <span class="text-rose-500">*</span></label>
+            <input type="date" id="odRangeToDate" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 transition shadow-2xs" />
           </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">From Time <span class="text-rose-500">*</span></label>
-            <input type="time" id="odRangeFromTime" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 font-mono focus:outline-none focus:border-emerald-600 transition" />
+            <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider font-mono">From Time <span class="text-rose-500">*</span></label>
+            <input type="time" id="odRangeFromTime" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-800 font-mono focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 transition shadow-2xs" />
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">To Time <span class="text-rose-500">*</span></label>
-            <input type="time" id="odRangeToTime" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 font-mono focus:outline-none focus:border-emerald-600 transition" />
+            <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider font-mono">To Time <span class="text-rose-500">*</span></label>
+            <input type="time" id="odRangeToTime" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-800 font-mono focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 transition shadow-2xs" />
           </div>
         </div>
       </div>
 
       <!-- Reason / Purpose -->
       <div>
-        <label class="block text-xs font-semibold text-slate-700 mb-1">Reason <span class="text-rose-500">*</span></label>
-        <textarea id="odReason" rows="3" placeholder="Enter reason / purpose for OD request..." class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-emerald-600 transition"></textarea>
+        <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider font-mono">Reason <span class="text-rose-500">*</span></label>
+        <textarea id="odReason" rows="3" placeholder="Enter reason / purpose for OD request..." class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 transition shadow-2xs"></textarea>
       </div>
 
       <!-- Hidden compatibility elements for automated tests and backend routing -->
@@ -2138,12 +2138,12 @@
 
     <!-- Modal Footer Actions -->
     <div class="flex items-center justify-end gap-3 pt-3.5 border-t border-slate-100">
-      <button type="button" onclick="closeODRequestModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition">
+      <button type="button" onclick="closeODRequestModal()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 rounded-xl text-sm font-bold transition">
         Cancel
       </button>
-      <button type="button" onclick="submitPopupODRequest()" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-2 active:scale-95">
+      <button type="button" onclick="submitPopupODRequest()" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl text-sm font-bold transition shadow-xs flex items-center gap-2 active:scale-95 cursor-pointer">
         <span>Submit OD Request</span>
-        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
       </button>
     </div>
   </div>
@@ -2168,35 +2168,35 @@
       </button>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-      <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
-        <span class="text-slate-400 block text-[10px]">Student Name</span>
-        <span id="profName" class="font-bold text-slate-900 text-sm">-</span>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+      <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+        <span class="text-slate-500 block text-xs font-medium uppercase tracking-wider font-mono">Student Name</span>
+        <span id="profName" class="font-bold text-slate-900 text-sm mt-0.5 block">-</span>
       </div>
-      <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
-        <span class="text-slate-400 block text-[10px]">Roll / Register Number</span>
-        <span id="profRoll" class="font-bold font-mono text-slate-900 text-sm">-</span>
+      <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+        <span class="text-slate-500 block text-xs font-medium uppercase tracking-wider font-mono">Roll / Register Number</span>
+        <span id="profRoll" class="font-bold font-mono text-slate-900 text-sm mt-0.5 block">-</span>
       </div>
-      <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
-        <span class="text-slate-400 block text-[10px]">Department &amp; Section</span>
-        <span id="profDeptSec" class="font-bold text-slate-900">-</span>
+      <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+        <span class="text-slate-500 block text-xs font-medium uppercase tracking-wider font-mono">Department &amp; Section</span>
+        <span id="profDeptSec" class="font-bold text-slate-900 text-sm mt-0.5 block">-</span>
       </div>
-      <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
-        <span class="text-slate-400 block text-[10px]">Accommodation</span>
-        <span id="profAccom" class="font-bold text-slate-900">-</span>
+      <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+        <span class="text-slate-500 block text-xs font-medium uppercase tracking-wider font-mono">Accommodation</span>
+        <span id="profAccom" class="font-bold text-slate-900 text-sm mt-0.5 block">-</span>
       </div>
-      <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
-        <span class="text-slate-400 block text-[10px]">Assigned Counselor</span>
-        <span id="profCounselor" class="font-bold text-slate-900">-</span>
+      <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+        <span class="text-slate-500 block text-xs font-medium uppercase tracking-wider font-mono">Assigned Counselor</span>
+        <span id="profCounselor" class="font-bold text-slate-900 text-sm mt-0.5 block">-</span>
       </div>
-      <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
-        <span class="text-slate-400 block text-[10px]">Parent / Guardian Contact</span>
-        <span id="profParent" class="font-bold font-mono text-slate-900">-</span>
+      <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+        <span class="text-slate-500 block text-xs font-medium uppercase tracking-wider font-mono">Parent / Guardian Contact</span>
+        <span id="profParent" class="font-bold font-mono text-slate-900 text-sm mt-0.5 block">-</span>
       </div>
     </div>
 
     <div class="flex justify-end pt-2">
-      <button type="button" onclick="closeStudentProfileModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition">
+      <button type="button" onclick="closeStudentProfileModal()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 rounded-xl text-sm font-bold transition">
         Close
       </button>
     </div>
@@ -2205,17 +2205,17 @@
 
 
 <!-- STUDENT REQUEST DETAIL & APPROVAL WORKFLOW MODAL -->
-<div id="stuRequestDetailModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-  <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-xl w-full p-6 text-slate-800 space-y-5 max-h-[92vh] overflow-y-auto">
+<div id="stuRequestDetailModal" class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto modal-backdrop-animate">
+  <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-xl w-full p-6 sm:p-7 text-slate-800 space-y-5 max-h-[92vh] overflow-y-auto modal-content-animate my-auto">
     <!-- Header -->
     <div class="flex items-center justify-between pb-3 border-b border-slate-100">
       <div>
         <div class="flex items-center gap-2">
-          <span id="stuModalReqId" class="font-mono text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded">-</span>
-          <span id="stuModalAccomBadge" class="px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">-</span>
+          <span id="stuModalReqId" class="font-mono text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-lg">-</span>
+          <span id="stuModalAccomBadge" class="px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">-</span>
         </div>
-        <h3 id="stuModalHeading" class="text-base font-bold text-slate-900 mt-1">Gate Pass Request Details</h3>
-        <p id="stuModalAppliedOn" class="text-[11px] text-slate-500 font-mono">Applied on: -</p>
+        <h3 id="stuModalHeading" class="text-lg font-bold text-slate-900 mt-1.5">Gate Pass Request Details</h3>
+        <p id="stuModalAppliedOn" class="text-xs text-slate-500 font-mono">Applied on: -</p>
       </div>
       <button
         type="button"
@@ -2228,91 +2228,91 @@
     </div>
 
     <!-- Current Status & Approval Authority Banner -->
-    <div id="stuModalStatusBanner" class="p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-amber-50/80 border-amber-200 text-amber-900">
+    <div id="stuModalStatusBanner" class="p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-amber-50/80 border-amber-200 text-amber-900">
       <div>
-        <div class="text-[10px] uppercase font-bold tracking-wider opacity-75">Current Clearance Status</div>
-        <div id="stuModalCurrentStatus" class="text-sm font-extrabold flex items-center gap-1.5 mt-0.5">-</div>
+        <div class="text-xs uppercase font-bold tracking-wider font-mono opacity-80">Current Clearance Status</div>
+        <div id="stuModalCurrentStatus" class="text-base font-extrabold flex items-center gap-1.5 mt-0.5">-</div>
       </div>
       <div class="sm:text-right">
-        <div class="text-[10px] uppercase font-bold tracking-wider opacity-75">Current Approval Authority</div>
-        <div id="stuModalCurrentAuthority" class="text-xs font-bold font-mono text-slate-800">-</div>
+        <div class="text-xs uppercase font-bold tracking-wider font-mono opacity-80">Current Approval Authority</div>
+        <div id="stuModalCurrentAuthority" class="text-sm font-bold font-mono text-slate-800">-</div>
       </div>
     </div>
 
     <!-- Rejection Banner (Shown only if rejected) -->
-    <div id="stuModalRejectionBox" class="hidden p-3.5 bg-rose-50 border border-rose-200 rounded-xl space-y-1 text-xs">
-      <div class="font-bold text-rose-900 flex items-center gap-1.5">
+    <div id="stuModalRejectionBox" class="hidden p-4 bg-rose-50 border border-rose-200 rounded-xl space-y-1.5 text-xs">
+      <div class="font-bold text-rose-900 flex items-center gap-1.5 text-sm">
         <svg class="w-4 h-4 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
         <span id="stuModalRejectionTitle">Application Rejected</span>
       </div>
-      <div id="stuModalRejectionReason" class="text-rose-800 leading-relaxed pl-5 font-medium">-</div>
+      <div id="stuModalRejectionReason" class="text-rose-800 leading-relaxed pl-5 font-medium text-xs sm:text-sm">-</div>
     </div>
 
     <!-- Visual Multi-Tier Sequential Approval Workflow Stepper -->
     <div class="space-y-2">
-      <div class="text-xs font-bold text-slate-800 uppercase tracking-wider text-[10px]">Sequential Approval Workflow</div>
-      <div id="stuModalWorkflowStepper" class="p-3 bg-slate-50 rounded-xl border border-slate-200 overflow-x-auto">
+      <div class="text-xs font-bold text-slate-700 uppercase tracking-wider font-mono">Sequential Approval Workflow</div>
+      <div id="stuModalWorkflowStepper" class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 overflow-x-auto">
         <!-- Dynamic Stepper rendered via JS based on Day Scholar vs Hosteller -->
       </div>
     </div>
 
     <!-- Student & Request Particulars (All 10 Fields) -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-slate-50 p-4 rounded-xl border border-slate-200">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-sm bg-slate-50 p-4 sm:p-5 rounded-xl border border-slate-200">
       <div>
-        <span class="text-slate-500 font-medium block text-[10px]">Registration Number</span>
-        <span id="stuModalRoll" class="font-bold font-mono text-slate-900 text-xs">-</span>
+        <span class="text-slate-500 font-medium block text-xs uppercase tracking-wider font-mono">Registration Number</span>
+        <span id="stuModalRoll" class="font-bold font-mono text-slate-900 text-sm mt-0.5 block">-</span>
       </div>
       <div>
-        <span class="text-slate-500 font-medium block text-[10px]">Student Full Name</span>
-        <span id="stuModalName" class="font-bold text-slate-900 text-xs">-</span>
+        <span class="text-slate-500 font-medium block text-xs uppercase tracking-wider font-mono">Student Full Name</span>
+        <span id="stuModalName" class="font-bold text-slate-900 text-sm mt-0.5 block">-</span>
       </div>
       <div>
-        <span class="text-slate-500 font-medium block text-[10px]">Father's / Guardian's Name</span>
-        <span id="stuModalFather" class="font-bold text-slate-900 text-xs">-</span>
+        <span class="text-slate-500 font-medium block text-xs uppercase tracking-wider font-mono">Father's / Guardian's Name</span>
+        <span id="stuModalFather" class="font-bold text-slate-900 text-sm mt-0.5 block">-</span>
       </div>
       <div>
-        <span class="text-slate-500 font-medium block text-[10px]">Parent's Phone Number</span>
-        <span id="stuModalPhone" class="font-bold font-mono text-slate-900 text-xs">-</span>
+        <span class="text-slate-500 font-medium block text-xs uppercase tracking-wider font-mono">Parent's Phone Number</span>
+        <span id="stuModalPhone" class="font-bold font-mono text-slate-900 text-sm mt-0.5 block">-</span>
       </div>
       <div>
-        <span class="text-slate-500 font-medium block text-[10px]">Departure Date &amp; Time</span>
-        <span id="stuModalDeparture" class="font-semibold text-slate-900 text-xs">-</span>
+        <span class="text-slate-500 font-medium block text-xs uppercase tracking-wider font-mono">Departure Date &amp; Time</span>
+        <span id="stuModalDeparture" class="font-semibold text-slate-900 text-sm mt-0.5 block">-</span>
       </div>
       <div>
-        <span class="text-slate-500 font-medium block text-[10px]">Return Date &amp; Time</span>
-        <span id="stuModalReturn" class="font-semibold text-slate-900 text-xs">-</span>
+        <span class="text-slate-500 font-medium block text-xs uppercase tracking-wider font-mono">Return Date &amp; Time</span>
+        <span id="stuModalReturn" class="font-semibold text-slate-900 text-sm mt-0.5 block">-</span>
       </div>
       <div class="sm:col-span-2">
-        <span class="text-slate-500 font-medium block text-[10px]">Place / Destination</span>
-        <span id="stuModalDestination" class="font-semibold text-slate-900 text-xs">-</span>
+        <span class="text-slate-500 font-medium block text-xs uppercase tracking-wider font-mono">Place / Destination</span>
+        <span id="stuModalDestination" class="font-semibold text-slate-900 text-sm mt-0.5 block">-</span>
       </div>
       <div class="sm:col-span-2">
-        <span class="text-slate-500 font-medium block text-[10px]">Reason / Purpose</span>
-        <span id="stuModalReason" class="font-medium text-slate-800 text-xs leading-relaxed block mt-0.5 bg-white p-2.5 rounded-lg border border-slate-200">-</span>
+        <span class="text-slate-500 font-medium block text-xs uppercase tracking-wider font-mono">Reason / Purpose</span>
+        <span id="stuModalReason" class="font-medium text-slate-800 text-sm leading-relaxed block mt-1 bg-white p-3 rounded-lg border border-slate-200">-</span>
       </div>
-      <div id="stuModalHostelInfoRow" class="hidden sm:col-span-2 p-2.5 bg-emerald-50/70 border border-emerald-200 rounded-lg text-emerald-900">
-        <span class="font-bold block text-[10px]">Hostel Particulars:</span>
-        <span id="stuModalHostelDetails" class="text-xs font-medium">-</span>
+      <div id="stuModalHostelInfoRow" class="hidden sm:col-span-2 p-3 bg-emerald-50/70 border border-emerald-200 rounded-lg text-emerald-900">
+        <span class="font-bold block text-xs uppercase tracking-wider font-mono">Hostel Particulars:</span>
+        <span id="stuModalHostelDetails" class="text-sm font-medium mt-0.5 block">-</span>
       </div>
     </div>
 
     <!-- Action Buttons -->
-    <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100">
+    <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
       <div class="flex items-center gap-2">
         <button
           type="button"
           id="stuModalViewLetterBtn"
-          class="px-3 py-2 bg-white hover:bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 shadow-2xs transition active:scale-95 flex items-center gap-1.5"
+          class="px-3.5 py-2.5 bg-white hover:bg-slate-50 active:bg-slate-100 border border-slate-300 rounded-xl text-sm font-bold text-slate-700 shadow-2xs transition active:scale-95 flex items-center gap-1.5"
         >
-          <svg class="w-3.5 h-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+          <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
           <span>View Letter</span>
         </button>
         <button
           type="button"
           id="stuModalDownloadLetterBtn"
-          class="px-3 py-2 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl text-xs font-bold text-blue-800 shadow-2xs transition active:scale-95 flex items-center gap-1.5"
+          class="px-3.5 py-2.5 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 border border-blue-200 rounded-xl text-sm font-bold text-blue-800 shadow-2xs transition active:scale-95 flex items-center gap-1.5"
         >
-          <svg class="w-3.5 h-3.5 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          <svg class="w-4 h-4 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
           <span>Download Letter (PDF)</span>
         </button>
       </div>
@@ -2321,15 +2321,15 @@
         <button
           type="button"
           id="stuModalPassCardBtn"
-          class="hidden px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1.5 active:scale-95"
+          class="hidden px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl text-sm font-bold transition shadow-xs flex items-center gap-1.5 active:scale-95"
         >
-          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           <span>View Gate Pass</span>
         </button>
         <button
           type="button"
           onclick="closeStudentRequestDetailModal()"
-          class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition"
+          class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 rounded-xl text-sm font-bold transition"
         >
           Close
         </button>
@@ -2696,33 +2696,33 @@
 
 
 <!-- REJECTION REASON MODAL -->
-<div id="rejectModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-  <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 md:p-6 max-w-md w-full shadow-xl text-white space-y-4">
-    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+<div id="rejectModal" class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto modal-backdrop-animate">
+  <div class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-7 max-w-md w-full shadow-2xl text-slate-800 space-y-4 modal-content-animate my-auto">
+    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
       <div class="flex items-center gap-2.5">
-        <div class="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-400 flex items-center justify-center border border-rose-500/20">
+        <div class="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center border border-rose-200">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </div>
-        <h3 id="rejectModalTitle" class="text-sm font-bold text-white">Reject Leave Application</h3>
+        <h3 id="rejectModalTitle" class="text-base font-bold text-slate-900">Reject Application</h3>
       </div>
-      <button onclick="closeRejectModal()" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition" aria-label="Close dialog">
+      <button onclick="closeRejectModal()" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition" aria-label="Close dialog">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
       </button>
     </div>
-    <p class="text-xs text-slate-400 leading-relaxed">Select or type the official institutional reason for rejecting this requisition.</p>
+    <p class="text-xs sm:text-sm text-slate-500 leading-relaxed">Select or type the official institutional reason for rejecting this requisition.</p>
 
     <!-- Preset Reason Chips -->
     <div id="presetChipsContainer" class="flex flex-wrap gap-1.5">
-      <button type="button" onclick="setRejectReason('Parent disclaimed permission during verification call')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 hover:text-rose-300 rounded-md text-xs font-medium text-slate-300 border border-slate-700 transition">
+      <button type="button" onclick="setRejectReason('Parent disclaimed permission during verification call')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 rounded-lg text-xs font-semibold text-slate-700 border border-slate-200 transition">
         Parent Disclaimed
       </button>
-      <button type="button" onclick="setRejectReason('Inadequate academic attendance (<75%)')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 hover:text-rose-300 rounded-md text-xs font-medium text-slate-300 border border-slate-700 transition">
+      <button type="button" onclick="setRejectReason('Inadequate academic attendance (<75%)')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 rounded-lg text-xs font-semibold text-slate-700 border border-slate-200 transition">
         Inadequate Attendance
       </button>
-      <button type="button" onclick="setRejectReason('Scheduled internal examination / lab assessment')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 hover:text-rose-300 rounded-md text-xs font-medium text-slate-300 border border-slate-700 transition">
+      <button type="button" onclick="setRejectReason('Scheduled internal examination / lab assessment')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 rounded-lg text-xs font-semibold text-slate-700 border border-slate-200 transition">
         Exam Scheduled
       </button>
-      <button type="button" onclick="setRejectReason('Disciplinary hold by department authority')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 hover:text-rose-300 rounded-md text-xs font-medium text-slate-300 border border-slate-700 transition">
+      <button type="button" onclick="setRejectReason('Disciplinary hold by department authority')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 rounded-lg text-xs font-semibold text-slate-700 border border-slate-200 transition">
         Disciplinary Hold
       </button>
     </div>
@@ -2731,21 +2731,21 @@
     <input type="hidden" id="rejectRoleLabel" value="" />
     <input type="hidden" id="rejectIsOD" value="false" />
     <div>
-      <label class="block text-xs font-semibold text-slate-300 mb-1.5">
-        Official Rejection Statement <span class="text-rose-400">*</span>
+      <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider font-mono">
+        Official Rejection Statement <span class="text-rose-500">*</span>
       </label>
       <textarea
         id="rejectReasonInput"
         rows="3"
         placeholder="State reason clearly..."
-        class="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-lg text-xs md:text-sm text-white focus:outline-none focus:border-rose-500 transition"
+        class="w-full p-3 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-100 transition shadow-2xs"
       ></textarea>
     </div>
-    <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
-      <button onclick="closeRejectModal()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs md:text-sm font-medium transition active:scale-98">
+    <div class="flex justify-end gap-2.5 pt-2 border-t border-slate-100">
+      <button onclick="closeRejectModal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 rounded-xl text-sm font-bold transition">
         Cancel
       </button>
-      <button onclick="submitRejectPass()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs md:text-sm font-semibold transition active:scale-98">
+      <button onclick="submitRejectPass()" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white rounded-xl text-sm font-bold shadow-xs transition">
         Confirm Rejection
       </button>
     </div>
@@ -2760,27 +2760,27 @@
   </script>
 
   <!-- Application Modular Components -->
-  <script src="/js/utils.js?v=3.3.0"></script>
-  <script src="/js/services/notificationService.js?v=3.3.0"></script>
-  <script src="/js/api.js?v=3.3.0"></script>
-  <script src="/js/services/pdfService.js?v=3.3.0"></script>
-  <script src="/js/services/attendanceExcelService.js?v=3.3.0"></script>
-  <script src="/js/modules/student/studentNavigation.js?v=3.3.0"></script>
-  <script src="/js/modules/student/studentForms.js?v=3.3.0"></script>
-  <script src="/js/modules/student/studentRequests.js?v=3.3.0"></script>
-  <script src="/js/modules/student/studentModals.js?v=3.3.0"></script>
-  <script src="/js/modules/studentPortal.js?v=3.3.0"></script>
-  <script src="/js/modules/onDutyPortal.js?v=3.3.0"></script>
-  <script src="/js/modules/counselorQueue.js?v=3.3.0"></script>
-  <script src="/js/modules/advisorQueue.js?v=3.3.0"></script>
-  <script src="/js/modules/hodQueue.js?v=3.3.0"></script>
-  <script src="/js/modules/principalQueue.js?v=3.3.0"></script>
-  <script src="/js/modules/wardenQueue.js?v=3.3.0"></script>
-  <script src="/js/modules/auditLogs.js?v=3.3.0"></script>
-  <script src="/js/modules/authorityPortal.js?v=3.3.0"></script>
-  <script src="/js/dashboard.js?v=3.3.0"></script>
-  <script src="/js/auth.js?v=3.3.0"></script>
-  <script src="/js/main.js?v=3.3.0"></script>
+  <script src="/js/utils.js?v=3.4.0"></script>
+  <script src="/js/services/notificationService.js?v=3.4.0"></script>
+  <script src="/js/api.js?v=3.4.0"></script>
+  <script src="/js/services/pdfService.js?v=3.4.0"></script>
+  <script src="/js/services/attendanceExcelService.js?v=3.4.0"></script>
+  <script src="/js/modules/student/studentNavigation.js?v=3.4.0"></script>
+  <script src="/js/modules/student/studentForms.js?v=3.4.0"></script>
+  <script src="/js/modules/student/studentRequests.js?v=3.4.0"></script>
+  <script src="/js/modules/student/studentModals.js?v=3.4.0"></script>
+  <script src="/js/modules/studentPortal.js?v=3.4.0"></script>
+  <script src="/js/modules/onDutyPortal.js?v=3.4.0"></script>
+  <script src="/js/modules/counselorQueue.js?v=3.4.0"></script>
+  <script src="/js/modules/advisorQueue.js?v=3.4.0"></script>
+  <script src="/js/modules/hodQueue.js?v=3.4.0"></script>
+  <script src="/js/modules/principalQueue.js?v=3.4.0"></script>
+  <script src="/js/modules/wardenQueue.js?v=3.4.0"></script>
+  <script src="/js/modules/auditLogs.js?v=3.4.0"></script>
+  <script src="/js/modules/authorityPortal.js?v=3.4.0"></script>
+  <script src="/js/dashboard.js?v=3.4.0"></script>
+  <script src="/js/auth.js?v=3.4.0"></script>
+  <script src="/js/main.js?v=3.4.0"></script>
 </body>
 
 </html>

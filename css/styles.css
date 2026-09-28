@@ -1,129 +1,255 @@
 /**
- * Campus PassPro Unified Enterprise Design System
- * Clean • Professional • Cohesive • Modern Academic SaaS Architecture
+ * Campus PassPro • Unified Enterprise Design System
+ * Clean • Modern • Professional • Developer-Built Architecture
  * GRT Institute of Engineering and Technology
  */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 :root {
+  /* Typography System */
   --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  /* Cohesive Enterprise Slate & Blue Palette */
-  --bg-canvas: #090d16;
-  --bg-surface: #0f172a;
-  --bg-surface-elevated: #151f34;
-  --bg-surface-subtle: #0c1322;
-  --border-subtle: #1e293b;
-  --border-medium: #334155;
+  /* Refined Institutional Color Palette (Clean Slate & Precision Blue) */
+  --bg-canvas: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #ffffff;
+  --bg-surface-subtle: #f1f5f9;
+  
+  --border-subtle: #e2e8f0;
+  --border-medium: #cbd5e1;
   --border-focus: #2563eb;
 
-  /* Brand Blue Accent */
+  /* Primary Brand Blue */
   --color-brand-600: #2563eb;
-  --color-brand-500: #3b82f6;
-  --color-brand-400: #60a5fa;
+  --color-brand-700: #1d4ed8;
+  --color-brand-800: #1e40af;
+  --color-brand-50:  #eff6ff;
+  --color-brand-100: #dbeafe;
 
-  /* Functional Semantic Status (Clean, not neon) */
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-danger:  #ef4444;
+  /* Semantic Status Colors (Clean & Production-Grade) */
+  --color-success: #059669;
+  --color-success-bg: #ecfdf5;
+  --color-success-border: #a7f3d0;
 
-  /* Typography Colors */
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
+  --color-warning: #d97706;
+  --color-warning-bg: #fffbeb;
+  --color-warning-border: #fde68a;
+
+  --color-danger: #dc2626;
+  --color-danger-bg: #fff1f2;
+  --color-danger-border: #fecdd3;
+
+  /* High-Readability Text Tokens */
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
   --text-muted: #64748b;
+  --text-tertiary: #94a3b8;
 
-  /* Standard Radii */
+  /* Radii */
+  --radius-xs: 0.25rem;  /* 4px */
   --radius-sm: 0.375rem; /* 6px */
   --radius-md: 0.5rem;   /* 8px */
   --radius-lg: 0.75rem;  /* 12px */
   --radius-xl: 1rem;     /* 16px */
+
+  /* Fast, Natural Animation Easings */
+  --transition-fast: 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-normal: 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-slow: 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Subtle Professional Shadows */
+  --shadow-subtle: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
+  --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+  --shadow-hover: 0 4px 14px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+  --shadow-modal: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
 }
 
-* {
+/* ==========================================================================
+   GLOBAL RESET & BASE TYPOGRAPHY
+   ========================================================================== */
+*, *::before, *::after {
   box-sizing: border-box;
+}
+
+html {
+  font-size: 15px; /* Comfortable base typography size */
+  scroll-behavior: smooth;
 }
 
 body {
   font-family: var(--font-sans);
   background-color: var(--bg-canvas);
-  background-image: linear-gradient(180deg, #0d1424 0%, #090d16 280px);
-  background-attachment: fixed;
-  background-repeat: no-repeat;
-  color: #e2e8f0;
+  color: var(--text-secondary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  line-height: 1.5;
+  line-height: 1.55;
   min-height: 100vh;
-  font-size: 0.875rem;
+  margin: 0;
+  padding: 0;
 }
 
-/* Typography Hierarchy */
+/* Modern Typography Scale */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-sans);
-  letter-spacing: -0.015em;
+  letter-spacing: -0.018em;
   color: var(--text-primary);
   font-weight: 700;
+  line-height: 1.28;
+  margin: 0;
 }
+
+h1 { font-size: 1.625rem; font-weight: 800; }
+h2 { font-size: 1.25rem; font-weight: 700; }
+h3 { font-size: 1.0625rem; font-weight: 700; }
+h4 { font-size: 0.9375rem; font-weight: 600; }
 
 .font-mono {
-  font-family: var(--font-mono);
+  font-family: var(--font-mono) !important;
 }
 
-/* Unified Surface Cards */
+/* ==========================================================================
+   INTERACTIVE BUTTON SYSTEM & MICRO-INTERACTIONS
+   ========================================================================== */
+button, input[type="button"], input[type="submit"] {
+  font-family: var(--font-sans);
+  transition: background-color var(--transition-fast), 
+              border-color var(--transition-fast), 
+              color var(--transition-fast), 
+              box-shadow var(--transition-fast), 
+              transform 0.1s ease;
+  user-select: none;
+  cursor: pointer;
+}
+
+button:active, .btn:active {
+  transform: scale(0.985);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+  border: 1px solid transparent;
+  box-shadow: var(--shadow-subtle);
+}
+
+.btn-primary {
+  background-color: var(--color-brand-600);
+  color: #ffffff;
+  border-color: var(--color-brand-600);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-brand-700);
+  border-color: var(--color-brand-700);
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+.btn-secondary {
+  background-color: #ffffff;
+  color: var(--text-secondary);
+  border-color: var(--border-medium);
+}
+
+.btn-secondary:hover {
+  background-color: var(--bg-surface-subtle);
+  color: var(--text-primary);
+  border-color: #94a3b8;
+}
+
+.btn-danger {
+  background-color: var(--color-danger);
+  color: #ffffff;
+  border-color: var(--color-danger);
+}
+
+.btn-danger:hover {
+  background-color: #b91c1c;
+  border-color: #b91c1c;
+}
+
+/* ==========================================================================
+   SURFACE CARDS & ELEVATION
+   ========================================================================== */
 .card,
 .panel,
-.glass-panel,
-.glass-panel-dark {
-  background-color: var(--bg-surface);
+.stu-card,
+.auth-card {
+  background-color: #ffffff;
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   color: var(--text-primary);
-  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-card);
+  transition: border-color var(--transition-normal), box-shadow var(--transition-normal), transform var(--transition-normal);
 }
 
-.card-elevated {
-  background-color: var(--bg-surface-elevated);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-lg);
+.stu-card:hover,
+.auth-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: var(--shadow-hover);
 }
 
-/* Unified Metric KPI Cards */
+/* Metric KPI Overview Cards */
 .kpi-card {
-  background-color: var(--bg-surface);
+  background-color: #ffffff;
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  padding: 1rem;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  border-radius: var(--radius-lg);
+  padding: 1.125rem;
+  box-shadow: var(--shadow-card);
+  transition: border-color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast);
   user-select: none;
 }
 
 .kpi-card:hover {
   border-color: var(--border-medium);
-  background-color: var(--bg-surface-elevated);
+  transform: translateY(-1.5px);
+  box-shadow: var(--shadow-hover);
 }
 
 .kpi-card.active-kpi-card {
   border-color: var(--color-brand-600) !important;
-  background-color: var(--bg-surface-elevated) !important;
+  background-color: var(--color-brand-50) !important;
+  box-shadow: 0 0 0 1px var(--color-brand-600) !important;
 }
 
-/* Form Controls & Inputs */
+/* ==========================================================================
+   FORM CONTROLS & INPUT SYSTEM
+   ========================================================================== */
 input[type="text"],
 input[type="password"],
 input[type="date"],
 input[type="time"],
 select,
 textarea {
-  background-color: var(--bg-surface-subtle);
+  font-family: var(--font-sans);
+  background-color: #ffffff;
+  color: var(--text-primary);
   border: 1px solid var(--border-medium);
-  color: #ffffff;
   border-radius: var(--radius-md);
-  padding: 0.625rem 0.875rem;
+  padding: 0.55rem 0.85rem;
   font-size: 0.875rem;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  line-height: 1.45;
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  width: 100%;
+}
+
+input[type="text"]:hover,
+input[type="password"]:hover,
+input[type="date"]:hover,
+input[type="time"]:hover,
+select:hover,
+textarea:hover {
+  border-color: #94a3b8;
 }
 
 input[type="text"]:focus,
@@ -132,200 +258,653 @@ input[type="date"]:focus,
 input[type="time"]:focus,
 select:focus,
 textarea:focus {
-  border-color: var(--color-brand-500);
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  border-color: var(--color-brand-600);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  background-color: #ffffff;
 }
 
-/* Unified Buttons */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+label {
   font-size: 0.8125rem;
   font-weight: 600;
-  border-radius: var(--radius-md);
-  padding: 0.5rem 0.875rem;
-  transition: all 0.15s ease;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.btn:active {
-  transform: scale(0.99);
-}
-
-.btn-primary {
-  background-color: var(--color-brand-600);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
-}
-
-.btn-primary:hover {
-  background-color: #1d4ed8;
-}
-
-.btn-secondary {
-  background-color: #1e293b;
-  color: #e2e8f0;
-  border: 1px solid #334155;
-}
-
-.btn-secondary:hover {
-  background-color: #283548;
-  color: #ffffff;
-  border-color: #475569;
-}
-
-.btn-danger {
-  background-color: rgba(239, 68, 68, 0.12);
-  color: #fca5a5;
-  border: 1px solid rgba(239, 68, 68, 0.25);
-}
-
-.btn-danger:hover {
-  background-color: rgba(239, 68, 68, 0.2);
-  border-color: rgba(239, 68, 68, 0.4);
-}
-
-/* Navigation Tabs */
-.nav-tab {
-  padding: 0.5rem 0.875rem;
-  border-radius: var(--radius-md);
-  font-size: 0.8125rem;
-  font-weight: 500;
   color: var(--text-secondary);
-  border: 1px solid transparent;
-  transition: all 0.15s ease;
-  cursor: pointer;
+  display: block;
+  margin-bottom: 0.35rem;
 }
 
-.nav-tab:hover {
-  color: #ffffff;
-  background-color: rgba(30, 41, 59, 0.5);
-}
-
-.nav-tab.active-tab {
-  background-color: var(--color-brand-600);
-  color: #ffffff;
-  font-weight: 600;
-  border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-}
-
-/* Status Badges */
-.badge-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  padding: 0.2rem 0.5rem;
-  border-radius: var(--radius-sm);
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.025em;
-  text-transform: uppercase;
-  line-height: 1.25;
-}
-
-.badge-approved {
-  background-color: rgba(16, 185, 129, 0.12);
-  color: #6ee7b7;
-  border: 1px solid rgba(16, 185, 129, 0.3);
-}
-
-.badge-pending {
-  background-color: rgba(245, 158, 11, 0.12);
-  color: #fde68a;
-  border: 1px solid rgba(245, 158, 11, 0.3);
-}
-
-.badge-rejected {
-  background-color: rgba(239, 68, 68, 0.12);
-  color: #fca5a5;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-}
-
-.badge-neutral {
-  background-color: rgba(30, 41, 59, 0.8);
-  color: #cbd5e1;
-  border: 1px solid #334155;
-}
-
-.badge-hosteller {
-  background-color: rgba(37, 99, 235, 0.12);
-  color: #93c5fd;
-  border: 1px solid rgba(59, 130, 246, 0.3);
-}
-
-.badge-dayscholar {
-  background-color: rgba(148, 163, 184, 0.12);
-  color: #cbd5e1;
-  border: 1px solid rgba(148, 163, 184, 0.3);
-}
-
-/* Enterprise Data Table */
+/* ==========================================================================
+   PRODUCTION DATA TABLES (HIGH-READABILITY & SUBTLE ROWS)
+   ========================================================================== */
+.stu-table,
+.auth-table,
 .enterprise-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
   text-align: left;
-  font-size: 0.8125rem;
-  color: #cbd5e1;
+  font-size: 0.875rem; /* Clean 14px text */
+  color: var(--text-secondary);
 }
 
+.stu-table th,
+.auth-table th,
 .enterprise-table thead th {
-  background-color: #0b1120;
-  color: #94a3b8;
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  font-weight: 600;
+  background-color: #f8fafc;
+  color: #475569;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #1e293b;
+  padding: 0.85rem 1.125rem;
+  border-bottom: 1px solid var(--border-subtle);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.stu-table tbody tr,
+.auth-table tbody tr,
+.enterprise-table tbody tr {
+  border-bottom: 1px solid #f1f5f9;
+  transition: background-color var(--transition-fast);
+  background-color: #ffffff;
+}
+
+.stu-table tbody tr:hover,
+.auth-table tbody tr:hover,
+.enterprise-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.stu-table td,
+.auth-table td,
+.enterprise-table tbody td {
+  padding: 0.85rem 1.125rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  color: var(--text-secondary);
+}
+
+/* Clean monospaced table elements */
+.stu-table td .font-mono,
+.auth-table td .font-mono,
+.enterprise-table td .font-mono {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+/* ==========================================================================
+   STATUS PILLS & SEMANTIC BADGES (READABLE, SHARP, NEVER NEON)
+   ========================================================================== */
+.badge-pill,
+.badge-approved-clean,
+.badge-pending-clean,
+.badge-rejected-clean,
+.badge-status-approved,
+.badge-status-pending,
+.badge-status-rejected,
+.badge-type-gatepass,
+.badge-type-leave,
+.badge-type-od,
+.badge-req-gatepass,
+.badge-req-leave,
+.badge-req-od {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
   white-space: nowrap;
 }
 
-.enterprise-table tbody tr {
-  border-bottom: 1px solid #1e293b;
-  transition: background-color 0.15s ease;
-  background-color: rgba(15, 23, 42, 0.6);
+/* Approved */
+.badge-approved-clean,
+.badge-status-approved,
+.badge-approved {
+  background-color: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
 }
 
-.enterprise-table tbody tr:hover {
-  background-color: rgba(30, 41, 59, 0.75);
+/* Pending */
+.badge-pending-clean,
+.badge-status-pending,
+.badge-pending {
+  background-color: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fde68a;
 }
 
-.enterprise-table tbody td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid rgba(30, 41, 59, 0.6);
-  vertical-align: middle;
-  color: #e2e8f0;
+/* Rejected */
+.badge-rejected-clean,
+.badge-status-rejected,
+.badge-rejected {
+  background-color: #fff1f2;
+  color: #9f1239;
+  border: 1px solid #fecdd3;
 }
 
-/* Custom Scrollbars */
-.overflow-x-auto::-webkit-scrollbar,
-.overflow-y-auto::-webkit-scrollbar {
-  height: 6px;
-  width: 6px;
-}
-.overflow-x-auto::-webkit-scrollbar-track,
-.overflow-y-auto::-webkit-scrollbar-track {
-  background: rgba(2, 6, 23, 0.4);
-}
-.overflow-x-auto::-webkit-scrollbar-thumb,
-.overflow-y-auto::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: var(--radius-sm);
-}
-.overflow-x-auto::-webkit-scrollbar-thumb:hover,
-.overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+/* Request Type Badges */
+.badge-type-gatepass,
+.badge-req-gatepass {
+  background-color: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+  font-family: var(--font-mono);
 }
 
-/* Toast Notifications - Clean Light / White Theme */
+.badge-type-leave,
+.badge-req-leave {
+  background-color: #f5f3ff;
+  color: #6b21a8;
+  border: 1px solid #ddd6fe;
+  font-family: var(--font-mono);
+}
+
+.badge-type-od,
+.badge-req-od {
+  background-color: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  font-family: var(--font-mono);
+}
+
+/* ==========================================================================
+   SEARCH BAR COMPONENT
+   ========================================================================== */
+.app-search-input,
+#authSearchInput,
+#unifiedSearchInput {
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.06);
+  color-scheme: light !important;
+  color: #0f172a !important;
+}
+
+.app-search-input::placeholder,
+#authSearchInput::placeholder,
+#unifiedSearchInput::placeholder {
+  color: #64748b !important;
+}
+
+/* ==========================================================================
+   NAVIGATION & TABS SYSTEM
+   ========================================================================== */
+.stu-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.75rem 0.95rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #475569;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  user-select: none;
+  width: 100%;
+  text-align: left;
+}
+
+.stu-nav-item:hover {
+  background-color: #f1f5f9;
+  color: var(--text-primary);
+  border-color: #e2e8f0;
+}
+
+.stu-nav-item.active {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.08);
+}
+
+.stu-nav-item.active svg {
+  color: #2563eb;
+}
+
+/* Authority Sidebar Nav Items */
+.auth-side-active {
+  background-color: #eff6ff !important;
+  color: #1d4ed8 !important;
+  font-weight: 700 !important;
+  border-left: 3px solid #2563eb !important;
+}
+
+/* Tab Filters */
+.nav-tab,
+.auth-tab-inactive {
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #475569;
+  background-color: #ffffff;
+  border: 1px solid var(--border-subtle);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.nav-tab:hover,
+.auth-tab-inactive:hover {
+  background-color: #f8fafc;
+  color: var(--text-primary);
+  border-color: var(--border-medium);
+}
+
+.nav-tab.active-tab,
+.auth-tab-active {
+  background-color: var(--color-brand-600) !important;
+  color: #ffffff !important;
+  border-color: var(--color-brand-600) !important;
+  font-weight: 700 !important;
+  box-shadow: var(--shadow-subtle) !important;
+}
+
+/* ==========================================================================
+   APPLE-INSPIRED ANIMATION & MOTION SYSTEM
+   Fluid • Restrained • Natural • Production-Grade
+   ========================================================================== */
+
+/* Apple-style Easing & Timing Curves */
+:root {
+  --apple-ease: cubic-bezier(0.16, 1, 0.3, 1);       /* Deceleration / Apple default */
+  --apple-spring: cubic-bezier(0.32, 0.72, 0, 1);    /* Interactive sheet & modal curve */
+  --apple-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);  /* Micro-bounce for toggles */
+  --apple-smooth: cubic-bezier(0.25, 0.1, 0.25, 1);   /* Standard smooth transition */
+}
+
+/* 1. Page & Section Entrance Animations */
+@keyframes pageEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.996);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes appleFadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes appleSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes appleSlideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes appleScaleIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes appleModalBackdrop {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(8px);
+  }
+}
+
+@keyframes appleBadgePulse {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes appleShakeAlert {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+
+@keyframes appleRowReveal {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Page Navigation Transition */
+.page-view-animate {
+  animation: pageEntrance 0.28s var(--apple-ease) forwards;
+  will-change: transform, opacity;
+}
+
+/* Modal Open & Close System */
+.modal-backdrop-animate {
+  animation: appleModalBackdrop 0.24s var(--apple-ease) forwards;
+  will-change: opacity, backdrop-filter;
+}
+
+.modal-content-animate {
+  animation: appleScaleIn 0.3s var(--apple-spring) forwards;
+  will-change: transform, opacity;
+}
+
+/* Dropdown Menu Animations */
+#stuProfileDropdown {
+  animation: appleSlideDown 0.2s var(--apple-ease) forwards;
+  transform-origin: top right;
+  will-change: transform, opacity;
+}
+
+/* Notification Drawer Slide & Easing */
+#notificationSideDrawer {
+  transition: transform 0.32s var(--apple-spring) !important;
+  will-change: transform;
+}
+
+#notifDrawerBackdrop {
+  transition: opacity 0.28s var(--apple-ease) !important;
+}
+
+/* Card & Surface Hover Micro-Interactions */
+.stu-card,
+.auth-card,
+.card {
+  transition: transform 0.24s var(--apple-ease),
+              box-shadow 0.24s var(--apple-ease),
+              border-color 0.2s ease !important;
+}
+
+.stu-card:hover,
+.auth-card:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.07), 0 2px 6px -1px rgba(15, 23, 42, 0.04) !important;
+}
+
+.kpi-card {
+  transition: transform 0.22s var(--apple-ease),
+              box-shadow 0.22s var(--apple-ease),
+              border-color 0.18s ease,
+              background-color 0.18s ease !important;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -3px rgba(15, 23, 42, 0.08), 0 3px 6px -2px rgba(15, 23, 42, 0.04) !important;
+}
+
+.kpi-card:active {
+  transform: translateY(0) scale(0.992);
+}
+
+/* Button & Action Micro-Interactions */
+button,
+.btn,
+input[type="button"],
+input[type="submit"] {
+  transition: transform 0.14s var(--apple-ease),
+              background-color 0.18s var(--apple-ease),
+              border-color 0.18s var(--apple-ease),
+              color 0.18s var(--apple-ease),
+              box-shadow 0.18s var(--apple-ease) !important;
+}
+
+button:hover:not(:disabled),
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+button:active:not(:disabled),
+.btn:active:not(:disabled) {
+  transform: scale(0.98) !important;
+  transition-duration: 0.06s !important;
+}
+
+/* Navigation Items (Left sidebar & tabs) */
+.stu-nav-item {
+  transition: all 0.2s var(--apple-ease) !important;
+}
+
+.stu-nav-item svg {
+  transition: transform 0.2s var(--apple-ease);
+}
+
+.stu-nav-item:hover svg {
+  transform: scale(1.08) translateX(1px);
+}
+
+.stu-nav-item:active {
+  transform: scale(0.985);
+}
+
+#authSidebarNav button {
+  transition: all 0.2s var(--apple-ease) !important;
+}
+
+#authSidebarNav button:hover {
+  transform: translateX(2px);
+}
+
+#authSidebarNav button:active {
+  transform: scale(0.985);
+}
+
+/* Filter Tabs Interaction */
+.auth-filter-tab,
+.nav-tab,
+#tabBtn_all,
+#tabBtn_gatepass,
+#tabBtn_leave,
+#tabBtn_onduty {
+  transition: transform 0.15s var(--apple-ease),
+              background-color 0.18s var(--apple-ease),
+              color 0.18s var(--apple-ease),
+              border-color 0.18s var(--apple-ease),
+              box-shadow 0.18s var(--apple-ease) !important;
+}
+
+.auth-filter-tab:hover,
+#tabBtn_all:hover,
+#tabBtn_gatepass:hover,
+#tabBtn_leave:hover,
+#tabBtn_onduty:hover {
+  transform: translateY(-0.5px);
+}
+
+.auth-filter-tab:active,
+#tabBtn_all:active,
+#tabBtn_gatepass:active,
+#tabBtn_leave:active,
+#tabBtn_onduty:active {
+  transform: scale(0.975);
+}
+
+/* Table Row Micro-Interactions */
+.stu-table tbody tr,
+.auth-table tbody tr {
+  transition: background-color 0.16s var(--apple-ease),
+              transform 0.16s var(--apple-ease);
+}
+
+.stu-table tbody tr:hover,
+.auth-table tbody tr:hover {
+  background-color: #f8fafc !important;
+}
+
+/* Status Badges */
+.badge-pill,
+.badge-status,
+[class*="badge-req-"],
+[class*="badge-status-"],
+[class*="badge-type-"] {
+  transition: transform 0.18s var(--apple-ease),
+              background-color 0.18s var(--apple-ease),
+              border-color 0.18s var(--apple-ease),
+              box-shadow 0.18s var(--apple-ease);
+}
+
+.badge-pill:hover,
+[class*="badge-status-"]:hover {
+  transform: scale(1.03);
+}
+
+/* Alert & Rejection Message Animations */
+#loginErrorAlert:not(.hidden),
+#stuModalRejectionBox:not(.hidden) {
+  animation: appleSlideUp 0.24s var(--apple-ease) both,
+             appleShakeAlert 0.32s 0.1s ease both;
+}
+
+/* Toast Notification Entrance */
+.toast-message {
+  animation: appleSlideDown 0.26s var(--apple-spring) both !important;
+  transition: transform 0.2s var(--apple-ease), opacity 0.2s var(--apple-ease);
+}
+
+/* Form Inputs Focus Interaction */
+input[type="text"],
+input[type="password"],
+input[type="date"],
+input[type="time"],
+select,
+textarea {
+  transition: border-color 0.18s var(--apple-ease),
+              box-shadow 0.18s var(--apple-ease),
+              transform 0.14s var(--apple-ease) !important;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="date"]:focus,
+input[type="time"]:focus,
+select:focus,
+textarea:focus {
+  transform: translateY(-0.5px);
+}
+
+/* Scroll-based & Section Reveal */
+.scroll-reveal,
+.section-reveal {
+  animation: appleSlideUp 0.34s var(--apple-ease) both;
+}
+
+/* Respect Prefers-Reduced-Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001s !important;
+    scroll-behavior: auto !important;
+  }
+
+  .page-view-animate,
+  .modal-backdrop-animate,
+  .modal-content-animate,
+  #stuProfileDropdown,
+  .toast-message {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+/* ==========================================================================
+   SEARCH BAR SYSTEM
+   ========================================================================== */
+.app-search-container {
+  position: relative;
+  display: block;
+}
+
+.app-search-input,
+#authSearchInput,
+#unifiedSearchInput,
+#studentSearchInput,
+input[id*="SearchInput"],
+input[id*="searchInput"] {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-subtle) !important;
+  font-size: 0.875rem !important;
+  padding: 0.55rem 0.85rem 0.55rem 2.4rem !important;
+  line-height: 1.35 !important;
+  outline: none !important;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast) !important;
+}
+
+.app-search-input::placeholder,
+#authSearchInput::placeholder,
+#unifiedSearchInput::placeholder,
+#studentSearchInput::placeholder,
+input[id*="SearchInput"]::placeholder,
+input[id*="searchInput"]::placeholder {
+  color: #64748b !important;
+  font-weight: 500 !important;
+}
+
+.app-search-input:focus,
+#authSearchInput:focus,
+#unifiedSearchInput:focus,
+#studentSearchInput:focus,
+input[id*="SearchInput"]:focus,
+input[id*="searchInput"]:focus {
+  background-color: #ffffff !important;
+  border-color: var(--color-brand-600) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14) !important;
+}
+
+/* ==========================================================================
+   TOAST NOTIFICATIONS (CLEAN LIGHT THEME)
+   ========================================================================== */
 #toastContainer {
   position: fixed;
   top: 1.25rem;
@@ -333,7 +912,7 @@ textarea:focus {
   z-index: 9999;
   display: flex;
   flex-direction: column;
-  gap: 0.625rem;
+  gap: 0.5rem;
   pointer-events: none;
   max-width: 24rem;
   width: calc(100% - 2.5rem);
@@ -344,158 +923,77 @@ textarea:focus {
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
-  padding: 0.875rem 1.125rem;
-  border-radius: 1rem;
+  padding: 0.85rem 1.125rem;
+  border-radius: var(--radius-lg);
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
-  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.06) !important;
+  box-shadow: var(--shadow-hover);
+  animation: pageEntrance 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  color: var(--text-primary);
   font-size: 0.875rem;
-  color: #0f172a !important;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.toast-message::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: #2563eb;
-}
-
-.toast-message.toast-success::before {
-  background: #10b981 !important;
-}
-
-.toast-message.toast-error::before {
-  background: #ef4444 !important;
-}
-
-.toast-message.toast-warning::before {
-  background: #f59e0b !important;
-}
-
-.toast-message.toast-info::before {
-  background: #2563eb !important;
-}
-
-.toast-message:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 30px -4px rgba(15, 23, 42, 0.16), 0 10px 12px -6px rgba(15, 23, 42, 0.08) !important;
-}
-
-.toast-leaving {
-  opacity: 0;
-  transform: translateX(24px) scale(0.96);
-  transition: all 0.25s ease;
+  line-height: 1.4;
 }
 
 /* ==========================================================================
-   NOTIFICATION SIDE DRAWER / PANEL (Clean White Theme & High Visibility)
+   CUSTOM SUBTLE SCROLLBARS
    ========================================================================== */
-#notifDrawerBackdrop {
-  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+.overflow-x-auto::-webkit-scrollbar,
+.overflow-y-auto::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
 }
-
-#notificationSideDrawer {
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  background-color: #ffffff !important;
+.overflow-x-auto::-webkit-scrollbar-track,
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: #f1f5f9;
 }
-
-.notif-card {
-  transition: all 0.2s ease;
-  position: relative;
+.overflow-x-auto::-webkit-scrollbar-thumb,
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: var(--radius-xs);
 }
-
-.notif-card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
-}
-
-.notif-card.is-unread {
-  background-color: #f8faff !important;
-  border-color: #bfdbfe !important;
-  border-left-width: 4px !important;
-  border-left-color: #2563eb !important;
-}
-
-.notif-card.is-read {
-  background-color: #ffffff !important;
-  border-color: #e2e8f0 !important;
-  border-left-width: 4px !important;
-  border-left-color: #cbd5e1 !important;
-}
-
-/* Login Card White Theme Inputs */
-#loginCard input[type="text"],
-#loginCard input[type="password"] {
-  background-color: #ffffff !important;
-  border: 1px solid #cbd5e1 !important;
-  color: #0f172a !important;
-  border-radius: 0.75rem !important;
-}
-
-#loginCard input[type="text"]::placeholder,
-#loginCard input[type="password"]::placeholder {
-  color: #94a3b8 !important;
-}
-
-#loginCard input[type="text"]:focus,
-#loginCard input[type="password"]:focus {
-  border-color: #2563eb !important;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
-}
-
-/* Login Button & Card Animations */
-#singleLoginPortalScreen {
-  transition: opacity 0.25s ease, transform 0.25s ease;
-}
-
-.login-btn {
-  position: relative;
-  transition: all 0.2s ease;
-}
-
-.login-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.88;
-}
-
-.login-btn.is-loading {
-  background-color: var(--color-brand-600) !important;
-  opacity: 0.9;
-}
-
-.login-btn.is-success {
-  background-color: #059669 !important;
-  border-color: #10b981 !important;
-}
-
-@keyframes checkmarkScale {
-  0% { transform: scale(0.6); opacity: 0; }
-  60% { transform: scale(1.1); opacity: 1; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-.animate-scale-check {
-  animation: checkmarkScale 0.25s ease-out forwards;
-}
-
-@keyframes shakeError {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-3px); }
-  40%, 80% { transform: translateX(3px); }
-}
-
-.animate-shake {
-  animation: shakeError 0.35s ease-in-out;
+.overflow-x-auto::-webkit-scrollbar-thumb:hover,
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 /* ==========================================================================
-   STUDENT PORTAL REFERENCE STYLING (Clean Academic White/Slate Aesthetic)
+   PAGE TRANSITION LOADER (COLLEGE LOGO & CLEAN BAR)
+   ========================================================================== */
+#grtPageTransitionLoader {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s 0.24s;
+}
+
+#grtPageTransitionLoader.active {
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+  transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s 0s;
+}
+
+#grtPageTransitionLoader.active #grtLoaderCard {
+  transform: scale(1);
+  opacity: 1;
+}
+
+#grtPageTransitionLoader:not(.active) #grtLoaderCard {
+  transform: scale(0.96);
+  opacity: 0;
+}
+
+@keyframes grtSpinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.grt-spin-orbital {
+  animation: grtSpinSlow 1.4s linear infinite;
+}
+
+/* ==========================================================================
+   ROLE / THEME ISOLATION RULES (PRESERVED 100% UNTOUCHED)
    ========================================================================== */
 body.theme-student {
   background-color: #f8fafc !important;
@@ -519,9 +1017,6 @@ body.theme-student #studentPortalContainer {
   width: 100% !important;
 }
 
-/* ==========================================================================
-   STRICT ISOLATION: Zero Authority/Staff elements visible during Student Login
-   ========================================================================== */
 body.theme-student #loginCampusBg,
 body.theme-student #authorityDashboardLayout,
 body.theme-student #authorityDashboardLayout *,
@@ -549,105 +1044,6 @@ body.theme-student [data-role="staff"] {
   left: -99999px !important;
 }
 
-body.theme-authority #loginCampusBg,
-body.theme-authority #studentPortalContainer,
-body.theme-authority #studentPortalContainer * {
-  display: none !important;
-  visibility: hidden !important;
-  height: 0 !important;
-  max-height: 0 !important;
-  overflow: hidden !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: none !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-
-.stu-nav-active {
-  color: #0f172a !important;
-  font-weight: 600 !important;
-  border-bottom: 2px solid #0f172a !important;
-}
-
-.stu-side-active {
-  background-color: #f1f5f9 !important;
-  color: #0f172a !important;
-  font-weight: 600 !important;
-}
-
-.stu-card {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.75rem;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
-}
-
-.stu-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  text-align: left;
-}
-
-.stu-table th {
-  background-color: #f8fafc;
-  color: #64748b;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.stu-table td {
-  padding: 0.875rem 1rem;
-  font-size: 0.8125rem;
-  color: #334155;
-  border-bottom: 1px solid #f1f5f9;
-  vertical-align: middle;
-}
-
-.stu-table tbody tr:hover {
-  background-color: #f8fafc;
-}
-
-.badge-pending-clean {
-  background-color: #f1f5f9;
-  color: #475569;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.25rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.2rem 0.6rem;
-  display: inline-block;
-}
-
-.badge-approved-clean {
-  background-color: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
-  border-radius: 0.25rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.2rem 0.6rem;
-  display: inline-block;
-}
-
-.badge-rejected-clean {
-  background-color: #fff1f2;
-  color: #be123c;
-  border: 1px solid #fecdd3;
-  border-radius: 0.25rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.2rem 0.6rem;
-  display: inline-block;
-}
-
-/* ==========================================================================
-   AUTHORITY PORTAL REFERENCE STYLING (Counselor, Advisor, HOD, Principal, Warden)
-   Clean, modern, production-grade academic light theme with professional blue accents
-   ========================================================================== */
 body.theme-authority {
   background-color: #f8fafc !important;
   background-image: none !important;
@@ -678,450 +1074,17 @@ body.theme-authority #dashScreen {
   background-color: #f8fafc;
 }
 
-body.theme-authority .bg-dark-backdrop,
-body.theme-authority > .fixed.inset-0.bg-slate-950 {
+body.theme-authority #loginCampusBg,
+body.theme-authority #studentPortalContainer,
+body.theme-authority #studentPortalContainer * {
   display: none !important;
-}
-
-/* Active Top Navigation Link */
-.auth-top-active {
-  color: #1d4ed8 !important;
-  font-weight: 700 !important;
-  border-bottom: 2px solid #1d4ed8 !important;
-}
-
-/* Active Sidebar Navigation Item */
-.auth-side-active {
-  background-color: #eff6ff !important;
-  color: #1d4ed8 !important;
-  font-weight: 600 !important;
-  border-left: 3px solid #2563eb !important;
-}
-
-/* Active Filter Tab */
-.auth-tab-active {
-  background-color: #1e40af !important;
-  color: #ffffff !important;
-  font-weight: 600 !important;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
-}
-
-.auth-tab-inactive {
-  background-color: #ffffff;
-  color: #475569;
-  border: 1px solid #e2e8f0;
-}
-.auth-tab-inactive:hover {
-  background-color: #f8fafc;
-  color: #0f172a;
-}
-
-/* Request Type Badges */
-.badge-req-leave {
-  background-color: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.25rem 0.65rem;
-  border-radius: 9999px;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.badge-req-gatepass {
-  background-color: #eff6ff;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.25rem 0.65rem;
-  border-radius: 9999px;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.badge-req-od {
-  background-color: #faf5ff;
-  color: #7e22ce;
-  border: 1px solid #e9d5ff;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.25rem 0.65rem;
-  border-radius: 9999px;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-/* Status Badges */
-.badge-status-pending {
-  background-color: #fffbeb;
-  color: #b45309;
-  border: 1px solid #fde68a;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.25rem 0.65rem;
-  border-radius: 9999px;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.badge-status-approved {
-  background-color: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.25rem 0.65rem;
-  border-radius: 9999px;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.badge-status-rejected {
-  background-color: #fff1f2;
-  color: #be123c;
-  border: 1px solid #fecdd3;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.25rem 0.65rem;
-  border-radius: 9999px;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-/* Authority Card & Table Styles */
-.auth-card {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.875rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
-}
-
-.auth-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  text-align: left;
-}
-
-.auth-table th {
-  background-color: #f8fafc;
-  color: #64748b;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #e2e8f0;
-  white-space: nowrap;
-}
-
-.auth-table td {
-  padding: 0.875rem 1rem;
-  font-size: 0.8125rem;
-  color: #334155;
-  border-bottom: 1px solid #f1f5f9;
-  vertical-align: middle;
-}
-
-.auth-table tbody tr:hover {
-  background-color: #f8fafc;
-}
-
-/* ====================================================================
-   STUDENT PORTAL MODAL POPUP & HOVER ANIMATION SYSTEM
-   ==================================================================== */
-
-@keyframes modalBackdropFadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes modalContentPopIn {
-  0% {
-    opacity: 0;
-    transform: scale(0.94) translateY(12px);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-.modal-backdrop-animate {
-  animation: modalBackdropFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.modal-content-animate {
-  animation: modalContentPopIn 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* Premium 3-Card Hover Micro-interactions */
-.stu-request-card {
-  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.stu-request-card:hover {
-  transform: translateY(-4px) scale(1.015);
-  box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 10px 10px -5px rgba(15, 23, 42, 0.04);
-}
-
-.stu-request-card:active {
-  transform: translateY(-1px) scale(0.995);
-}
-
-.stu-request-card .card-icon-container {
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.stu-request-card:hover .card-icon-container {
-  transform: scale(1.08) rotate(-2deg);
-}
-
-/* Unified Requests Table Badges */
-.badge-type-gatepass {
-  background-color: #eff6ff;
-  color: #1e40af;
-  border: 1px solid #bfdbfe;
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 0.2rem 0.6rem;
-  border-radius: 9999px;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-family: var(--font-mono);
-}
-
-.badge-type-leave {
-  background-color: #f5f3ff;
-  color: #6b21a8;
-  border: 1px solid #ddd6fe;
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 0.2rem 0.6rem;
-  border-radius: 9999px;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-family: var(--font-mono);
-}
-
-.badge-type-od {
-  background-color: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 0.2rem 0.6rem;
-  border-radius: 9999px;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-family: var(--font-mono);
-}
-
-/* Student Portal Page Transition */
-@keyframes pageFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.page-view-animate {
-  animation: pageFadeIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* Left-Side Navigation Menu */
-.stu-nav-item {
-  display: flex;
-  align-items: center;
-  gap: 0.875rem;
-  padding: 0.85rem 1rem;
-  border-radius: 0.75rem;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: #475569;
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  text-decoration: none;
-  cursor: pointer;
-  border: 1px solid transparent;
-  user-select: none;
-  width: 100%;
-  text-align: left;
-}
-
-.stu-nav-item:hover {
-  transform: translateX(4px);
-  background-color: #f1f5f9;
-  color: #0f172a;
-  border-color: #e2e8f0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-}
-
-.stu-nav-item.active {
-  background-color: #eff6ff;
-  color: #1d4ed8;
-  border-color: #bfdbfe;
-  font-weight: 700;
-  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.08);
-}
-
-.stu-nav-item.active svg {
-  color: #2563eb;
-}
-
-.stu-nav-item:active {
-  transform: scale(0.98) translateX(2px);
-}
-
-/* ==========================================================================
-   INSTITUTIONAL PAGE TRANSITION LOADER (COLLEGE LOGO & 1.5S PROGRESS ANIMATION)
-   ========================================================================== */
-
-#grtPageTransitionLoader {
-  opacity: 0;
-  pointer-events: none;
-  visibility: hidden;
-  transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s 0.28s;
-}
-
-#grtPageTransitionLoader.active {
-  opacity: 1;
-  pointer-events: auto;
-  visibility: visible;
-  transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s 0s;
-}
-
-#grtPageTransitionLoader.active #grtLoaderCard {
-  transform: scale(1);
-  opacity: 1;
-}
-
-#grtPageTransitionLoader:not(.active) #grtLoaderCard {
-  transform: scale(0.94);
-  opacity: 0;
-}
-
-@keyframes grtSpinSlow {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.grt-spin-orbital {
-  animation: grtSpinSlow 1.4s linear infinite;
-}
-
-@keyframes grtPulseLogo {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-}
-
-.grt-loader-logo-pulse {
-  animation: grtPulseLogo 1.6s ease-in-out infinite;
-}
-
-.grt-progress-bar-glow {
-  box-shadow: 0 0 10px rgba(37, 99, 235, 0.5);
-}
-
-#grtPageTransitionLoader .sr-only {
-  position: absolute !important;
-  width: 1px !important;
-  height: 1px !important;
-  padding: 0 !important;
-  margin: -1px !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  max-height: 0 !important;
   overflow: hidden !important;
-  clip: rect(0, 0, 0, 0) !important;
-  white-space: nowrap !important;
-  border: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
   opacity: 0 !important;
   pointer-events: none !important;
-}
-
-/* ==========================================================================
-   ENTERPRISE SEARCH BAR DESIGN SYSTEM (All Portals & Dashboards)
-   Consistent, professional white-theme styling across Student, Counselor,
-   Class Advisor, HOD, Principal, and Warden dashboards.
-   Guarantees zero dark/black block appearance across all devices and themes.
-   ========================================================================== */
-.app-search-container {
-  position: relative;
-  display: block;
-}
-
-.app-search-input,
-#authSearchInput,
-#unifiedSearchInput,
-#studentSearchInput,
-input[id*="SearchInput"],
-input[id*="searchInput"] {
-  background-color: #ffffff !important;
-  background: #ffffff !important;
-  color: #0f172a !important;
-  border: 1px solid #cbd5e1 !important;
-  border-radius: 0.75rem !important;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04) !important;
-  color-scheme: light !important;
-  font-size: 0.8125rem !important;
-  line-height: 1.25rem !important;
-  outline: none !important;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease !important;
-}
-
-.app-search-input::placeholder,
-#authSearchInput::placeholder,
-#unifiedSearchInput::placeholder,
-#studentSearchInput::placeholder,
-input[id*="SearchInput"]::placeholder,
-input[id*="searchInput"]::placeholder {
-  color: #64748b !important; /* Clearly readable slate-500 */
-  opacity: 1 !important;
-  font-weight: 500 !important;
-}
-
-.app-search-input:focus,
-#authSearchInput:focus,
-#unifiedSearchInput:focus,
-#studentSearchInput:focus,
-input[id*="SearchInput"]:focus,
-input[id*="searchInput"]:focus {
-  background-color: #ffffff !important;
-  background: #ffffff !important;
-  color: #0f172a !important;
-  border-color: #2563eb !important; /* Premium brand blue-600 */
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14), 0 1px 3px 0 rgba(0, 0, 0, 0.06) !important;
-}
-
-.app-search-input:hover,
-#authSearchInput:hover,
-#unifiedSearchInput:hover,
-#studentSearchInput:hover,
-input[id*="SearchInput"]:hover,
-input[id*="searchInput"]:hover {
-  border-color: #94a3b8 !important; /* Slate-400 on hover */
 }

@@ -1,15 +1,15 @@
 <!-- STUDENT REQUEST DETAIL & APPROVAL WORKFLOW MODAL -->
-<div id="stuRequestDetailModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-  <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-xl w-full p-6 text-slate-800 space-y-5 max-h-[92vh] overflow-y-auto">
+<div id="stuRequestDetailModal" class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto modal-backdrop-animate">
+  <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-xl w-full p-6 sm:p-7 text-slate-800 space-y-5 max-h-[92vh] overflow-y-auto modal-content-animate my-auto">
     <!-- Header -->
     <div class="flex items-center justify-between pb-3 border-b border-slate-100">
       <div>
         <div class="flex items-center gap-2">
-          <span id="stuModalReqId" class="font-mono text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded">-</span>
-          <span id="stuModalAccomBadge" class="px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">-</span>
+          <span id="stuModalReqId" class="font-mono text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-lg">-</span>
+          <span id="stuModalAccomBadge" class="px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">-</span>
         </div>
-        <h3 id="stuModalHeading" class="text-base font-bold text-slate-900 mt-1">Gate Pass Request Details</h3>
-        <p id="stuModalAppliedOn" class="text-[11px] text-slate-500 font-mono">Applied on: -</p>
+        <h3 id="stuModalHeading" class="text-lg font-bold text-slate-900 mt-1.5">Gate Pass Request Details</h3>
+        <p id="stuModalAppliedOn" class="text-xs text-slate-500 font-mono">Applied on: -</p>
       </div>
       <button
         type="button"
@@ -22,91 +22,91 @@
     </div>
 
     <!-- Current Status & Approval Authority Banner -->
-    <div id="stuModalStatusBanner" class="p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-amber-50/80 border-amber-200 text-amber-900">
+    <div id="stuModalStatusBanner" class="p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-amber-50/80 border-amber-200 text-amber-900">
       <div>
-        <div class="text-[10px] uppercase font-bold tracking-wider opacity-75">Current Clearance Status</div>
-        <div id="stuModalCurrentStatus" class="text-sm font-extrabold flex items-center gap-1.5 mt-0.5">-</div>
+        <div class="text-xs uppercase font-bold tracking-wider font-mono opacity-80">Current Clearance Status</div>
+        <div id="stuModalCurrentStatus" class="text-base font-extrabold flex items-center gap-1.5 mt-0.5">-</div>
       </div>
       <div class="sm:text-right">
-        <div class="text-[10px] uppercase font-bold tracking-wider opacity-75">Current Approval Authority</div>
-        <div id="stuModalCurrentAuthority" class="text-xs font-bold font-mono text-slate-800">-</div>
+        <div class="text-xs uppercase font-bold tracking-wider font-mono opacity-80">Current Approval Authority</div>
+        <div id="stuModalCurrentAuthority" class="text-sm font-bold font-mono text-slate-800">-</div>
       </div>
     </div>
 
     <!-- Rejection Banner (Shown only if rejected) -->
-    <div id="stuModalRejectionBox" class="hidden p-3.5 bg-rose-50 border border-rose-200 rounded-xl space-y-1 text-xs">
-      <div class="font-bold text-rose-900 flex items-center gap-1.5">
+    <div id="stuModalRejectionBox" class="hidden p-4 bg-rose-50 border border-rose-200 rounded-xl space-y-1.5 text-xs">
+      <div class="font-bold text-rose-900 flex items-center gap-1.5 text-sm">
         <svg class="w-4 h-4 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
         <span id="stuModalRejectionTitle">Application Rejected</span>
       </div>
-      <div id="stuModalRejectionReason" class="text-rose-800 leading-relaxed pl-5 font-medium">-</div>
+      <div id="stuModalRejectionReason" class="text-rose-800 leading-relaxed pl-5 font-medium text-xs sm:text-sm">-</div>
     </div>
 
     <!-- Visual Multi-Tier Sequential Approval Workflow Stepper -->
     <div class="space-y-2">
-      <div class="text-xs font-bold text-slate-800 uppercase tracking-wider text-[10px]">Sequential Approval Workflow</div>
-      <div id="stuModalWorkflowStepper" class="p-3 bg-slate-50 rounded-xl border border-slate-200 overflow-x-auto">
+      <div class="text-xs font-bold text-slate-700 uppercase tracking-wider font-mono">Sequential Approval Workflow</div>
+      <div id="stuModalWorkflowStepper" class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 overflow-x-auto">
         <!-- Dynamic Stepper rendered via JS based on Day Scholar vs Hosteller -->
       </div>
     </div>
 
     <!-- Student & Request Particulars (All 10 Fields) -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-slate-50 p-4 rounded-xl border border-slate-200">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-sm bg-slate-50 p-4 sm:p-5 rounded-xl border border-slate-200">
       <div>
-        <span class="text-slate-500 font-medium block text-[10px]">Registration Number</span>
-        <span id="stuModalRoll" class="font-bold font-mono text-slate-900 text-xs">-</span>
+        <span class="text-slate-500 font-medium block text-xs uppercase tracking-wider font-mono">Registration Number</span>
+        <span id="stuModalRoll" class="font-bold font-mono text-slate-900 text-sm mt-0.5 block">-</span>
       </div>
       <div>
-        <span class="text-slate-500 font-medium block text-[10px]">Student Full Name</span>
-        <span id="stuModalName" class="font-bold text-slate-900 text-xs">-</span>
+        <span class="text-slate-500 font-medium block text-xs uppercase tracking-wider font-mono">Student Full Name</span>
+        <span id="stuModalName" class="font-bold text-slate-900 text-sm mt-0.5 block">-</span>
       </div>
       <div>
-        <span class="text-slate-500 font-medium block text-[10px]">Father's / Guardian's Name</span>
-        <span id="stuModalFather" class="font-bold text-slate-900 text-xs">-</span>
+        <span class="text-slate-500 font-medium block text-xs uppercase tracking-wider font-mono">Father's / Guardian's Name</span>
+        <span id="stuModalFather" class="font-bold text-slate-900 text-sm mt-0.5 block">-</span>
       </div>
       <div>
-        <span class="text-slate-500 font-medium block text-[10px]">Parent's Phone Number</span>
-        <span id="stuModalPhone" class="font-bold font-mono text-slate-900 text-xs">-</span>
+        <span class="text-slate-500 font-medium block text-xs uppercase tracking-wider font-mono">Parent's Phone Number</span>
+        <span id="stuModalPhone" class="font-bold font-mono text-slate-900 text-sm mt-0.5 block">-</span>
       </div>
       <div>
-        <span class="text-slate-500 font-medium block text-[10px]">Departure Date &amp; Time</span>
-        <span id="stuModalDeparture" class="font-semibold text-slate-900 text-xs">-</span>
+        <span class="text-slate-500 font-medium block text-xs uppercase tracking-wider font-mono">Departure Date &amp; Time</span>
+        <span id="stuModalDeparture" class="font-semibold text-slate-900 text-sm mt-0.5 block">-</span>
       </div>
       <div>
-        <span class="text-slate-500 font-medium block text-[10px]">Return Date &amp; Time</span>
-        <span id="stuModalReturn" class="font-semibold text-slate-900 text-xs">-</span>
+        <span class="text-slate-500 font-medium block text-xs uppercase tracking-wider font-mono">Return Date &amp; Time</span>
+        <span id="stuModalReturn" class="font-semibold text-slate-900 text-sm mt-0.5 block">-</span>
       </div>
       <div class="sm:col-span-2">
-        <span class="text-slate-500 font-medium block text-[10px]">Place / Destination</span>
-        <span id="stuModalDestination" class="font-semibold text-slate-900 text-xs">-</span>
+        <span class="text-slate-500 font-medium block text-xs uppercase tracking-wider font-mono">Place / Destination</span>
+        <span id="stuModalDestination" class="font-semibold text-slate-900 text-sm mt-0.5 block">-</span>
       </div>
       <div class="sm:col-span-2">
-        <span class="text-slate-500 font-medium block text-[10px]">Reason / Purpose</span>
-        <span id="stuModalReason" class="font-medium text-slate-800 text-xs leading-relaxed block mt-0.5 bg-white p-2.5 rounded-lg border border-slate-200">-</span>
+        <span class="text-slate-500 font-medium block text-xs uppercase tracking-wider font-mono">Reason / Purpose</span>
+        <span id="stuModalReason" class="font-medium text-slate-800 text-sm leading-relaxed block mt-1 bg-white p-3 rounded-lg border border-slate-200">-</span>
       </div>
-      <div id="stuModalHostelInfoRow" class="hidden sm:col-span-2 p-2.5 bg-emerald-50/70 border border-emerald-200 rounded-lg text-emerald-900">
-        <span class="font-bold block text-[10px]">Hostel Particulars:</span>
-        <span id="stuModalHostelDetails" class="text-xs font-medium">-</span>
+      <div id="stuModalHostelInfoRow" class="hidden sm:col-span-2 p-3 bg-emerald-50/70 border border-emerald-200 rounded-lg text-emerald-900">
+        <span class="font-bold block text-xs uppercase tracking-wider font-mono">Hostel Particulars:</span>
+        <span id="stuModalHostelDetails" class="text-sm font-medium mt-0.5 block">-</span>
       </div>
     </div>
 
     <!-- Action Buttons -->
-    <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100">
+    <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
       <div class="flex items-center gap-2">
         <button
           type="button"
           id="stuModalViewLetterBtn"
-          class="px-3 py-2 bg-white hover:bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 shadow-2xs transition active:scale-95 flex items-center gap-1.5"
+          class="px-3.5 py-2.5 bg-white hover:bg-slate-50 active:bg-slate-100 border border-slate-300 rounded-xl text-sm font-bold text-slate-700 shadow-2xs transition active:scale-95 flex items-center gap-1.5"
         >
-          <svg class="w-3.5 h-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+          <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
           <span>View Letter</span>
         </button>
         <button
           type="button"
           id="stuModalDownloadLetterBtn"
-          class="px-3 py-2 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl text-xs font-bold text-blue-800 shadow-2xs transition active:scale-95 flex items-center gap-1.5"
+          class="px-3.5 py-2.5 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 border border-blue-200 rounded-xl text-sm font-bold text-blue-800 shadow-2xs transition active:scale-95 flex items-center gap-1.5"
         >
-          <svg class="w-3.5 h-3.5 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          <svg class="w-4 h-4 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
           <span>Download Letter (PDF)</span>
         </button>
       </div>
@@ -115,15 +115,15 @@
         <button
           type="button"
           id="stuModalPassCardBtn"
-          class="hidden px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1.5 active:scale-95"
+          class="hidden px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl text-sm font-bold transition shadow-xs flex items-center gap-1.5 active:scale-95"
         >
-          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           <span>View Gate Pass</span>
         </button>
         <button
           type="button"
           onclick="closeStudentRequestDetailModal()"
-          class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition"
+          class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 rounded-xl text-sm font-bold transition"
         >
           Close
         </button>

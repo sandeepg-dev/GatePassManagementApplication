@@ -41,7 +41,7 @@ function assembleIndexHtml() {
   <script src="https://unpkg.com/@zxing/library@latest"></script>
 
   <!-- External Design System Stylesheet -->
-  <link rel="stylesheet" href="/css/styles.css?v=3.0.0">
+  <link rel="stylesheet" href="/css/styles.css?v=3.4.1">
   <style>
     body { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; }
     .font-mono { font-family: 'JetBrains Mono', monospace; }
@@ -85,27 +85,27 @@ function assembleIndexHtml() {
   </script>
 
   <!-- Application Modular Components -->
-  <script src="/js/utils.js?v=3.3.0"></script>
-  <script src="/js/services/notificationService.js?v=3.3.0"></script>
-  <script src="/js/api.js?v=3.3.0"></script>
-  <script src="/js/services/pdfService.js?v=3.3.0"></script>
-  <script src="/js/services/attendanceExcelService.js?v=3.3.0"></script>
-  <script src="/js/modules/student/studentNavigation.js?v=3.3.0"></script>
-  <script src="/js/modules/student/studentForms.js?v=3.3.0"></script>
-  <script src="/js/modules/student/studentRequests.js?v=3.3.0"></script>
-  <script src="/js/modules/student/studentModals.js?v=3.3.0"></script>
-  <script src="/js/modules/studentPortal.js?v=3.3.0"></script>
-  <script src="/js/modules/onDutyPortal.js?v=3.3.0"></script>
-  <script src="/js/modules/counselorQueue.js?v=3.3.0"></script>
-  <script src="/js/modules/advisorQueue.js?v=3.3.0"></script>
-  <script src="/js/modules/hodQueue.js?v=3.3.0"></script>
-  <script src="/js/modules/principalQueue.js?v=3.3.0"></script>
-  <script src="/js/modules/wardenQueue.js?v=3.3.0"></script>
-  <script src="/js/modules/auditLogs.js?v=3.3.0"></script>
-  <script src="/js/modules/authorityPortal.js?v=3.3.0"></script>
-  <script src="/js/dashboard.js?v=3.3.0"></script>
-  <script src="/js/auth.js?v=3.3.0"></script>
-  <script src="/js/main.js?v=3.3.0"></script>
+  <script src="/js/utils.js?v=3.4.0"></script>
+  <script src="/js/services/notificationService.js?v=3.4.0"></script>
+  <script src="/js/api.js?v=3.4.0"></script>
+  <script src="/js/services/pdfService.js?v=3.4.0"></script>
+  <script src="/js/services/attendanceExcelService.js?v=3.4.0"></script>
+  <script src="/js/modules/student/studentNavigation.js?v=3.4.0"></script>
+  <script src="/js/modules/student/studentForms.js?v=3.4.0"></script>
+  <script src="/js/modules/student/studentRequests.js?v=3.4.0"></script>
+  <script src="/js/modules/student/studentModals.js?v=3.4.0"></script>
+  <script src="/js/modules/studentPortal.js?v=3.4.0"></script>
+  <script src="/js/modules/onDutyPortal.js?v=3.4.0"></script>
+  <script src="/js/modules/counselorQueue.js?v=3.4.0"></script>
+  <script src="/js/modules/advisorQueue.js?v=3.4.0"></script>
+  <script src="/js/modules/hodQueue.js?v=3.4.0"></script>
+  <script src="/js/modules/principalQueue.js?v=3.4.0"></script>
+  <script src="/js/modules/wardenQueue.js?v=3.4.0"></script>
+  <script src="/js/modules/auditLogs.js?v=3.4.0"></script>
+  <script src="/js/modules/authorityPortal.js?v=3.4.0"></script>
+  <script src="/js/dashboard.js?v=3.4.0"></script>
+  <script src="/js/auth.js?v=3.4.0"></script>
+  <script src="/js/main.js?v=3.4.0"></script>
 </body>
 
 </html>
