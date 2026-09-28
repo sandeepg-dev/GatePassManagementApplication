@@ -339,7 +339,7 @@
   }
 
   /**
-   * Open Digital Gate Pass Card Modal (When Approved - Gate Pass Ready)
+   * Open Official Digital Gate Pass Document Modal (When Approved - Gate Pass Ready)
    */
   function openGatePassCardModal(pass) {
     if (!pass) return;
@@ -347,38 +347,122 @@
     const modal = document.getElementById('gatePassCardModal');
     if (!modal) return;
 
+    window.currentActivePass = pass;
+
     const isHosteller = (/hoste?l|^h$/i.test(pass.accommodation || '') && !/day\s*scholar/i.test(pass.accommodation || ''));
-    const depDisplay = typeof window.formatAcademicDateTime === 'function'
-      ? window.formatAcademicDateTime(pass.departureDate, pass.departureTime)
-      : `${pass.departureDate || ''} ${pass.departureTime || ''}`;
-    const retDisplay = typeof window.formatAcademicDateTime === 'function'
-      ? window.formatAcademicDateTime(pass.expectedReturnDate || pass.returnDate, pass.expectedReturnTime || pass.returnTime)
-      : `${pass.expectedReturnDate || pass.returnDate || ''} ${pass.expectedReturnTime || pass.returnTime || ''}`;
+    
+    // Gate Pass ID
+    const yr = new Date(pass.createdAt || Date.now()).getFullYear();
+    const fallbackId = `GRT-GP-${yr}-${String(pass._id || '').slice(-4).toUpperCase() || '1048'}`;
+    const gatePassId = pass.gatePassId || fallbackId;
+    pass.gatePassId = gatePassId;
 
-    const nameEl = document.getElementById('gpCardName');
-    if (nameEl) nameEl.innerText = pass.studentName || pass.name || '-';
+    // Movement details
+    const studentName = pass.studentName || pass.name || 'Student';
+    const rollNo = pass.rollNo || pass.registrationNumber || '-';
+    const deptStr = pass.dept ? `Dept of ${pass.dept.toUpperCase()}` : 'Engineering';
+    const yearSecStr = `${pass.academicYear || 'III Year'} / Section '${pass.yearSec || 'A'}'`;
+    const accomStr = isHosteller ? 'Hosteller (Resident)' : 'Day Scholar';
+    const parentContact = pass.parentContact || pass.contactNumber || pass.mobile || '-';
+    
+    const depDate = pass.departureDate || pass.leaveDate || '-';
+    const depTime = pass.departureTime || pass.leaveTime || '-';
+    const depTimeFormatted = typeof formatTime12 === 'function' ? formatTime12(depTime) : depTime;
 
-    const rollEl = document.getElementById('gpCardRoll');
-    if (rollEl) rollEl.innerText = pass.rollNo || pass.registrationNumber || '-';
+    const retDate = pass.expectedReturnDate || pass.returnDate || '';
+    const retTime = pass.expectedReturnTime || pass.returnTime || '';
+    let retDisplay = 'N/A (Day Scholar Outpass)';
+    if (isHosteller) {
+      if (retDate && retTime) {
+        retDisplay = `${retDate} at ${retTime}`;
+      } else if (retDate) {
+        retDisplay = retDate;
+      } else if (pass.expectedReturnDateTime) {
+        retDisplay = pass.expectedReturnDateTime;
+      } else {
+        retDisplay = 'Authorized Institutional Hours';
+      }
+    }
 
-    const deptEl = document.getElementById('gpCardDept');
-    if (deptEl) deptEl.innerText = `${pass.dept || 'Engineering'} - Sec ${pass.yearSec || 'A'} (${pass.academicYear || 'III Year'})`;
+    // Final Approving Authority
+    let finalAuth = pass.finalApprovingAuthority;
+    if (!finalAuth) {
+      if (isHosteller) {
+        const wName = pass.wardenApproval?.wardenName || (pass.gender === 'Female' ? 'Girls Hostel Warden' : 'Boys Hostel Warden');
+        finalAuth = `${wName} (Hostel Warden)`;
+      } else {
+        const pName = pass.principalApproval?.principalName || 'Principal';
+        finalAuth = `Principal (${pName})`;
+      }
+      pass.finalApprovingAuthority = finalAuth;
+    }
 
-    const accomEl = document.getElementById('gpCardAccom');
-    if (accomEl) accomEl.innerText = isHosteller ? 'Hosteller (Resident)' : 'Day Scholar';
+    const approvalTime = pass.finalApprovalTime || pass.approvalTime || pass.principalApproval?.time || pass.wardenApproval?.time || pass.appliedTime || '-';
+    const verifyCode = `GRT-VERIFY-${rollNo}-${String(gatePassId).replace(/[^A-Za-z0-9]/g, '')}`;
 
-    const depEl = document.getElementById('gpCardDep');
-    if (depEl) depEl.innerText = depDisplay;
+    // Populate Official Document Elements
+    const setTxt = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.innerText = val;
+    };
 
-    const retEl = document.getElementById('gpCardRet');
-    if (retEl) retEl.innerText = retDisplay;
+    setTxt('gpDocPassId', gatePassId);
+    setTxt('gpDocName', studentName);
+    setTxt('gpDocRoll', rollNo);
+    setTxt('gpDocDept', deptStr);
+    setTxt('gpDocYearSec', yearSecStr);
+    setTxt('gpDocAccom', accomStr);
+    setTxt('gpDocParentContact', parentContact);
+    setTxt('gpDocDate', depDate);
+    setTxt('gpDocTime', depTimeFormatted);
+    setTxt('gpDocReturnTime', retDisplay);
+    setTxt('gpDocFinalAuthority', finalAuth);
+    setTxt('gpDocApprovalTime', approvalTime);
+    setTxt('gpDocVerifyCode', verifyCode);
+    setTxt('gpDocStudentSignName', studentName);
+    setTxt('gpDocFinalAuthoritySign', finalAuth);
 
-    const reasonEl = document.getElementById('gpCardReason');
+    const reasonEl = document.getElementById('gpDocReason');
     if (reasonEl) {
       const dest = pass.destination || pass.placeOrEvent ? ` | Destination: ${pass.destination || pass.placeOrEvent}` : '';
       reasonEl.innerText = `${pass.reason || '-'}${dest}`;
     }
 
+    const accomBadge = document.getElementById('gpDocAccomBadge');
+    if (accomBadge) {
+      accomBadge.innerText = isHosteller ? 'HOSTELLER' : 'DAY SCHOLAR';
+      accomBadge.className = isHosteller 
+        ? 'px-2.5 py-1 bg-amber-50 border border-amber-300 text-amber-900 rounded font-mono text-xs font-bold'
+        : 'px-2.5 py-1 bg-blue-50 border border-blue-200 text-blue-800 rounded font-mono text-xs font-bold';
+    }
+
+    const approverRoleLabel = document.getElementById('gpDocApproverRoleLabel');
+    if (approverRoleLabel) {
+      approverRoleLabel.innerText = isHosteller ? 'Hostel Warden Clearance' : 'Principal Final Approval';
+    }
+
+    // Dynamic QR Code Generation
+    const qrImg = document.getElementById('gpDocQrImage');
+    if (qrImg) {
+      const qrPayload = encodeURIComponent(`GRT_INSTITUTIONAL_GATE_PASS|ID:${gatePassId}|STUDENT:${studentName}|ROLL:${rollNo}|STATUS:APPROVED|AUTHORITY:${finalAuth}|DEPARTURE:${depDate} ${depTime}`);
+      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${qrPayload}`;
+      qrImg.onerror = function() {
+        // Fallback placeholder pattern if offline
+        this.onerror = null;
+        this.src = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='white'/%3E%3Crect x='10' y='10' width='25' height='25' fill='black'/%3E%3Crect x='15' y='15' width='15' height='15' fill='white'/%3E%3Crect x='18' y='18' width='9' height='9' fill='black'/%3E%3Crect x='65' y='10' width='25' height='25' fill='black'/%3E%3Crect x='70' y='15' width='15' height='15' fill='white'/%3E%3Crect x='73' y='18' width='9' height='9' fill='black'/%3E%3Crect x='10' y='65' width='25' height='25' fill='black'/%3E%3Crect x='15' y='70' width='15' height='15' fill='white'/%3E%3Crect x='18' y='73' width='9' height='9' fill='black'/%3E%3Crect x='45' y='15' width='10' height='10' fill='black'/%3E%3Crect x='45' y='45' width='10' height='10' fill='black'/%3E%3Crect x='45' y='75' width='10' height='10' fill='black'/%3E%3Crect x='75' y='45' width='15' height='15' fill='black'/%3E%3Crect x='75' y='75' width='15' height='15' fill='black'/%3E%3C/svg%3E";
+      };
+    }
+
+    // Maintain backward-compatibility elements
+    setTxt('gpCardName', studentName);
+    setTxt('gpCardRoll', rollNo);
+    setTxt('gpCardDept', `${pass.dept || 'Engineering'} - Sec ${pass.yearSec || 'A'} (${pass.academicYear || 'III Year'})`);
+    setTxt('gpCardAccom', accomStr);
+    setTxt('gpCardDep', `${depDate} ${depTimeFormatted}`);
+    setTxt('gpCardRet', retDisplay);
+    setTxt('gpCardReason', pass.reason || '-');
+
+    // Download Button Handlers
     const dlBtn = document.getElementById('gpCardDownloadBtn');
     if (dlBtn) {
       dlBtn.onclick = () => {

@@ -361,9 +361,9 @@ async function fetchAuthorityData() {
       passUrl += `&dept=${encodeURIComponent(user.dept || '')}`;
       odUrl += `&dept=${encodeURIComponent(user.dept || '')}`;
     } else if (role === 'boys_warden' || role.includes('boys')) {
-      passUrl += `&accommodation=Hosteller&role=boys_warden&gender=Male`;
+      passUrl += `&accommodation=Hosteller&gender=Male`;
     } else if (role === 'girls_warden' || role.includes('girls')) {
-      passUrl += `&accommodation=Hosteller&role=girls_warden&gender=Female`;
+      passUrl += `&accommodation=Hosteller&gender=Female`;
     }
 
     const [passesRes, odRes] = await Promise.all([
@@ -425,9 +425,13 @@ function isPendingForRole(item, isOD) {
   if (role === 'advisor') return status === 'Pending Advisor';
   if (role === 'hod') return status === 'Pending HOD';
   if (role === 'principal') return status === 'Pending Principal';
-  if (role === 'boys_warden') return status === 'Pending Boys Warden' || status === 'Pending Warden';
-  if (role === 'girls_warden') return status === 'Pending Girls Warden' || status === 'Pending Warden';
-  if (role === 'warden') return status.includes('Warden');
+  if (role === 'boys_warden' || (role.includes('warden') && role.includes('boys')) || role === 'warden_boys') {
+    return status === 'Pending Boys Warden' || status === 'Pending Warden';
+  }
+  if (role === 'girls_warden' || (role.includes('warden') && role.includes('girls')) || role === 'warden_girls') {
+    return status === 'Pending Girls Warden' || status === 'Pending Warden';
+  }
+  if (role === 'warden' || role.includes('warden')) return status.includes('Warden');
 
   return status.toLowerCase().includes('pending');
 }
@@ -1506,6 +1510,12 @@ async function executeRoleApprove(itemId, isOD) {
       } else if (role === 'principal') {
         endpoint = '/api/approvals/principal';
         payload = { passId: itemId, principalName: user?.name };
+      } else if (role === 'boys_warden' || (role.includes('warden') && role.includes('boys'))) {
+        endpoint = '/api/approvals/boys-warden';
+        payload = { passId: itemId, wardenName: user?.name };
+      } else if (role === 'girls_warden' || (role.includes('warden') && role.includes('girls'))) {
+        endpoint = '/api/approvals/girls-warden';
+        payload = { passId: itemId, wardenName: user?.name };
       } else if (role.includes('warden')) {
         endpoint = '/api/approvals/warden';
         payload = { passId: itemId, wardenName: user?.name };
@@ -1515,8 +1525,8 @@ async function executeRoleApprove(itemId, isOD) {
     }
 
     if (typeof showToast === 'function') {
-      const nextRole = role === 'counselor' ? 'Class Advisor' : (role === 'advisor' ? 'Head of Department' : 'final clearance');
-      showToast(`Request approved successfully and forwarded to ${nextRole}!`, 'success');
+      const nextRole = role === 'counselor' ? 'Class Advisor' : (role === 'advisor' ? 'Head of Department' : (role === 'hod' ? 'Principal' : (role === 'principal' ? 'Hostel Warden' : 'Final Gate Pass Generation')));
+      showToast(`Request approved successfully!`, 'success');
     }
 
     fetchAuthorityData();

@@ -545,7 +545,103 @@
     if (elTot) elTot.innerText = String(totalCount);
     if (elBadge) elBadge.innerText = String(totalCount);
 
-    // Render Dashboard Recent Requisitions preview (top 3)
+    // 1. Render Active Approved Gate Pass Banner on Student Dashboard
+    const activeGatePass = cachedStudentPasses.find(p => p.requestCategory !== 'leave' && isPassFullyApproved(p));
+    const activePassSection = document.getElementById('stuActiveGatePassSection');
+    if (activePassSection) {
+      if (activeGatePass) {
+        const isHosteller = (/hoste?l|^h$/i.test(activeGatePass.accommodation || '') && !/day\s*scholar/i.test(activeGatePass.accommodation || ''));
+        const yr = new Date(activeGatePass.createdAt || Date.now()).getFullYear();
+        const fallbackId = `GRT-GP-${yr}-${String(activeGatePass._id || '').slice(-4).toUpperCase() || '1048'}`;
+        const gpId = activeGatePass.gatePassId || fallbackId;
+        activeGatePass.gatePassId = gpId;
+
+        const depStr = formatAcademicDateTime(activeGatePass.departureDate, activeGatePass.departureTime);
+        const retStr = isHosteller 
+          ? (activeGatePass.expectedReturnDate ? formatAcademicDateTime(activeGatePass.expectedReturnDate, activeGatePass.expectedReturnTime) : (activeGatePass.expectedReturnDateTime || '-'))
+          : 'N/A (Day Scholar Outpass)';
+        const approver = activeGatePass.finalApprovingAuthority || (isHosteller ? 'Hostel Warden' : 'Principal Directorate');
+
+        activePassSection.className = 'block';
+        activePassSection.innerHTML = `
+          <div class="stu-card p-5 border-2 border-emerald-500/80 bg-gradient-to-r from-emerald-50/50 via-white to-slate-50 shadow-xs rounded-2xl space-y-3.5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-emerald-100">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shadow-xs">
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold uppercase tracking-wider text-emerald-800 font-mono">Official Gate Pass Issued</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 font-mono">${isHosteller ? 'HOSTELLER' : 'DAY SCHOLAR'}</span>
+                  </div>
+                  <h3 class="text-sm sm:text-base font-black text-slate-900">Pass ID: <span class="font-mono text-emerald-700">${escapeHtml(gpId)}</span></h3>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 self-start sm:self-auto">
+                <button
+                  type="button"
+                  id="dashViewGatePassBtn"
+                  class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  <span>View Gate Pass</span>
+                </button>
+                <button
+                  type="button"
+                  id="dashDownloadGatePassBtn"
+                  class="px-3.5 py-2 bg-slate-900 hover:bg-black text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                  <span>Download Gate Pass (PDF)</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+              <div class="p-2.5 bg-white rounded-xl border border-slate-200">
+                <span class="text-[10px] text-slate-500 font-medium block">Departure Schedule</span>
+                <span class="font-bold text-slate-900 block mt-0.5">${escapeHtml(depStr)}</span>
+              </div>
+              <div class="p-2.5 bg-white rounded-xl border border-slate-200">
+                <span class="text-[10px] text-slate-500 font-medium block">Expected Return</span>
+                <span class="font-bold text-slate-900 block mt-0.5">${escapeHtml(retStr)}</span>
+              </div>
+              <div class="p-2.5 bg-white rounded-xl border border-slate-200">
+                <span class="text-[10px] text-slate-500 font-medium block">Final Approving Authority</span>
+                <span class="font-bold text-emerald-800 block mt-0.5">${escapeHtml(approver)}</span>
+              </div>
+              <div class="p-2.5 bg-white rounded-xl border border-slate-200">
+                <span class="text-[10px] text-slate-500 font-medium block">Reason for Outpass</span>
+                <span class="font-medium text-slate-800 truncate block mt-0.5" title="${escapeHtml(activeGatePass.reason || '')}">${escapeHtml(activeGatePass.reason || '-')}</span>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const viewBtn = document.getElementById('dashViewGatePassBtn');
+        if (viewBtn) {
+          viewBtn.onclick = () => {
+            if (typeof window.openGatePassCardModal === 'function') {
+              window.openGatePassCardModal(activeGatePass);
+            }
+          };
+        }
+        const dlBtn = document.getElementById('dashDownloadGatePassBtn');
+        if (dlBtn) {
+          dlBtn.onclick = () => {
+            if (typeof window.downloadGatePassCardPDF === 'function') {
+              window.downloadGatePassCardPDF(activeGatePass);
+            }
+          };
+        }
+      } else {
+        activePassSection.className = 'hidden';
+        activePassSection.innerHTML = '';
+      }
+    }
+
+    // 2. Render Dashboard Recent Requisitions preview (top 3)
     const recentContainer = document.getElementById('dashRecentRequestsContainer');
     if (recentContainer) {
       if (items.length === 0) {
@@ -557,27 +653,40 @@
         `;
       } else {
         const recents = items.slice(0, 3);
-        recentContainer.innerHTML = recents.map(item => `
-          <div class="p-3.5 bg-slate-50/80 hover:bg-slate-100/80 rounded-xl border border-slate-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition">
-            <div class="flex items-center gap-3">
-              <span class="${item.badgeClass}">${item.categoryLabel}</span>
-              <div>
-                <div class="text-xs font-bold text-slate-900">${escapeHtml(item.title)}</div>
-                <div class="text-[11px] text-slate-500 font-mono">${escapeHtml(item.schedule)}</div>
+        recentContainer.innerHTML = recents.map(item => {
+          const isGPApproved = item.category === 'gatepass' && item.statusInfo.isApproved;
+          return `
+            <div class="p-3.5 bg-slate-50/80 hover:bg-slate-100/80 rounded-xl border border-slate-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition">
+              <div class="flex items-center gap-3">
+                <span class="${item.badgeClass}">${item.categoryLabel}</span>
+                <div>
+                  <div class="text-xs font-bold text-slate-900">${escapeHtml(item.title)}</div>
+                  <div class="text-[11px] text-slate-500 font-mono">${escapeHtml(item.schedule)}</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="${item.statusInfo.statusClass}">${item.statusInfo.statusText}</span>
+                ${isGPApproved ? `
+                  <button
+                    type="button"
+                    onclick="openGatePassCardModal(${escapeAttr(item.raw)})"
+                    class="px-2.5 py-1 text-xs font-bold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition shadow-2xs"
+                  >
+                    View Gate Pass
+                  </button>
+                ` : `
+                  <button
+                    type="button"
+                    onclick="switchStudentPage('requests')"
+                    class="px-2.5 py-1 text-xs font-semibold text-blue-700 bg-white border border-slate-200 rounded-lg hover:bg-blue-50 transition shadow-2xs"
+                  >
+                    View Status
+                  </button>
+                `}
               </div>
             </div>
-            <div class="flex items-center gap-2.5">
-              <span class="${item.statusInfo.statusClass}">${item.statusInfo.statusText}</span>
-              <button
-                type="button"
-                onclick="switchStudentPage('requests')"
-                class="px-2.5 py-1 text-xs font-semibold text-blue-700 bg-white border border-slate-200 rounded-lg hover:bg-blue-50 transition shadow-2xs"
-              >
-                View Status
-              </button>
-            </div>
-          </div>
-        `).join('');
+          `;
+        }).join('');
       }
     }
 
@@ -653,9 +762,17 @@
                 type="button"
                 onclick="openGatePassCardModal(${escapeAttr(item.raw)})"
                 class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs transition active:scale-95"
-                title="View Gate Pass Card"
+                title="View Approved Official Gate Pass"
               >
-                View Pass
+                View Gate Pass
+              </button>
+              <button
+                type="button"
+                onclick="downloadGatePassCardPDF(${escapeAttr(item.raw)})"
+                class="px-2.5 py-1 bg-slate-900 hover:bg-black text-white rounded-lg text-xs font-bold shadow-xs transition active:scale-95"
+                title="Download Official Gate Pass PDF"
+              >
+                Download Pass
               </button>
             ` : ''}
           </div>

@@ -905,301 +905,310 @@ async function downloadAllCompleteLettersPDF() {
  * @param {string} logoBase64
  * @param {string} [watermarkBase64]
  */
-function renderProfessionalGatePassCardPage(doc, pass, logoBase64, watermarkBase64, bannerBase64) {
-  const banner = bannerBase64 || cachedCollegeBannerBase64;
+/**
+ * Helper to generate QR code data URL for official Gate Pass verification
+ */
+function getGatePassQrBase64(pass, gatePassId, rollNo, finalAuth, depDate, depTime) {
+  return new Promise((resolve) => {
+    try {
+      const studentName = pass.studentName || pass.name || 'Student';
+      const qrPayload = encodeURIComponent(`GRT_INSTITUTIONAL_GATE_PASS|ID:${gatePassId}|STUDENT:${studentName}|ROLL:${rollNo}|STATUS:APPROVED|AUTHORITY:${finalAuth}|DEPARTURE:${depDate} ${depTime}`);
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+      const timeoutId = setTimeout(() => resolve(null), 1500);
+      img.onload = () => {
+        clearTimeout(timeoutId);
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth || 140;
+          canvas.height = img.naturalHeight || 140;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL('image/png'));
+        } catch (e) {
+          resolve(null);
+        }
+      };
+      img.onerror = () => {
+        clearTimeout(timeoutId);
+        resolve(null);
+      };
+      img.src = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${qrPayload}`;
+    } catch (e) {
+      resolve(null);
+    }
+  });
+}
+
+/**
+ * Renders an Authentic, Official College Gate Pass Document
+ * Follows genuine institutional certificate standards:
+ * - Proper typography, spacing, borders, and authorization sections
+ * - Pure white background, zero artificial neon colors or emojis
+ * - Fully incorporates all 16 required particulars and movement details
+ */
+function renderProfessionalGatePassCardPage(doc, pass, logoBase64, watermarkBase64, bannerBase64, qrBase64) {
   const logo = logoBase64 || cachedCollegeLogoBase64;
   const watermark = watermarkBase64 || cachedCollegeLogoWatermarkBase64;
 
-  const isHosteller = (/hoste?l|^h$/i.test(pass.accommodation || '') && !/day/i.test(pass.accommodation || ''));
+  const isHosteller = (/hoste?l|^h$/i.test(pass.accommodation || '') && !/day\s*scholar/i.test(pass.accommodation || ''));
   const deptUpper = String(pass.dept || 'ENGINEERING').toUpperCase();
-  const appliedDate = formatLetterDate(pass.appliedTime);
-  const leaveTimeStr = pass.leaveDate ? `${pass.leaveDate}${pass.leaveTime ? ' at ' + pass.leaveTime : ''}` : (pass.departureDate ? `${pass.departureDate}${pass.departureTime ? ' at ' + pass.departureTime : ''}` : (pass.approvalTime || pass.appliedTime || appliedDate));
+  const studentName = pass.studentName || pass.name || 'Student';
+  const rollNo = pass.rollNo || pass.registrationNumber || '-';
 
-  // 1. Outer Background & Security Frame
-  const cardX = 12;
-  const cardY = 12;
-  const cardWidth = 186;
-  const cardHeight = 273;
+  // Gate Pass ID
+  const yr = new Date(pass.createdAt || Date.now()).getFullYear();
+  const fallbackId = `GRT-GP-${yr}-${String(pass._id || '').slice(-4).toUpperCase() || '1048'}`;
+  const gatePassId = pass.gatePassId || fallbackId;
 
-  // Card Outer Double Border
-  doc.setDrawColor(15, 23, 42); // Deep Navy
-  doc.setLineWidth(0.8);
-  doc.roundedRect(cardX, cardY, cardWidth, cardHeight, 3.5, 3.5, 'D');
-
-  doc.setDrawColor(203, 213, 225); // Subtle Slate Inner Frame
-  doc.setLineWidth(0.3);
-  doc.roundedRect(cardX + 1.5, cardY + 1.5, cardWidth - 3, cardHeight - 3, 2.5, 2.5, 'D');
-
-  // 2. Official Header Banner - Full Width (stretches left-to-right to fill entire space)
-  if (banner) {
-    try {
-      const bX = cardX + 2;
-      const bY = cardY + 2;
-      const bW = cardWidth - 4; // 182mm - full width across the card
-      const bH = 34; // fills header area with high clarity
-      doc.setFillColor(255, 255, 255);
-      doc.roundedRect(bX, bY, bW, bH, 2, 2, 'F');
-      doc.addImage(banner, 'PNG', bX, bY, bW, bH);
-    } catch (e) {
-      console.warn('Could not add banner to Gate Pass card:', e);
+  // Final Approving Authority
+  let finalAuth = pass.finalApprovingAuthority;
+  if (!finalAuth) {
+    if (isHosteller) {
+      const wName = pass.wardenApproval?.wardenName || (pass.gender === 'Female' ? 'Girls Hostel Warden' : 'Boys Hostel Warden');
+      finalAuth = `${wName} (Hostel Warden)`;
+    } else {
+      const pName = pass.principalApproval?.principalName || 'Principal';
+      finalAuth = `Principal (${pName})`;
     }
-  } else {
-    doc.setFillColor(15, 23, 42); // Navy Banner
-    doc.roundedRect(cardX + 2, cardY + 2, cardWidth - 4, 34, 2.5, 2.5, 'F');
-
-    // College Logo in White Badge
-    if (logo) {
-      try {
-        doc.setFillColor(255, 255, 255);
-        doc.roundedRect(cardX + 4.5, cardY + 4, 25, 25, 2, 2, 'F');
-        doc.addImage(logo, 'PNG', cardX + 5.5, cardY + 5, 23, 23);
-      } catch (e) {
-        console.warn('Could not add logo to Gate Pass card:', e);
-      }
-    }
-
-    // College Header Text
-    const headerCenterX = cardX + 28 + (cardWidth - 32) / 2;
-    doc.setFont('times', 'bold');
-    doc.setFontSize(13);
-    doc.setTextColor(255, 255, 255);
-    doc.text('GRT INSTITUTE OF ENGINEERING AND TECHNOLOGY', headerCenterX, cardY + 10, { align: 'center' });
-
-    doc.setFont('times', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(226, 232, 240);
-    doc.text('(An Autonomous Institution | Accredited by NAAC with \'A++\' Grade | Approved by AICTE)', headerCenterX, cardY + 15.5, { align: 'center' });
-
-    doc.setFontSize(7.5);
-    doc.setTextColor(203, 213, 225);
-    doc.text('Affiliated to Anna University, Chennai • Tiruttani-Chennai Highway, Tiruttani - 631 209', headerCenterX, cardY + 20, { align: 'center' });
-
-    doc.setFont('times', 'bold');
-    doc.setFontSize(9);
-    doc.setTextColor(253, 224, 71); // Gold accent
-    doc.text(`DEPARTMENT OF ${deptUpper}`, headerCenterX, cardY + 26, { align: 'center' });
   }
 
-  // Maroon/Gold Accent Bar
-  doc.setFillColor(185, 28, 28); // Maroon
-  doc.rect(cardX + 2, cardY + 36.2, cardWidth - 4, 1.8, 'F');
+  const depDate = pass.departureDate || pass.leaveDate || '-';
+  const depTime = pass.departureTime || pass.leaveTime || '-';
+  const depTimeFormatted = typeof formatTime12 === 'function' ? formatTime12(depTime) : depTime;
 
-  // 3. Pass Card Title Bar & Security Token
-  let curY = cardY + 41.5;
-  doc.setFillColor(240, 253, 244);
-  doc.setDrawColor(34, 197, 94);
-  doc.setLineWidth(0.4);
-  doc.roundedRect(cardX + 4, curY, 70, 11, 2, 2, 'FD');
+  let retDisplay = 'N/A (Day Scholar Outpass)';
+  if (isHosteller) {
+    const retDate = pass.expectedReturnDate || pass.returnDate || '';
+    const retTime = pass.expectedReturnTime || pass.returnTime || '';
+    if (retDate && retTime) {
+      retDisplay = `${retDate} at ${typeof formatTime12 === 'function' ? formatTime12(retTime) : retTime}`;
+    } else if (retDate) {
+      retDisplay = retDate;
+    } else if (pass.expectedReturnDateTime) {
+      retDisplay = pass.expectedReturnDateTime;
+    } else {
+      retDisplay = 'Authorized Institutional Hours';
+    }
+  }
 
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10.5);
-  doc.setTextColor(22, 101, 52);
-  doc.text('CAMPUS GATE PASS', cardX + 7, curY + 7.5);
+  const parentContact = pass.parentContact || pass.contactNumber || pass.mobile || '-';
+  const approvalTime = pass.finalApprovalTime || pass.approvalTime || pass.principalApproval?.time || pass.wardenApproval?.time || pass.appliedTime || '-';
+  const verifyCode = `GRT-VERIFY-${rollNo}-${String(gatePassId).replace(/[^A-Za-z0-9]/g, '')}`;
 
-  // Barcode & Token
-  doc.setFont('courier', 'bold');
-  doc.setFontSize(8.5);
+  // 1. Page & Border Geometry
+  const cardX = 14;
+  const cardY = 13;
+  const cardWidth = 182;
+  const cardHeight = 271;
+  const centerX = cardX + cardWidth / 2;
+
+  // Outer Deep Border
+  doc.setDrawColor(15, 23, 42); // Formal Slate-900
+  doc.setLineWidth(0.8);
+  doc.roundedRect(cardX, cardY, cardWidth, cardHeight, 2, 2, 'D');
+
+  // Inner Hairline Frame
+  doc.setDrawColor(203, 213, 225); // Slate-300
+  doc.setLineWidth(0.25);
+  doc.roundedRect(cardX + 1.2, cardY + 1.2, cardWidth - 2.4, cardHeight - 2.4, 1.5, 1.5, 'D');
+
+  // Watermark
+  if (watermark) {
+    renderPageWatermark(doc, watermark, 85);
+  }
+
+  // 2. Official College Masthead Header
+  if (logo) {
+    try {
+      doc.addImage(logo, 'PNG', cardX + 4, cardY + 4, 21, 21);
+    } catch (e) {
+      console.warn('Could not add logo to Gate Pass PDF:', e);
+    }
+  }
+
+  // QR Code on top right (if available)
+  if (qrBase64) {
+    try {
+      doc.addImage(qrBase64, 'PNG', cardX + cardWidth - 25, cardY + 4, 21, 21);
+    } catch (e) {
+      console.warn('Could not add QR to Gate Pass PDF:', e);
+    }
+  } else {
+    // Crisp formal security validation block if QR unavailable
+    const qBoxX = cardX + cardWidth - 25;
+    doc.setDrawColor(203, 213, 225);
+    doc.setFillColor(248, 250, 252);
+    doc.rect(qBoxX, cardY + 4, 21, 21, 'FD');
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(6.5);
+    doc.setTextColor(30, 41, 59);
+    doc.text('INSTITUTE', qBoxX + 10.5, cardY + 11, { align: 'center' });
+    doc.text('GATE PASS', qBoxX + 10.5, cardY + 15, { align: 'center' });
+    doc.text('SECURITY', qBoxX + 10.5, cardY + 19, { align: 'center' });
+  }
+
+  // Centered Institution Text
+  doc.setFont('times', 'bold');
+  doc.setFontSize(12.5);
+  doc.setTextColor(15, 23, 42);
+  doc.text('GRT INSTITUTE OF ENGINEERING AND TECHNOLOGY', centerX, cardY + 8.5, { align: 'center' });
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(51, 65, 85);
+  doc.text('(An Autonomous Institution | Approved by AICTE, New Delhi | Affiliated to Anna University, Chennai)', centerX, cardY + 13, { align: 'center' });
+
+  doc.setFont('times', 'bold');
+  doc.setFontSize(7.8);
   doc.setTextColor(30, 41, 59);
-  doc.text(`TOKEN: GP-${pass.rollNo}`, cardX + 80, curY + 4.5);
+  doc.text('Accredited by NAAC with \'A++\' Grade', centerX, cardY + 17, { align: 'center' });
 
-  const barX = cardX + 80;
-  const barY = curY + 5.5;
-  const barWidths = [1.2, 0.6, 1.8, 0.8, 1.4, 0.5, 1.2, 2, 0.7, 1.3, 0.6, 1.8, 1, 0.8, 1.5, 0.6, 1.2, 0.8, 1.6];
-  let curBx = barX;
-  doc.setFillColor(15, 23, 42);
-  barWidths.forEach(w => {
-    doc.rect(curBx, barY, w, 5.2, 'F');
-    curBx += w + 0.8;
-  });
-
-  // Accommodation & Approved Badge
-  doc.setFillColor(isHosteller ? 254 : 238, isHosteller ? 243 : 242, isHosteller ? 199 : 255);
-  doc.setDrawColor(isHosteller ? 217 : 99, isHosteller ? 119 : 102, isHosteller ? 6 : 241);
-  doc.roundedRect(cardX + 132, curY, 49, 11, 2, 2, 'FD');
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.setTextColor(isHosteller ? 146 : 67, isHosteller ? 64 : 56, isHosteller ? 14 : 202);
-  doc.text(isHosteller ? 'HOSTELLER' : 'DAY SCHOLAR', cardX + 156.5, curY + 5, { align: 'center' });
-
+  doc.setFont('times', 'normal');
   doc.setFontSize(7);
-  doc.setTextColor(22, 101, 52);
-  doc.text('APPROVED & VALIDATED', cardX + 156.5, curY + 9.2, { align: 'center' });
+  doc.setTextColor(100, 116, 139);
+  doc.text('GRT Mahalaksmi Nagar, Tiruttani - 631 209, Tiruvallur District, Tamil Nadu', centerX, cardY + 21, { align: 'center' });
 
-  // 4. Student Information Grid
-  curY += 14;
+  // Divider Rules
+  doc.setDrawColor(15, 23, 42);
+  doc.setLineWidth(0.6);
+  doc.line(cardX + 3, cardY + 27, cardX + cardWidth - 3, cardY + 27);
+
+  doc.setDrawColor(203, 213, 225);
+  doc.setLineWidth(0.2);
+  doc.line(cardX + 3, cardY + 28, cardX + cardWidth - 3, cardY + 28);
+
+  // 3. Document Title & Identity Bar
+  doc.setFont('times', 'bold');
+  doc.setFontSize(13);
+  doc.setTextColor(15, 23, 42);
+  doc.text('GATE PASS', centerX, cardY + 34, { align: 'center' });
+
+  // Sub-bar Box
+  const subBoxY = cardY + 36.5;
+  const subBoxH = 7.5;
   doc.setFillColor(248, 250, 252);
   doc.setDrawColor(203, 213, 225);
   doc.setLineWidth(0.3);
-  doc.roundedRect(cardX + 4, curY, cardWidth - 8, 38, 2, 2, 'FD');
+  doc.rect(cardX + 3, subBoxY, cardWidth - 6, subBoxH, 'FD');
+
+  doc.setFont('times', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(71, 85, 105);
+  doc.text('PASS ID: ', cardX + 6, subBoxY + 5.2);
+  doc.setFont('courier', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(15, 23, 42);
+  doc.text(gatePassId, cardX + 22, subBoxY + 5.2);
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.setTextColor(71, 85, 105);
-  doc.text('STUDENT INFORMATION', cardX + 8, curY + 6);
+  doc.setFontSize(8);
+  doc.setTextColor(isHosteller ? 146 : 30, isHosteller ? 64 : 58, isHosteller ? 14 : 138);
+  doc.text(isHosteller ? 'CATEGORY: HOSTELLER' : 'CATEGORY: DAY SCHOLAR', centerX, subBoxY + 5.2, { align: 'center' });
 
-  doc.setDrawColor(226, 232, 240);
-  doc.setLineWidth(0.2);
-  doc.line(cardX + 8, curY + 8, cardX + cardWidth - 8, curY + 8);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.setTextColor(22, 101, 52);
+  doc.text('OFFICIALLY APPROVED & ISSUED', cardX + cardWidth - 6, subBoxY + 5.2, { align: 'right' });
 
-  const col1X = cardX + 8;
-  const col2X = cardX + 70;
-  const col3X = cardX + 130;
-  let infoY = curY + 14;
+  // 4. Tabular Particulars Grid (Official College Document Table)
+  const tblX = cardX + 3;
+  let curY = cardY + 47;
+  const tblW = cardWidth - 6; // 176mm
+  const col1W = 42;
+  const col2W = 46;
+  const col3W = 42;
+  const col4W = 46;
 
-  // Row 1
-  doc.setFont('times', 'bold'); doc.setFontSize(8.5); doc.setTextColor(71, 85, 105);
-  doc.text('Name:', col1X, infoY);
-  doc.setFont('times', 'bold'); doc.setFontSize(9); doc.setTextColor(15, 23, 42);
-  doc.text(String(pass.name || 'Student'), col1X + 22, infoY);
+  function renderTableRow(label1, val1, label2, val2, rowH, isFontMono1 = false, isFontMono2 = false) {
+    doc.setDrawColor(203, 213, 225);
+    doc.setLineWidth(0.25);
 
-  doc.setFont('times', 'bold'); doc.setFontSize(8.5); doc.setTextColor(71, 85, 105);
-  doc.text('Year / Sec:', col2X, infoY);
-  doc.setFont('times', 'bold'); doc.setFontSize(9); doc.setTextColor(15, 23, 42);
-  doc.text(`${pass.academicYear || 'III Year'} - Sec '${pass.yearSec || 'A'}'`, col2X + 20, infoY);
+    // Col 1 (Label)
+    doc.setFillColor(248, 250, 252);
+    doc.rect(tblX, curY, col1W, rowH, 'FD');
+    doc.setFont('times', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(71, 85, 105);
+    doc.text(label1, tblX + 2.5, curY + rowH / 2 + 1.5);
 
-  doc.setFont('times', 'bold'); doc.setFontSize(8.5); doc.setTextColor(71, 85, 105);
-  doc.text('Applied:', col3X, infoY);
-  doc.setFont('times', 'bold'); doc.setFontSize(8.5); doc.setTextColor(15, 23, 42);
-  doc.text(appliedDate, col3X + 16, infoY);
-
-  // Row 2
-  infoY += 7.5;
-  doc.setFont('times', 'bold'); doc.setFontSize(8.5); doc.setTextColor(71, 85, 105);
-  doc.text('Roll No:', col1X, infoY);
-  doc.setFont('courier', 'bold'); doc.setFontSize(9); doc.setTextColor(15, 23, 42);
-  doc.text(String(pass.rollNo || '-'), col1X + 22, infoY);
-
-  doc.setFont('times', 'bold'); doc.setFontSize(8.5); doc.setTextColor(71, 85, 105);
-  doc.text('Father:', col2X, infoY);
-  doc.setFont('times', 'bold'); doc.setFontSize(9); doc.setTextColor(15, 23, 42);
-  doc.text(String(pass.fatherName || pass.parentName || '-'), col2X + 20, infoY);
-
-  doc.setFont('times', 'bold'); doc.setFontSize(8.5); doc.setTextColor(71, 85, 105);
-  doc.text('Parent Ph:', col3X, infoY);
-  doc.setFont('courier', 'bold'); doc.setFontSize(8.5); doc.setTextColor(15, 23, 42);
-  doc.text(String(pass.parentContact || '-'), col3X + 16, infoY);
-
-  // Row 3
-  infoY += 7.5;
-  doc.setFont('times', 'bold'); doc.setFontSize(8.5); doc.setTextColor(71, 85, 105);
-  doc.text('Dept:', col1X, infoY);
-  doc.setFont('times', 'normal'); doc.setFontSize(8.5); doc.setTextColor(15, 23, 42);
-  doc.text(`Dept of ${pass.dept || 'Engineering'}`, col1X + 22, infoY);
-
-  doc.setFont('times', 'bold'); doc.setFontSize(8.5); doc.setTextColor(71, 85, 105);
-  doc.text('Mobile:', col2X, infoY);
-  doc.setFont('courier', 'normal'); doc.setFontSize(8.5); doc.setTextColor(15, 23, 42);
-  doc.text(String(pass.mobile || '-'), col2X + 20, infoY);
-
-  doc.setFont('times', 'bold'); doc.setFontSize(8.5); doc.setTextColor(71, 85, 105);
-  doc.text('Validity:', col3X, infoY);
-  doc.setFont('courier', 'bold'); doc.setFontSize(8.5); doc.setTextColor(22, 101, 52);
-  doc.text(String(pass.validUntil || 'Authorized Hours'), col3X + 16, infoY);
-
-  // 5. Schedule & Movement Specifics Box (Hosteller vs Day Scholar)
-  curY += 41.5;
-  if (isHosteller) {
-    doc.setFillColor(255, 251, 235);
-    doc.setDrawColor(245, 158, 11);
-    doc.setLineWidth(0.4);
-    doc.roundedRect(cardX + 4, curY, cardWidth - 8, 38, 2, 2, 'FD');
-
-    doc.setFont('helvetica', 'bold');
+    // Col 2 (Value)
+    doc.setFillColor(255, 255, 255);
+    doc.rect(tblX + col1W, curY, col2W, rowH, 'FD');
+    doc.setFont(isFontMono1 ? 'courier' : 'times', 'bold');
     doc.setFontSize(8.5);
-    doc.setTextColor(146, 64, 14);
-    doc.text('HOSTELLER MOVEMENT SCHEDULE (SECURITY CLEARANCE PARTICULARS)', cardX + 8, curY + 6);
+    doc.setTextColor(15, 23, 42);
+    doc.text(String(val1 || '-'), tblX + col1W + 2.5, curY + rowH / 2 + 1.5, { maxWidth: col2W - 4 });
 
-    doc.setDrawColor(251, 191, 36);
-    doc.setLineWidth(0.2);
-    doc.line(cardX + 8, curY + 8, cardX + cardWidth - 8, curY + 8);
+    // Col 3 (Label)
+    doc.setFillColor(248, 250, 252);
+    doc.rect(tblX + col1W + col2W, curY, col3W, rowH, 'FD');
+    doc.setFont('times', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(71, 85, 105);
+    doc.text(label2, tblX + col1W + col2W + 2.5, curY + rowH / 2 + 1.5);
 
-    let schY = curY + 14.5;
-    doc.setFont('times', 'bold'); doc.setFontSize(8.5); doc.setTextColor(120, 53, 15);
-    doc.text('1. Application Date:', cardX + 8, schY);
-    doc.setFont('times', 'bold'); doc.setFontSize(9); doc.setTextColor(15, 23, 42);
-    doc.text(appliedDate, cardX + 42, schY);
-
-    doc.setFont('times', 'bold'); doc.setFontSize(8.5); doc.setTextColor(120, 53, 15);
-    doc.text('2. Departure Date & Time:', cardX + 90, schY);
-    const depStr = `${pass.departureDate || '-'}${pass.departureTime ? ' at ' + pass.departureTime : ''}`;
-    doc.setFont('courier', 'bold'); doc.setFontSize(9); doc.setTextColor(15, 23, 42);
-    doc.text(depStr, cardX + 133, schY);
-
-    schY += 8;
-    doc.setFont('times', 'bold'); doc.setFontSize(8.5); doc.setTextColor(120, 53, 15);
-    doc.text('3. Return Date & Time:', cardX + 8, schY);
-    const retStr = pass.expectedReturnDate ? `${pass.expectedReturnDate}${pass.expectedReturnTime ? ' at ' + pass.expectedReturnTime : ''}` : (pass.expectedReturnDateTime || '-');
-    doc.setFont('courier', 'bold'); doc.setFontSize(9); doc.setTextColor(15, 23, 42);
-    doc.text(retStr, cardX + 42, schY);
-
-    doc.setFont('times', 'bold'); doc.setFontSize(8.5); doc.setTextColor(120, 53, 15);
-    doc.text('4. Department:', cardX + 90, schY);
-    doc.setFont('times', 'bold'); doc.setFontSize(9); doc.setTextColor(15, 23, 42);
-    doc.text(`Dept of ${pass.dept || 'Engineering'}`, cardX + 133, schY);
-
-    schY += 8;
-    doc.setFont('times', 'bold'); doc.setFontSize(8.5); doc.setTextColor(120, 53, 15);
-    doc.text('5. Academic Year:', cardX + 8, schY);
-    doc.setFont('times', 'bold'); doc.setFontSize(9); doc.setTextColor(15, 23, 42);
-    doc.text(String(pass.academicYear || 'III Year'), cardX + 42, schY);
-
-    doc.setFont('times', 'bold'); doc.setFontSize(8.5); doc.setTextColor(120, 53, 15);
-    doc.text('6. Section:', cardX + 90, schY);
-    doc.setFont('times', 'bold'); doc.setFontSize(9); doc.setTextColor(15, 23, 42);
-    doc.text(`Section '${pass.yearSec || 'A'}'`, cardX + 133, schY);
-
-    curY += 41.5;
-  } else {
-    doc.setFillColor(238, 242, 255);
-    doc.setDrawColor(99, 102, 241);
-    doc.setLineWidth(0.4);
-    doc.roundedRect(cardX + 4, curY, cardWidth - 8, 32, 2, 2, 'FD');
-
-    doc.setFont('helvetica', 'bold');
+    // Col 4 (Value)
+    doc.setFillColor(255, 255, 255);
+    doc.rect(tblX + col1W + col2W + col3W, curY, col4W, rowH, 'FD');
+    doc.setFont(isFontMono2 ? 'courier' : 'times', 'bold');
     doc.setFontSize(8.5);
-    doc.setTextColor(67, 56, 202);
-    doc.text('DAY SCHOLAR LEAVE PARTICULARS (CAMPUS CLEARANCE)', cardX + 8, curY + 6);
+    doc.setTextColor(15, 23, 42);
+    doc.text(String(val2 || '-'), tblX + col1W + col2W + col3W + 2.5, curY + rowH / 2 + 1.5, { maxWidth: col4W - 4 });
 
-    doc.setDrawColor(165, 180, 252);
-    doc.setLineWidth(0.2);
-    doc.line(cardX + 8, curY + 8, cardX + cardWidth - 8, curY + 8);
-
-    let schY = curY + 15;
-    doc.setFont('times', 'bold'); doc.setFontSize(8.5); doc.setTextColor(67, 56, 202);
-    doc.text('1. Leave Date & Time:', cardX + 8, schY);
-    doc.setFont('courier', 'bold'); doc.setFontSize(9); doc.setTextColor(15, 23, 42);
-    doc.text(leaveTimeStr, cardX + 44, schY);
-
-    doc.setFont('times', 'bold'); doc.setFontSize(8.5); doc.setTextColor(67, 56, 202);
-    doc.text('2. Department:', cardX + 95, schY);
-    doc.setFont('times', 'bold'); doc.setFontSize(9); doc.setTextColor(15, 23, 42);
-    doc.text(`Dept of ${pass.dept || 'Engineering'}`, cardX + 125, schY);
-
-    schY += 8;
-    doc.setFont('times', 'bold'); doc.setFontSize(8.5); doc.setTextColor(67, 56, 202);
-    doc.text('3. Academic Year:', cardX + 8, schY);
-    doc.setFont('times', 'bold'); doc.setFontSize(9); doc.setTextColor(15, 23, 42);
-    doc.text(String(pass.academicYear || 'III Year'), cardX + 44, schY);
-
-    doc.setFont('times', 'bold'); doc.setFontSize(8.5); doc.setTextColor(67, 56, 202);
-    doc.text('4. Class Section:', cardX + 95, schY);
-    doc.setFont('times', 'bold'); doc.setFontSize(9); doc.setTextColor(15, 23, 42);
-    doc.text(`Section '${pass.yearSec || 'A'}'`, cardX + 125, schY);
-
-    curY += 38;
+    curY += rowH;
   }
 
-  // 6. Multi-Tier Institutional Clearance Badges (Reason is strictly excluded from Gate Pass)
-  curY += 4;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.setTextColor(71, 85, 105);
-  doc.text('INSTITUTIONAL CLEARANCES & DIGITAL VERIFICATIONS', cardX + 4, curY);
+  // Row 1: Student Name | Register Number
+  renderTableRow('Student Name', studentName, 'Register Number', rollNo, 7.8, false, true);
 
-  curY += 4.5;
+  // Row 2: Department | Year and Section
+  renderTableRow('Department', `Dept of ${pass.dept || 'Engineering'}`, 'Year and Section', `${pass.academicYear || 'III Year'} / Sec '${pass.yearSec || 'A'}'`, 7.8);
+
+  // Row 3: Day Scholar / Hosteller status | Parent Contact
+  renderTableRow('Student Status', isHosteller ? 'Hosteller (Resident)' : 'Day Scholar', 'Parent / Guardian Contact', parentContact, 7.8, false, true);
+
+  // Row 4: Date of Leaving | Time of Leaving
+  renderTableRow('Date of Leaving', depDate, 'Time of Leaving', depTimeFormatted, 7.8, true, true);
+
+  // Row 5: Expected Return Time | Final Approving Authority
+  renderTableRow('Expected Return Time', retDisplay, 'Final Approving Authority', finalAuth, 7.8, true, false);
+
+  // Row 6: Reason for Leaving (Spanning full width across Cols 2-4)
+  const reasonH = 12.5;
+  doc.setDrawColor(203, 213, 225);
+  doc.setLineWidth(0.25);
+  doc.setFillColor(248, 250, 252);
+  doc.rect(tblX, curY, col1W, reasonH, 'FD');
+  doc.setFont('times', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(71, 85, 105);
+  doc.text('Reason for Leaving', tblX + 2.5, curY + 5);
+
+  doc.setFillColor(255, 255, 255);
+  doc.rect(tblX + col1W, curY, tblW - col1W, reasonH, 'FD');
+  doc.setFont('times', 'normal');
+  doc.setFontSize(8.2);
+  doc.setTextColor(15, 23, 42);
+  const destStr = pass.destination || pass.placeOrEvent ? ` (Destination: ${pass.destination || pass.placeOrEvent})` : '';
+  const fullReason = `${pass.reason || '-'}${destStr}`;
+  const rLines = doc.splitTextToSize(fullReason, tblW - col1W - 5);
+  doc.text(rLines, tblX + col1W + 2.5, curY + 4.5);
+  curY += reasonH;
+
+  // Row 7: Approval Date and Time | Verification Code
+  renderTableRow('Approval Date & Time', approvalTime, 'Verification Code', verifyCode, 7.8, true, true);
+
+  // 5. Multi-Tier Institutional Clearance Badges
+  curY += 5;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(71, 85, 105);
+  doc.text('INSTITUTIONAL CLEARANCES & DIGITAL VERIFICATIONS', tblX, curY);
+
+  curY += 3.5;
   const numSigners = isHosteller ? 5 : 4;
-  const colW = (cardWidth - 8 - (numSigners - 1) * 3) / numSigners;
+  const colW = (tblW - (numSigners - 1) * 3) / numSigners;
 
   const counselorName = pass.counselorApproval?.counselorName || pass.counselorName || 'Class Counselor';
   const advisorName = pass.advisorApproval?.advisorName || 'Class Advisor';
@@ -1219,100 +1228,154 @@ function renderProfessionalGatePassCardPage(doc, pass, logoBase64, watermarkBase
         { role: 'Advisor', name: advisorName, status: 'APPROVED', date: aDate },
         { role: 'HOD', name: hodName, status: 'APPROVED', date: hDate },
         { role: 'Principal', name: principalName, status: 'APPROVED', date: pDate },
-        { role: 'Warden', name: wardenName, status: 'APPROVED', date: wDate }
+        { role: 'Warden (Final)', name: wardenName, status: 'APPROVED', date: wDate }
       ]
     : [
         { role: 'Counselor', name: counselorName, status: 'APPROVED', date: cDate },
         { role: 'Advisor', name: advisorName, status: 'APPROVED', date: aDate },
         { role: 'HOD', name: hodName, status: 'APPROVED', date: hDate },
-        { role: 'Principal', name: principalName, status: 'APPROVED', date: pDate }
+        { role: 'Principal (Final)', name: principalName, status: 'APPROVED', date: pDate }
       ];
 
   approvalBlocks.forEach((b, idx) => {
-    const bx = cardX + 4 + idx * (colW + 3);
-    doc.setFillColor(240, 253, 244);
-    doc.setDrawColor(187, 247, 208);
-    doc.setLineWidth(0.3);
-    doc.roundedRect(bx, curY, colW, 25, 1.5, 1.5, 'FD');
+    const bx = tblX + idx * (colW + 3);
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(203, 213, 225);
+    doc.setLineWidth(0.25);
+    doc.rect(bx, curY, colW, 23, 'FD');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.2);
+    doc.setTextColor(30, 41, 59);
+    doc.text(b.role, bx + colW / 2, curY + 4.8, { align: 'center' });
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(7.5);
     doc.setTextColor(22, 101, 52);
-    doc.text(b.role, bx + colW / 2, curY + 5.2, { align: 'center' });
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.2);
-    doc.setTextColor(21, 128, 61);
-    doc.text('APPROVED', bx + colW / 2, curY + 10.5, { align: 'center' });
+    doc.text('APPROVED', bx + colW / 2, curY + 9.5, { align: 'center' });
 
     doc.setFont('times', 'normal');
-    doc.setFontSize(7.5);
+    doc.setFontSize(7.2);
     doc.setTextColor(71, 85, 105);
-    doc.text(b.name, bx + colW / 2, curY + 15.5, { align: 'center', maxWidth: colW - 2 });
+    doc.text(b.name, bx + colW / 2, curY + 14.5, { align: 'center', maxWidth: colW - 2 });
 
     if (b.date !== '-') {
       doc.setFont('courier', 'bold');
-      doc.setFontSize(7);
+      doc.setFontSize(6.8);
       doc.setTextColor(100, 116, 139);
-      doc.text(b.date, bx + colW / 2, curY + 20.8, { align: 'center' });
+      doc.text(b.date, bx + colW / 2, curY + 19.5, { align: 'center' });
     }
   });
 
-  curY += 31;
+  curY += 28;
 
-  // 7. Main Gate Security Ingress / Egress Log
-  const secBoxW = (cardWidth - 8 - 4) / 2;
+  // 6. Security Gate Ingress & Egress Clearance Records
+  const secBoxW = (tblW - 4) / 2;
   doc.setFillColor(255, 255, 255);
   doc.setDrawColor(203, 213, 225);
   doc.setLineWidth(0.3);
-  doc.roundedRect(cardX + 4, curY, secBoxW, 30, 1.5, 1.5, 'FD');
+  doc.rect(tblX, curY, secBoxW, 25, 'FD');
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.2);
+  doc.setFontSize(7.8);
   doc.setTextColor(71, 85, 105);
-  doc.text('SECURITY GATE EXIT (OUT)', cardX + 8, curY + 6);
+  doc.text('CAMPUS EXIT CLEARANCE (MAIN GATE OUT)', tblX + 3.5, curY + 5.5);
 
   doc.setFont('times', 'normal');
-  doc.setFontSize(7.8);
+  doc.setFontSize(7.5);
   if (pass.exitTime && pass.exitTime !== '-') {
     doc.setTextColor(15, 23, 42);
-    doc.text(`Actual Departure: ${pass.exitTime}`, cardX + 8, curY + 14.5);
+    doc.text(`Actual Departure Time: ${pass.exitTime}`, tblX + 3.5, curY + 12.5);
   } else {
     doc.setTextColor(148, 163, 184);
-    doc.text('Actual Departure: ___________________________', cardX + 8, curY + 14.5);
+    doc.text('Actual Departure: ___________________________', tblX + 3.5, curY + 12.5);
   }
   doc.setTextColor(148, 163, 184);
-  doc.text('Security Officer Signature: __________________', cardX + 8, curY + 23);
+  doc.text('Security Officer Signature: __________________', tblX + 3.5, curY + 20);
 
-  doc.roundedRect(cardX + 4 + secBoxW + 4, curY, secBoxW, 30, 1.5, 1.5, 'FD');
-
+  // Return Box
+  doc.rect(tblX + secBoxW + 4, curY, secBoxW, 25, 'FD');
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.2);
+  doc.setFontSize(7.8);
   doc.setTextColor(71, 85, 105);
-  doc.text('SECURITY GATE INGRESS (IN)', cardX + 8 + secBoxW + 4, curY + 6);
+  doc.text('CAMPUS RE-ENTRY CLEARANCE (MAIN GATE IN)', tblX + secBoxW + 7.5, curY + 5.5);
 
   doc.setFont('times', 'normal');
-  doc.setFontSize(7.8);
+  doc.setFontSize(7.5);
   if (pass.returnTime && pass.returnTime !== '-') {
     doc.setTextColor(15, 23, 42);
-    doc.text(`Actual Return: ${pass.returnTime}`, cardX + 8 + secBoxW + 4, curY + 14.5);
+    doc.text(`Actual Return Time: ${pass.returnTime}`, tblX + secBoxW + 7.5, curY + 12.5);
   } else {
     doc.setTextColor(148, 163, 184);
-    doc.text('Actual Return: ______________________________', cardX + 8 + secBoxW + 4, curY + 14.5);
+    doc.text('Actual Return: ______________________________', tblX + secBoxW + 7.5, curY + 12.5);
   }
   doc.setTextColor(148, 163, 184);
-  doc.text('Security Officer Signature: __________________', cardX + 8 + secBoxW + 4, curY + 23);
+  doc.text('Security Officer Signature: __________________', tblX + secBoxW + 7.5, curY + 20);
 
-  // Subtle Institutional College Logo Watermark across the pass card
-  renderPageWatermark(doc, watermarkBase64, 92);
+  curY += 30;
 
-  // 8. Card Footer Warning / Terms
+  // 7. Authorized Signature Section (3-Column Authentic College Layout)
+  const sigColW = (tblW - 6) / 3;
+
+  // Column 1: Student Signature
+  doc.setDrawColor(203, 213, 225);
+  doc.setFillColor(255, 255, 255);
+  doc.rect(tblX, curY, sigColW, 24, 'FD');
   doc.setFont('times', 'italic');
+  doc.setFontSize(8.5);
+  doc.setTextColor(51, 65, 85);
+  doc.text(studentName, tblX + sigColW / 2, curY + 9, { align: 'center', maxWidth: sigColW - 4 });
+  doc.setDrawColor(148, 163, 184);
+  doc.line(tblX + 5, curY + 14, tblX + sigColW - 5, curY + 14);
+  doc.setFont('times', 'bold');
+  doc.setFontSize(7.5);
+  doc.setTextColor(30, 41, 59);
+  doc.text('Signature of Student', tblX + sigColW / 2, curY + 19, { align: 'center' });
+
+  // Column 2: Final Approving Authority
+  const col2X = tblX + sigColW + 3;
+  doc.setDrawColor(203, 213, 225);
+  doc.setFillColor(248, 250, 252);
+  doc.rect(col2X, curY, sigColW, 24, 'FD');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.setTextColor(22, 101, 52);
+  doc.text('DIGITALLY AUTHENTICATED', col2X + sigColW / 2, curY + 6.5, { align: 'center' });
+  doc.setFont('times', 'normal');
   doc.setFontSize(7.2);
+  doc.setTextColor(71, 85, 105);
+  doc.text(finalAuth, col2X + sigColW / 2, curY + 11.5, { align: 'center', maxWidth: sigColW - 4 });
+  doc.setDrawColor(148, 163, 184);
+  doc.line(col2X + 5, curY + 14, col2X + sigColW - 5, curY + 14);
+  doc.setFont('times', 'bold');
+  doc.setFontSize(7.5);
+  doc.setTextColor(30, 41, 59);
+  doc.text(isHosteller ? 'Warden Final Approval' : 'Principal Final Approval', col2X + sigColW / 2, curY + 19, { align: 'center' });
+
+  // Column 3: Security Gate Officer
+  const col3X = col2X + sigColW + 3;
+  doc.setDrawColor(203, 213, 225);
+  doc.setFillColor(255, 255, 255);
+  doc.rect(col3X, curY, sigColW, 24, 'FD');
+  doc.setFont('times', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(148, 163, 184);
+  doc.text('Gate Clearance Seal / Stamp', col3X + sigColW / 2, curY + 9, { align: 'center' });
+  doc.setDrawColor(148, 163, 184);
+  doc.line(col3X + 5, curY + 14, col3X + sigColW - 5, curY + 14);
+  doc.setFont('times', 'bold');
+  doc.setFontSize(7.5);
+  doc.setTextColor(30, 41, 59);
+  doc.text('Main Gate Security Officer', col3X + sigColW / 2, curY + 19, { align: 'center' });
+
+  // 8. Institutional Footer Notice
+  doc.setFont('times', 'italic');
+  doc.setFontSize(6.8);
   doc.setTextColor(100, 116, 139);
   const noticeText = 'NOTICE: This Gate Pass is official institutional property of GRT Institute of Engineering and Technology. It is non-transferable and strictly valid for the named student. Present this pass at the Main Security Gate upon exit and return.';
-  const nLines = doc.splitTextToSize(noticeText, cardWidth - 8);
-  doc.text(nLines, cardX + cardWidth / 2, cardY + cardHeight - 6, { align: 'center' });
+  const nLines = doc.splitTextToSize(noticeText, tblW);
+  doc.text(nLines, centerX, cardY + cardHeight - 5, { align: 'center' });
 }
 
 /**
@@ -1342,10 +1405,24 @@ async function downloadGatePassCardPDF(pass) {
   const watermarkBase64 = await getCollegeLogoWatermarkBase64();
   const bannerBase64 = await getCollegeBannerBase64();
 
-  renderProfessionalGatePassCardPage(doc, pass, logoBase64, watermarkBase64, bannerBase64);
+  const isHosteller = (/hoste?l|^h$/i.test(pass.accommodation || '') && !/day\s*scholar/i.test(pass.accommodation || ''));
+  const yr = new Date(pass.createdAt || Date.now()).getFullYear();
+  const fallbackId = `GRT-GP-${yr}-${String(pass._id || '').slice(-4).toUpperCase() || '1048'}`;
+  const gatePassId = pass.gatePassId || fallbackId;
+  pass.gatePassId = gatePassId;
 
-  doc.save(`GRTIET_Gate_Pass_${pass.rollNo}.pdf`);
-  showToast(`Official Gate Pass card downloaded for Roll No: ${pass.rollNo}`, 'success');
+  const rollNo = pass.rollNo || pass.registrationNumber || '-';
+  const depDate = pass.departureDate || pass.leaveDate || '-';
+  const depTime = pass.departureTime || pass.leaveTime || '-';
+  const finalAuth = pass.finalApprovingAuthority || (isHosteller ? 'Hostel Warden' : 'Principal Directorate');
+
+  // Fetch QR Code for authentic college document
+  const qrBase64 = await getGatePassQrBase64(pass, gatePassId, rollNo, finalAuth, depDate, depTime);
+
+  renderProfessionalGatePassCardPage(doc, pass, logoBase64, watermarkBase64, bannerBase64, qrBase64);
+
+  doc.save(`GRTIET_Gate_Pass_${gatePassId}_${pass.rollNo || 'Student'}.pdf`);
+  showToast(`Official Gate Pass PDF downloaded (${gatePassId})`, 'success');
 }
 
 /**

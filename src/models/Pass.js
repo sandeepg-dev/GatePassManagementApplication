@@ -231,6 +231,20 @@ const PassSchema = new mongoose.Schema({
     time: String
   },
 
+  gatePassId: {
+    type: String,
+    index: true,
+    trim: true
+  },
+  finalApprovingAuthority: {
+    type: String,
+    default: ''
+  },
+  finalApprovalTime: {
+    type: String,
+    default: ''
+  },
+
   approvalTime: String,
   validUntil: String,
   expiresAt: {

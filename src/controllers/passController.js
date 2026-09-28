@@ -12,11 +12,20 @@ const { generateFormalLetter } = require('../utils/letterGenerator');
  */
 async function getPasses(req, res) {
   try {
-    const { status, dept, rollNo, counselorName, yearSec, role, startRoll, endRoll, authorityUserId, userId } = req.query;
+    const { status, dept, rollNo, counselorName, yearSec, role: queryRole, startRoll, endRoll, authorityUserId, userId } = req.query;
     let filter = {};
 
-    const cleanRole = role ? role.toLowerCase().trim() : '';
-    const cleanAuthUid = (authorityUserId || userId || '').toLowerCase().trim();
+    const rawRole = Array.isArray(queryRole) ? queryRole[0] : queryRole;
+    let cleanRole = rawRole ? String(rawRole).toLowerCase().trim().replace(/[\s-]+/g, '_') : '';
+    if (cleanRole === 'boys_hostel_warden' || cleanRole === 'warden_boys' || (cleanRole.includes('warden') && cleanRole.includes('boys'))) {
+      cleanRole = 'boys_warden';
+    }
+    if (cleanRole === 'girls_hostel_warden' || cleanRole === 'warden_girls' || (cleanRole.includes('warden') && cleanRole.includes('girls'))) {
+      cleanRole = 'girls_warden';
+    }
+    const role = cleanRole;
+    const rawAuthUid = Array.isArray(authorityUserId) ? authorityUserId[0] : (authorityUserId || userId || '');
+    const cleanAuthUid = String(rawAuthUid).toLowerCase().trim();
     const authorityKey = (cleanRole && cleanAuthUid) ? `${cleanRole}:${cleanAuthUid}` : '';
 
     if (authorityKey) {
@@ -24,15 +33,20 @@ async function getPasses(req, res) {
     }
 
     if (status) {
-      if (status.includes(',')) {
-        filter.status = { $in: status.split(',').map(s => s.trim()) };
+      const rawStatus = Array.isArray(status) ? status[0] : status;
+      if (typeof rawStatus === 'string' && rawStatus.includes(',')) {
+        filter.status = { $in: rawStatus.split(',').map(s => s.trim()) };
       } else {
-        filter.status = status;
+        filter.status = rawStatus;
       }
     }
-    if (rollNo) filter.rollNo = rollNo.trim().toUpperCase();
+    if (rollNo) {
+      const rawRoll = Array.isArray(rollNo) ? rollNo[0] : rollNo;
+      filter.rollNo = String(rawRoll).trim().toUpperCase();
+    }
 
-    const cleanDept = dept ? dept.toUpperCase().trim() : '';
+    const rawDept = Array.isArray(dept) ? dept[0] : dept;
+    const cleanDept = rawDept ? String(rawDept).toUpperCase().trim() : '';
 
     if (role === 'principal') {
       filter.requestCategory = { $nin: ['leave', 'onduty'] };
@@ -40,27 +54,34 @@ async function getPasses(req, res) {
       filter.dept = cleanDept;
     } else if (role === 'advisor' && cleanDept) {
       filter.dept = cleanDept;
-      if (yearSec) filter.yearSec = extractSection(yearSec);
+      if (yearSec) filter.yearSec = extractSection(Array.isArray(yearSec) ? yearSec[0] : yearSec);
     } else if (role === 'boys_warden') {
       filter.accommodation = { $regex: /hoste?l|^h$/i, $not: /day\s*scholar/i };
       filter.requestCategory = { $nin: ['leave', 'onduty'] };
       filter.gender = { $regex: /^male$/i };
-      filter.status = { $ne: 'Pending Girls Warden' };
+      if (!filter.status) {
+        filter.status = { $ne: 'Pending Girls Warden' };
+      }
     } else if (role === 'girls_warden') {
       filter.accommodation = { $regex: /hoste?l|^h$/i, $not: /day\s*scholar/i };
       filter.requestCategory = { $nin: ['leave', 'onduty'] };
       filter.gender = { $regex: /^female$/i };
-      filter.status = { $ne: 'Pending Boys Warden' };
+      if (!filter.status) {
+        filter.status = { $ne: 'Pending Boys Warden' };
+      }
     } else if (role === 'counselor') {
       const conditions = [];
-      if (counselorName) {
-        conditions.push({ counselorName: new RegExp(`^${counselorName.trim()}$`, 'i') });
+      const rawCName = Array.isArray(counselorName) ? counselorName[0] : counselorName;
+      if (rawCName) {
+        conditions.push({ counselorName: new RegExp(`^${String(rawCName).trim()}$`, 'i') });
       }
-      if (startRoll && endRoll) {
+      const rawStartRoll = Array.isArray(startRoll) ? startRoll[0] : startRoll;
+      const rawEndRoll = Array.isArray(endRoll) ? endRoll[0] : endRoll;
+      if (rawStartRoll && rawEndRoll) {
         conditions.push({
           rollNo: {
-            $gte: startRoll.trim().toUpperCase(),
-            $lte: endRoll.trim().toUpperCase()
+            $gte: String(rawStartRoll).trim().toUpperCase(),
+            $lte: String(rawEndRoll).trim().toUpperCase()
           }
         });
       }
@@ -94,6 +115,21 @@ async function getPasses(req, res) {
           passObj.fatherName = passObj.parentName || '-';
         }
         passObj.accommodation = (/hoste?l|^h$/i.test(passObj.accommodation || '') && !/day\s*scholar/i.test(passObj.accommodation || '')) ? 'Hosteller' : 'Day Scholar';
+        if (passObj.status === 'Approved' || passObj.status === 'Exited' || passObj.status === 'Scanned In Campus' || passObj.status === 'Returned') {
+          if (!passObj.gatePassId) {
+            const yr = new Date(passObj.createdAt || Date.now()).getFullYear();
+            const hex = String(passObj._id || '').slice(-4).toUpperCase() || '1048';
+            passObj.gatePassId = `GRT-GP-${yr}-${hex}`;
+          }
+          if (!passObj.finalApprovingAuthority) {
+            passObj.finalApprovingAuthority = passObj.accommodation === 'Hosteller'
+              ? (passObj.wardenApproval?.wardenName ? `${passObj.wardenApproval.wardenName} (Hostel Warden)` : 'Hostel Warden')
+              : (passObj.principalApproval?.principalName ? `Principal (${passObj.principalApproval.principalName})` : 'Principal Directorate');
+          }
+          if (!passObj.finalApprovalTime) {
+            passObj.finalApprovalTime = passObj.wardenApproval?.time || passObj.principalApproval?.time || passObj.approvalTime || passObj.appliedTime;
+          }
+        }
         return passObj;
       })
       .filter(p => {
@@ -106,6 +142,7 @@ async function getPasses(req, res) {
         // Rule 1: A leave application must only be displayed to the current authority once forwarded.
         // Rule 2: Once rejected at an authority level, it must NOT appear on any subsequent authority's dashboard.
 
+        // Advisor (Tier 2):
         // Advisor (Tier 2):
         if (role === 'advisor') {
           const reachedAdvisor = p.counselorApproval?.approved === true || p.status === 'Pending Advisor';
@@ -145,8 +182,8 @@ async function getPasses(req, res) {
           const st = studentMap[p.rollNo];
           const stGender = String(st?.gender || '').trim().toLowerCase();
           const passGender = String(p.gender || '').trim().toLowerCase();
-          if (stGender === 'female' || passGender === 'female') return false;
-          if (stGender !== 'male' && passGender !== 'male') return false;
+          const effectiveGender = passGender || stGender;
+          if (effectiveGender !== 'male') return false;
           if (p.status === 'Pending Girls Warden') return false;
 
           const reachedWarden = p.principalApproval?.approved === true || p.status === 'Pending Boys Warden' || p.status === 'Pending Warden';
@@ -166,8 +203,8 @@ async function getPasses(req, res) {
           const st = studentMap[p.rollNo];
           const stGender = String(st?.gender || '').trim().toLowerCase();
           const passGender = String(p.gender || '').trim().toLowerCase();
-          if (stGender === 'male' || passGender === 'male') return false;
-          if (stGender !== 'female' && passGender !== 'female') return false;
+          const effectiveGender = passGender || stGender;
+          if (effectiveGender !== 'female') return false;
           if (p.status === 'Pending Boys Warden') return false;
 
           const reachedWarden = p.principalApproval?.approved === true || p.status === 'Pending Girls Warden' || p.status === 'Pending Warden';
