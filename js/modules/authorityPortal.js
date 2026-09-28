@@ -18,6 +18,27 @@ let authState = {
   pageSize: 10
 };
 
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function escapeAttr(str) {
+  if (typeof str === 'object') {
+    try {
+      str = JSON.stringify(str);
+    } catch (e) {
+      str = '';
+    }
+  }
+  return escapeHtml(str);
+}
+
 /**
  * Format role name for executive presentation
  */
@@ -162,21 +183,64 @@ function initAuthorityPortal(user) {
   const sideRosterLabel = document.getElementById('authSidebarRosterLabel');
   if (sideRosterLabel) sideRosterLabel.innerText = getRosterTabLabel(user.role);
 
-  const topRosterLabel = document.getElementById('authTopNavRosterLabel');
-  if (topRosterLabel) topRosterLabel.innerText = getRosterTabLabel(user.role);
+  const roleKey = String(user.role).trim().toLowerCase().replace(/[\s-]+/g, '_');
+  const isCounselor = roleKey === 'counselor';
 
-  // Set default view tab
-  switchAuthorityMainTab('verification');
+  // Requirement: Top Navigation removed completely from all staff portals (Navigation strictly in Left Sidebar)
+  const topNavContainer = document.getElementById('authTopNavContainer');
+  if (topNavContainer) {
+    topNavContainer.innerHTML = '';
+    topNavContainer.classList.add('hidden');
+    topNavContainer.style.display = 'none';
+  }
+
+  // Requirement: Hide "All Requests" filter button for Counselor, Advisor, and HOD (replaced with Gate Pass Request)
+  const allReqsTabBtn = document.getElementById('authTabBtn_all');
+  if (allReqsTabBtn) {
+    if (isCounselor || roleKey === 'advisor' || roleKey === 'hod') {
+      allReqsTabBtn.classList.add('hidden');
+      allReqsTabBtn.style.display = 'none';
+    } else {
+      allReqsTabBtn.classList.remove('hidden');
+      allReqsTabBtn.style.display = '';
+    }
+  }
+
+  // Pre-fetch student roster for Counselor, Advisor, and HOD so parent contact and student info are immediately resolved
+  if (isCounselor || roleKey === 'advisor' || roleKey === 'hod') {
+    fetchAuthorityStudents();
+  }
+
+  // Set default view tab: Counselor, Advisor, and HOD open directly with Gate Pass Request
+  if (isCounselor || roleKey === 'advisor' || roleKey === 'hod') {
+    switchAuthorityMainTab('gatepass');
+  } else {
+    switchAuthorityMainTab('verification');
+  }
 
   // Fetch live database records
   fetchAuthorityData();
 }
 
 /**
- * Switch main view (Verification Desk | Student List | Gate Pass | Leave | OD | Approved | Reports)
+ * Switch main view (Verification Desk | Ward | Student List | Gate Pass | Leave | OD | Approved | Reports)
  */
 function switchAuthorityMainTab(tab) {
-  authState.activeTab = tab;
+  const user = window.loggedUser;
+  const roleKey = user && user.role ? String(user.role).trim().toLowerCase().replace(/[\s-]+/g, '_') : '';
+  const isCounselor = roleKey === 'counselor';
+  const isAdvisor = roleKey === 'advisor';
+  const isHod = roleKey === 'hod';
+
+  let targetTab = tab;
+  // When Counselor, Advisor, or HOD opens/clicks Verification Desk, default directly to Gate Pass Request
+  if ((isCounselor || isAdvisor || isHod) && tab === 'verification') {
+    targetTab = 'gatepass';
+  } else if (tab === 'ward') {
+    targetTab = 'roster';
+  }
+
+  authState.activeTab = targetTab;
   authState.searchQuery = '';
   authState.page = 1;
 
@@ -188,31 +252,11 @@ function switchAuthorityMainTab(tab) {
   sideBtns.forEach(b => {
     const btn = document.getElementById(`authSideBtn_${b}`);
     if (btn) {
-      if (b === tab) {
-        btn.className = 'w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition text-left auth-side-active shadow-2xs';
+      const isSelected = (b === targetTab) || (b === tab) || ((isCounselor || isAdvisor || isHod) && targetTab === 'gatepass' && b === 'verification');
+      if (isSelected) {
+        btn.className = 'w-full flex items-center justify-between px-3.5 py-3 rounded-xl font-bold transition text-left auth-side-active shadow-2xs';
       } else {
-        btn.className = 'w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition text-left font-medium';
-      }
-    }
-  });
-
-  // Update top nav active items
-  const topNavMap = {
-    verification: 'dashboard',
-    roster: 'roster',
-    gatepass: 'pass',
-    leave: 'leave',
-    onduty: 'onduty',
-    reports: 'reports'
-  };
-  const currentTop = topNavMap[tab] || 'dashboard';
-  ['dashboard', 'pass', 'leave', 'onduty', 'roster', 'reports'].forEach(tn => {
-    const el = document.getElementById(`authTopNav_${tn}`);
-    if (el) {
-      if (tn === currentTop) {
-        el.className = 'auth-top-btn py-1.5 text-blue-700 border-b-2 border-blue-700 font-bold';
-      } else {
-        el.className = 'auth-top-btn py-1.5 text-slate-600 hover:text-slate-900 transition font-medium';
+        btn.className = 'w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition text-left font-semibold';
       }
     }
   });
@@ -222,12 +266,12 @@ function switchAuthorityMainTab(tab) {
   const secRoster = document.getElementById('authSection_roster');
   const secReports = document.getElementById('authSection_reports');
 
-  if (tab === 'roster') {
+  if (targetTab === 'roster') {
     if (secRequests) secRequests.classList.add('hidden');
     if (secRoster) secRoster.classList.remove('hidden');
     if (secReports) secReports.classList.add('hidden');
     fetchAuthorityStudents();
-  } else if (tab === 'reports') {
+  } else if (targetTab === 'reports') {
     if (secRequests) secRequests.classList.add('hidden');
     if (secRoster) secRoster.classList.add('hidden');
     if (secReports) secReports.classList.remove('hidden');
@@ -237,12 +281,12 @@ function switchAuthorityMainTab(tab) {
     if (secRoster) secRoster.classList.add('hidden');
     if (secReports) secReports.classList.add('hidden');
 
-    // Set subFilter based on tab
-    if (tab === 'gatepass') setAuthoritySubFilter('gatepass');
-    else if (tab === 'leave') setAuthoritySubFilter('leave');
-    else if (tab === 'onduty') setAuthoritySubFilter('onduty');
-    else if (tab === 'approved') setAuthoritySubFilter('approved');
-    else setAuthoritySubFilter('all'); // Show all pending student requisitions by default
+    // Set subFilter based on targetTab
+    if (targetTab === 'gatepass') setAuthoritySubFilter('gatepass');
+    else if (targetTab === 'leave') setAuthoritySubFilter('leave');
+    else if (targetTab === 'onduty') setAuthoritySubFilter('onduty');
+    else if (targetTab === 'approved') setAuthoritySubFilter('approved');
+    else setAuthoritySubFilter(isCounselor ? 'gatepass' : 'all');
   }
 }
 
@@ -355,6 +399,7 @@ function isPendingForRole(item, isOD) {
  */
 function isApprovedByRole(item, isOD) {
   const role = String(window.loggedUser?.role || '').toLowerCase().replace(/[\s-]+/g, '_');
+  const isPostApproval = item.status === 'Approved' || item.status === 'Exited' || item.status === 'Scanned In Campus' || item.status === 'Returned';
 
   if (isOD) {
     if (role === 'counselor') return item.counselorApproval?.approved === true;
@@ -363,13 +408,13 @@ function isApprovedByRole(item, isOD) {
     return false;
   }
 
-  if (role === 'counselor') return item.counselorApproval?.approved === true;
-  if (role === 'advisor') return item.advisorApproval?.approved === true;
-  if (role === 'hod') return item.hodApproval?.approved === true;
-  if (role === 'principal') return item.principalApproval?.approved === true || item.status === 'Approved';
-  if (role.includes('warden')) return item.wardenApproval?.approved === true || item.status === 'Approved';
+  if (role === 'counselor') return item.counselorApproval?.approved === true || isPostApproval;
+  if (role === 'advisor') return item.advisorApproval?.approved === true || isPostApproval;
+  if (role === 'hod') return item.hodApproval?.approved === true || isPostApproval;
+  if (role === 'principal') return item.principalApproval?.approved === true || isPostApproval;
+  if (role.includes('warden')) return item.wardenApproval?.approved === true || isPostApproval;
 
-  return item.status === 'Approved';
+  return isPostApproval;
 }
 
 /**
@@ -382,14 +427,17 @@ function updateAuthorityBadges() {
   const passes = authState.passes || [];
   const ods = authState.odRequests || [];
 
-  // Categorize
-  const pendingLeave = passes.filter(p => p.requestCategory === 'leave' && isPendingForRole(p, false));
-  const pendingGatePass = passes.filter(p => p.requestCategory !== 'leave' && isPendingForRole(p, false));
+  // Categorize with strict request separation
+  const isLeavePass = p => (p.requestCategory === 'leave' || p.type === 'leave' || (!p.departureDate && (p.fromDate || p.leaveDate)));
+  const isGatePass = p => !isLeavePass(p) && p.requestCategory !== 'onduty' && p._type !== 'onduty';
+
+  const pendingLeave = passes.filter(p => isLeavePass(p) && isPendingForRole(p, false));
+  const pendingGatePass = passes.filter(p => isGatePass(p) && isPendingForRole(p, false));
   const pendingOD = ods.filter(o => isPendingForRole(o, true));
   const totalPending = pendingLeave.length + pendingGatePass.length + pendingOD.length;
 
-  const approvedLeave = passes.filter(p => p.requestCategory === 'leave' && isApprovedByRole(p, false));
-  const approvedGatePass = passes.filter(p => p.requestCategory !== 'leave' && isApprovedByRole(p, false));
+  const approvedLeave = passes.filter(p => isLeavePass(p) && isApprovedByRole(p, false));
+  const approvedGatePass = passes.filter(p => isGatePass(p) && isApprovedByRole(p, false));
   const approvedOD = ods.filter(o => isApprovedByRole(o, true));
   const totalApproved = approvedLeave.length + approvedGatePass.length + approvedOD.length;
 
@@ -434,28 +482,46 @@ function updateAuthorityBadges() {
 }
 
 /**
- * Filter and sort requests for the currently active tab & search query
+ * Filter and sort requests for the currently active tab & search query with strict separation
  */
 function getFilteredRequests() {
   const sub = authState.subFilter;
   const q = (authState.searchQuery || '').trim().toLowerCase();
 
+  const isLeavePass = p => (p.requestCategory === 'leave' || p.type === 'leave' || (!p.departureDate && (p.fromDate || p.leaveDate)));
+  const isGatePass = p => !isLeavePass(p) && p.requestCategory !== 'onduty' && p._type !== 'onduty';
+
   let list = [];
 
+  // Requirement 3: Strict Request Separation (Gate Pass ONLY, Leave ONLY, OD ONLY)
   if (sub === 'leave') {
-    list = authState.passes.filter(p => p.requestCategory === 'leave' && isPendingForRole(p, false)).map(p => ({ ...p, _type: 'leave' }));
+    list = authState.passes
+      .filter(p => isLeavePass(p) && isPendingForRole(p, false))
+      .map(p => ({ ...p, _type: 'leave' }));
   } else if (sub === 'gatepass') {
-    list = authState.passes.filter(p => p.requestCategory !== 'leave' && isPendingForRole(p, false)).map(p => ({ ...p, _type: 'gatepass' }));
+    list = authState.passes
+      .filter(p => isGatePass(p) && isPendingForRole(p, false))
+      .map(p => ({ ...p, _type: 'gatepass' }));
   } else if (sub === 'onduty') {
-    list = authState.odRequests.filter(o => isPendingForRole(o, true)).map(o => ({ ...o, _type: 'onduty' }));
+    list = (authState.odRequests || [])
+      .filter(o => isPendingForRole(o, true))
+      .map(o => ({ ...o, _type: 'onduty' }));
   } else if (sub === 'approved') {
-    const appPasses = authState.passes.filter(p => isApprovedByRole(p, false)).map(p => ({ ...p, _type: p.requestCategory === 'leave' ? 'leave' : 'gatepass' }));
-    const appOD = authState.odRequests.filter(o => isApprovedByRole(o, true)).map(o => ({ ...o, _type: 'onduty' }));
+    const appPasses = authState.passes
+      .filter(p => isApprovedByRole(p, false))
+      .map(p => ({ ...p, _type: isLeavePass(p) ? 'leave' : 'gatepass' }));
+    const appOD = (authState.odRequests || [])
+      .filter(o => isApprovedByRole(o, true))
+      .map(o => ({ ...o, _type: 'onduty' }));
     list = [...appPasses, ...appOD];
   } else {
-    // All Pending
-    const pendPasses = authState.passes.filter(p => isPendingForRole(p, false)).map(p => ({ ...p, _type: p.requestCategory === 'leave' ? 'leave' : 'gatepass' }));
-    const pendOD = authState.odRequests.filter(o => isPendingForRole(o, true)).map(o => ({ ...o, _type: 'onduty' }));
+    // All Pending (for non-counselor roles)
+    const pendPasses = authState.passes
+      .filter(p => isPendingForRole(p, false))
+      .map(p => ({ ...p, _type: isLeavePass(p) ? 'leave' : 'gatepass' }));
+    const pendOD = (authState.odRequests || [])
+      .filter(o => isPendingForRole(o, true))
+      .map(o => ({ ...o, _type: 'onduty' }));
     list = [...pendPasses, ...pendOD];
   }
 
@@ -484,10 +550,34 @@ function renderAuthorityRequestsTable() {
   const titleEl = document.getElementById('authTableHeadingTitle');
   const subEl = document.getElementById('authTableHeadingSubtitle');
   const paginationInfo = document.getElementById('authTablePaginationInfo');
-  if (!container) return;
 
   const items = getFilteredRequests();
   const sub = authState.subFilter;
+
+  const user = window.loggedUser;
+  const roleKey = user && user.role ? String(user.role).trim().toLowerCase().replace(/[\s-]+/g, '_') : '';
+  const isCounselor = roleKey === 'counselor';
+  const isAdvisor = roleKey === 'advisor';
+  const isHod = roleKey === 'hod';
+  const usesCardsView = isCounselor || isAdvisor || isHod;
+
+  const tableContainer = document.getElementById('authTableContainer');
+  const counselorCardsContainer = document.getElementById('counselorCardsContainer');
+
+  // Requirement: Dedicated Gate Pass Request & Leave Request cards for Counselor, Class Advisor, and HOD
+  if (usesCardsView) {
+    if (tableContainer) tableContainer.classList.add('hidden');
+    if (counselorCardsContainer) {
+      counselorCardsContainer.classList.remove('hidden');
+      renderCounselorCardsView(items, counselorCardsContainer, sub);
+      return;
+    }
+  } else {
+    if (tableContainer) tableContainer.classList.remove('hidden');
+    if (counselorCardsContainer) counselorCardsContainer.classList.add('hidden');
+  }
+
+  if (!container) return;
 
   // Title configuration
   const titles = {
@@ -611,7 +701,7 @@ function renderAuthorityRequestsTable() {
           <div class="text-xs text-slate-800 font-medium truncate" title="${escapeAttr(reasonDisplay)}">
             ${escapeHtml(reasonDisplay)}
           </div>
-          ${destDisplay ? `<div class="text-[11px] text-blue-700 font-medium truncate" title="Destination: ${escapeAttr(destDisplay)}">📍 ${escapeHtml(destDisplay)}</div>` : ''}
+          ${destDisplay ? `<div class="text-[11px] text-blue-700 font-medium truncate" title="Destination: ${escapeAttr(destDisplay)}"><span class="text-slate-400 font-semibold uppercase text-[9px] mr-1">To:</span>${escapeHtml(destDisplay)}</div>` : ''}
         </td>
 
         <!-- 9. Current Status -->
@@ -681,6 +771,676 @@ function renderAuthorityRequestsTable() {
 }
 
 /**
+ * Dedicated Counselor Portal Request Cards View
+ * Displays all student details directly on the card without "View Request",
+ * provides click-to-call action with active calling UI status indicator,
+ * enforces mandatory "Talked to Parent" confirmation before enabling approval,
+ * and automatically adjusts layout to show Return Date/Time only for Hostellers.
+ */
+function renderCounselorCardsView(items, container, sub) {
+  const user = window.loggedUser;
+  const roleKey = user && user.role ? String(user.role).trim().toLowerCase().replace(/[\s-]+/g, '_') : '';
+  const isCounselor = roleKey === 'counselor';
+  const isAdvisor = roleKey === 'advisor';
+  const isHod = roleKey === 'hod';
+
+  const categoryTitles = {
+    gatepass: 'Gate Pass Requests',
+    leave: 'Leave Requests',
+    onduty: 'OD Requests',
+    approved: 'Approved Records'
+  };
+  const categorySubtitles = {
+    gatepass: isCounselor
+      ? 'Review student gate pass requests, contact parents directly for verification, and endorse clearance.'
+      : (isAdvisor
+        ? 'Review student gate pass requests pre-screened by counselors and endorse to Head of Department.'
+        : 'Review student gate pass requests and authorize departmental campus clearance.'),
+    leave: isCounselor
+      ? 'Review student leave applications, contact parents directly for verification, and endorse clearance.'
+      : (isAdvisor
+        ? 'Review student leave applications pre-screened by counselors and endorse to Head of Department.'
+        : 'Review student leave applications and sanction departmental leave clearance.'),
+    onduty: 'Review official institutional on-duty requisition endorsements.',
+    approved: 'Chronological record of student passes cleared by this authority.'
+  };
+
+  const currentTitle = categoryTitles[sub] || 'Gate Pass Requests';
+  const currentSubtitle = categorySubtitles[sub] || 'Review and take action on student requisitions.';
+
+  // If no items in this filter
+  if (!items || items.length === 0) {
+    container.innerHTML = `
+      <div class="auth-card p-5 sm:p-6 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 mb-4 bg-white rounded-2xl border border-slate-200 shadow-xs">
+        <div>
+          <h3 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight">${escapeHtml(currentTitle)} (0)</h3>
+          <p class="text-xs text-slate-500">${escapeHtml(currentSubtitle)}</p>
+        </div>
+        <button
+          type="button"
+          onclick="fetchAuthorityData()"
+          class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition flex items-center gap-1.5"
+        >
+          <svg class="w-3.5 h-3.5 auth-refresh-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          <span>Refresh</span>
+        </button>
+      </div>
+      <div class="auth-card p-8 sm:p-12 text-center bg-white rounded-2xl border border-slate-200/80 shadow-xs">
+        <div class="w-14 h-14 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center mx-auto mb-3 border border-slate-200">
+          <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <h3 class="text-base font-bold text-slate-800">No ${escapeHtml(currentTitle)} Pending</h3>
+        <p class="text-xs sm:text-sm text-slate-500 mt-1 max-w-md mx-auto">There are currently no requests requiring action in this section.</p>
+      </div>
+    `;
+    return;
+  }
+
+  // Pagination calculation
+  const total = items.length;
+  const totalPages = Math.ceil(total / authState.pageSize) || 1;
+  if (authState.page > totalPages) authState.page = totalPages;
+  const startIdx = (authState.page - 1) * authState.pageSize;
+  const pageItems = items.slice(startIdx, startIdx + authState.pageSize);
+
+  const cardsHtml = pageItems.map((item) => {
+    const isOD = item._type === 'onduty';
+    const isLeave = item._type === 'leave' || item.requestCategory === 'leave';
+    const isPending = isPendingForRole(item, isOD);
+
+    // Cross-match student profile from roster
+    const st = (authState.students || []).find(s => String(s.rollNo || '').trim().toUpperCase() === String(item.rollNo || '').trim().toUpperCase());
+    const studentName = item.name || item.studentName || st?.name || 'Student';
+    const rollNo = item.rollNo || st?.rollNo || '-';
+    const dept = item.dept || st?.dept || '-';
+    const section = item.yearSec || item.section || st?.yearSec || st?.section || 'A';
+    const accomRaw = item.accommodation || st?.accommodation || 'Day Scholar';
+    const isHostel = (/hoste?l|^h$/i.test(accomRaw) && !/day\s*scholar/i.test(accomRaw));
+
+    const parentName = item.parentName || item.fatherName || st?.parentName || st?.fatherName || 'Parent / Guardian';
+    const parentPhone = item.parentContact || item.parentPhone || st?.parentContact || st?.mobile || '';
+    const reason = item.reason || 'No reason specified';
+
+    // Departure & Return formatted fields
+    let depDate = '-';
+    let depTime = '-';
+    let retDate = '-';
+    let retTime = '-';
+
+    if (isOD) {
+      depDate = item.specificDate || item.fromDate || '-';
+      depTime = item.fromTime || '-';
+      retDate = item.toDate || '-';
+      retTime = item.toTime || '-';
+    } else if (isLeave) {
+      depDate = item.fromDate || item.departureDate || item.leaveDate || '-';
+      retDate = item.toDate || item.expectedReturnDate || item.returnDate || '-';
+    } else {
+      depDate = item.departureDate || item.leaveDate || item.date || '-';
+      depTime = item.departureTime || item.leaveTime || item.time || '-';
+      retDate = item.expectedReturnDate || item.returnDate || item.toDate || '-';
+      retTime = item.expectedReturnTime || item.returnTime || '-';
+    }
+
+    const statusInfo = typeof getDetailedStatusInfo === 'function' ? getDetailedStatusInfo(item) : {
+      statusText: item.status || 'Pending',
+      statusClass: item.status === 'Approved' ? 'badge-status-approved' : (item.status === 'Rejected' ? 'badge-status-rejected' : 'badge-status-pending')
+    };
+
+    return `
+      <div class="auth-card p-5 sm:p-6 bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition space-y-5" id="counselorCard_${item._id}">
+        <!-- Top Row: Student Name, Roll No, Student Type Badge, Department, Section, Status -->
+        <div class="flex flex-wrap items-start justify-between gap-3 pb-3 border-b border-slate-100">
+          <div class="space-y-1.5">
+            <div class="flex flex-wrap items-center gap-2.5">
+              <h3 class="text-base sm:text-lg font-black text-slate-900 tracking-tight">${escapeHtml(studentName)}</h3>
+              <span class="font-mono text-xs font-bold px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-800 border border-slate-200">
+                ${escapeHtml(rollNo)}
+              </span>
+              <!-- Student Type Badge: Hosteller / Day Scholar / On-Duty -->
+              ${isOD ? `
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-800 border border-indigo-200">
+                  <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                  On-Duty Requisition
+                </span>
+              ` : (isHostel ? `
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                  <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                  Hosteller
+                </span>
+              ` : `
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200">
+                  <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                  Day Scholar
+                </span>
+              `)}
+            </div>
+            <div class="text-xs font-semibold text-slate-500 flex items-center gap-2">
+              <span>Department: <strong class="text-slate-700">${escapeHtml(dept)}</strong></span>
+              <span>•</span>
+              <span>Section: <strong class="text-slate-700">${escapeHtml(section)}</strong></span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span class="${statusInfo.statusClass}">
+              ${statusInfo.statusText}
+            </span>
+          </div>
+        </div>
+
+        <!-- Middle Details Grid (Strict Hosteller / Day Scholar Display Logic) -->
+        ${isOD ? `
+          <!-- OD Specific Details -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-xl bg-slate-50/70 border border-slate-200/80">
+            <!-- 1. Duty / Event Title -->
+            <div class="space-y-1">
+              <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Duty / Event Title</div>
+              <div class="text-xs sm:text-sm font-bold text-slate-900">${escapeHtml(item.purpose || item.eventTitle || 'Official Institutional Duty')}</div>
+            </div>
+
+            <!-- 2. Venue / Destination -->
+            <div class="space-y-1">
+              <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Venue / Destination</div>
+              <div class="text-xs sm:text-sm font-bold text-slate-900">${escapeHtml(item.destination || item.placeOrEvent || 'Campus Authorized')}</div>
+            </div>
+
+            <!-- 3. Duty Schedule -->
+            <div class="space-y-1">
+              <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Duty Schedule</div>
+              <div class="text-xs sm:text-sm font-bold text-slate-900 font-mono">${escapeHtml(depDate)} ${item.fromTime ? `<span class="text-slate-400 font-normal">|</span> ${escapeHtml(item.fromTime)} - ${escapeHtml(item.toTime || '')}` : ''}</div>
+            </div>
+          </div>
+        ` : `
+          <!-- Gate Pass & Leave Details: Direct Parent details & Hosteller/Day Scholar schedule -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 ${isLeave ? 'lg:grid-cols-4' : (isHostel ? 'lg:grid-cols-3 xl:grid-cols-6' : 'lg:grid-cols-4')} gap-4 p-4 rounded-xl bg-slate-50/70 border border-slate-200/80">
+            <!-- 1. Parent Name -->
+            <div class="space-y-1">
+              <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Parent Name</div>
+              <div class="text-xs sm:text-sm font-bold text-slate-900">${escapeHtml(parentName)}</div>
+            </div>
+
+            <!-- 2. Parent Phone Number -->
+            <div class="space-y-1">
+              <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Parent Phone Number</div>
+              ${parentPhone && parentPhone !== '-' ? (isCounselor ? `
+                <a
+                  href="tel:${escapeAttr(parentPhone)}"
+                  id="counselorCallLink_${item._id}"
+                  onclick="startCounselorParentCall('${item._id}', '${escapeAttr(parentPhone)}', '${escapeAttr(parentName)}', event)"
+                  class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-mono text-xs font-bold transition shadow-2xs group"
+                  title="Click to initiate phone call to parent"
+                >
+                  <svg class="w-4 h-4 text-emerald-600 group-hover:scale-110 transition shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                  <span>${escapeHtml(parentPhone)}</span>
+                  <span class="text-[10px] uppercase font-bold tracking-wider text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">Call Parent</span>
+                </a>
+              ` : `
+                <a
+                  href="tel:${escapeAttr(parentPhone)}"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-mono text-xs font-bold transition"
+                  title="Parent Contact Number"
+                >
+                  <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                  <span>${escapeHtml(parentPhone)}</span>
+                </a>
+              `) : `
+                <span class="text-xs text-slate-400 font-mono">Not Provided</span>
+              `}
+            </div>
+
+            <!-- 3. Departure Date (or From Date for Leave) -->
+            <div class="space-y-1">
+              <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">${isLeave ? 'From Date' : 'Departure Date'}</div>
+              <div class="text-xs sm:text-sm font-bold text-slate-800 font-mono">${escapeHtml(depDate)}</div>
+            </div>
+
+            <!-- 4. Departure Time (Gate Pass only) -->
+            ${!isLeave ? `
+              <div class="space-y-1">
+                <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Departure Time</div>
+                <div class="text-xs sm:text-sm font-bold text-slate-800 font-mono">${escapeHtml(depTime)}</div>
+              </div>
+            ` : ''}
+
+            ${isLeave ? `
+              <div class="space-y-1">
+                <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">To Date</div>
+                <div class="text-xs sm:text-sm font-bold text-slate-800 font-mono">${escapeHtml(retDate)}</div>
+              </div>
+            ` : (isHostel ? `
+              <div class="space-y-1">
+                <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Return Date</div>
+                <div class="text-xs sm:text-sm font-bold text-slate-800 font-mono">${escapeHtml(retDate)}</div>
+              </div>
+              <div class="space-y-1">
+                <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Return Time</div>
+                <div class="text-xs sm:text-sm font-bold text-slate-800 font-mono">${escapeHtml(retTime)}</div>
+              </div>
+            ` : '')}
+          </div>
+        `}
+
+        <!-- Reason Section Directly Visible -->
+        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+          <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">${isOD ? 'Duty Description &amp; Objectives' : 'Reason for the Gate Pass'}</div>
+          <div class="text-xs sm:text-sm font-medium text-slate-900 leading-relaxed">${escapeHtml(reason)}</div>
+          ${item.destination && !isOD ? `<div class="mt-1 text-xs text-blue-700 font-semibold"><span class="text-slate-500 font-medium">Destination:</span> ${escapeHtml(item.destination)}</div>` : ''}
+        </div>
+
+        ${((item.exitTime && item.exitTime !== '-') || (item.returnTime && item.returnTime !== '-')) ? `
+          <div class="p-3 rounded-xl bg-slate-50/90 border border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+            ${item.exitTime && item.exitTime !== '-' ? `
+              <div class="flex items-center gap-1.5">
+                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Campus Exit Scanned:</span>
+                <span class="font-bold text-slate-800">${escapeHtml(item.exitTime)}</span>
+              </div>
+            ` : ''}
+            ${item.returnTime && item.returnTime !== '-' ? `
+              <div class="flex items-center gap-1.5">
+                <span class="text-[10px] font-bold text-teal-700 uppercase tracking-wider">Campus Return Scanned:</span>
+                <span class="font-bold text-teal-800">${escapeHtml(item.returnTime)}</span>
+              </div>
+            ` : ''}
+          </div>
+        ` : ''}
+
+        <!-- Calling Parent In-Progress Banner (Counselor only for Gate Pass / Leave upon clicking phone number) -->
+        ${isCounselor && !isOD ? `
+          <div id="callingIndicator_${item._id}" class="hidden p-3.5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 flex items-center justify-between transition-all">
+            <div class="flex items-center gap-3">
+              <span class="relative flex h-3 w-3">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+              </span>
+              <div>
+                <span class="text-xs font-bold">Calling Parent:</span>
+                <span class="text-xs font-semibold text-emerald-950">${escapeHtml(parentName)} (${escapeHtml(parentPhone)})</span>
+              </div>
+            </div>
+            <span class="text-[11px] font-bold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-full border border-emerald-300">Call In Progress</span>
+          </div>
+        ` : ''}
+
+        <!-- Bottom Action Bar: Role Actions -->
+        ${isPending ? (isOD ? `
+          <!-- OD Action Bar -->
+          <div class="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-slate-100">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-semibold text-slate-500">${roleKey === 'advisor' ? 'Class Advisor Endorsement' : (roleKey === 'hod' ? 'Department Head Sanction' : 'Official OD Requisition Endorsement')}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                onclick="downloadOnDutyLetterPDF(${escapeAttr(item)})"
+                class="px-3.5 py-2 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl text-xs font-bold text-blue-700 transition active:scale-95 shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                title="Download official OD letter"
+              >
+                <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <span>Download Letter</span>
+              </button>
+              <button
+                type="button"
+                onclick="viewOnDutyLetter(${escapeAttr(item)})"
+                class="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 transition active:scale-95 shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                title="View official formal college OD letter"
+              >
+                <svg class="w-4 h-4 text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                <span>View Letter</span>
+              </button>
+              <button
+                type="button"
+                onclick="promptRejectCurrentItem('${item._id}', true)"
+                class="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition active:scale-95 shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                title="Reject OD request"
+              >
+                <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                <span>Reject</span>
+              </button>
+              <button
+                type="button"
+                id="roleApproveBtn_${item._id}"
+                onclick="executeRoleApprove('${item._id}', true)"
+                class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-xs active:scale-95 cursor-pointer flex items-center gap-1.5"
+                title="Approve and endorse OD request"
+              >
+                <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <span>Approve &amp; Forward</span>
+              </button>
+            </div>
+          </div>
+        ` : (isCounselor ? `
+          <!-- Counselor Gate Pass & Leave Action Bar (Requires Talked to Parent confirmation) -->
+          <div class="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-slate-100">
+            <!-- Left: Talked to Parent Checkbox -->
+            <div class="flex items-center gap-3">
+              <label class="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-amber-50/80 border border-amber-200 hover:bg-amber-100/80 transition cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  id="counselorTalkedParent_${item._id}"
+                  onchange="toggleCounselorParentTalked('${item._id}', this.checked)"
+                  class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer"
+                />
+                <span class="text-xs font-bold text-slate-800">Talked to Parent</span>
+              </label>
+              <span id="counselorTalkedHelp_${item._id}" class="text-[11px] text-amber-700 font-medium inline-flex items-center gap-1">
+                <svg class="w-3.5 h-3.5 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <span>Mandatory before approval</span>
+              </span>
+            </div>
+
+            <!-- Right: Action Buttons -->
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                onclick="${isOD ? `downloadOnDutyLetterPDF(${escapeAttr(item)})` : `downloadOfficialLetterOnlyPDF(${escapeAttr(item)})`}"
+                class="px-3.5 py-2 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl text-xs font-bold text-blue-700 transition active:scale-95 shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                title="Download letter as PDF"
+              >
+                <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <span>Download Letter</span>
+              </button>
+              <button
+                type="button"
+                onclick="${isOD ? `viewOnDutyLetter(${escapeAttr(item)})` : `viewFormalLetter(${escapeAttr(item)})`}"
+                class="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 transition active:scale-95 shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                title="View official formal college letter"
+              >
+                <svg class="w-4 h-4 text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                <span>View Letter</span>
+              </button>
+              <button
+                type="button"
+                onclick="promptRejectCurrentItem('${item._id}', false)"
+                class="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition active:scale-95 shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                title="Reject request with comments"
+              >
+                <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                <span>Reject</span>
+              </button>
+              <button
+                type="button"
+                id="counselorApproveBtn_${item._id}"
+                disabled
+                onclick="executeRoleApprove('${item._id}', false)"
+                class="px-4 py-2 bg-slate-200 text-slate-400 rounded-xl text-xs font-bold transition cursor-not-allowed opacity-60 shadow-none flex items-center gap-1.5"
+                title="Approve and forward (requires Talked to Parent confirmation)"
+              >
+                <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <span>Approve &amp; Forward</span>
+              </button>
+            </div>
+          </div>
+        ` : `
+          <!-- Class Advisor & HOD Action Bar (Direct approval, no parent confirmation required) -->
+          <div class="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-slate-100">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-semibold text-slate-500">${roleKey === 'advisor' ? 'Class Advisor Clearance &amp; Endorsement' : (roleKey === 'hod' ? 'Department Head Gate Pass Sanction' : 'Clearance Verification')}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                onclick="${isOD ? `downloadOnDutyLetterPDF(${escapeAttr(item)})` : `downloadOfficialLetterOnlyPDF(${escapeAttr(item)})`}"
+                class="px-3.5 py-2 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl text-xs font-bold text-blue-700 transition active:scale-95 shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                title="Download letter as PDF"
+              >
+                <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <span>Download Letter</span>
+              </button>
+              <button
+                type="button"
+                onclick="${isOD ? `viewOnDutyLetter(${escapeAttr(item)})` : `viewFormalLetter(${escapeAttr(item)})`}"
+                class="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 transition active:scale-95 shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                title="View official formal college letter"
+              >
+                <svg class="w-4 h-4 text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                <span>View Letter</span>
+              </button>
+              <button
+                type="button"
+                onclick="promptRejectCurrentItem('${item._id}', false)"
+                class="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition active:scale-95 shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                title="Reject request with comments"
+              >
+                <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                <span>Reject</span>
+              </button>
+              <button
+                type="button"
+                id="roleApproveBtn_${item._id}"
+                onclick="executeRoleApprove('${item._id}', false)"
+                class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-xs active:scale-95 cursor-pointer flex items-center gap-1.5"
+                title="${roleKey === 'advisor' ? 'Approve and endorse request to Head of Department' : 'Approve and sanction departmental clearance'}"
+              >
+                <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <span>${roleKey === 'advisor' ? 'Approve &amp; Forward' : 'Approve Clearance'}</span>
+              </button>
+            </div>
+          </div>
+        `)) : `
+          <!-- Non-pending Records Action Bar -->
+          <div class="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-slate-100">
+            <span class="text-xs font-semibold text-slate-500">Current Status: <strong class="text-slate-800">${escapeHtml(item.status)}</strong></span>
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                onclick="${isOD ? `downloadOnDutyLetterPDF(${escapeAttr(item)})` : `downloadOfficialLetterOnlyPDF(${escapeAttr(item)})`}"
+                class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg text-xs font-bold text-blue-700 transition flex items-center gap-1.5 cursor-pointer"
+                title="Download letter as PDF"
+              >
+                <svg class="w-3.5 h-3.5 text-blue-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <span>Download Letter</span>
+              </button>
+              <button
+                type="button"
+                onclick="${isOD ? `viewOnDutyLetter(${escapeAttr(item)})` : `viewFormalLetter(${escapeAttr(item)})`}"
+                class="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <svg class="w-3.5 h-3.5 text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                <span>View Letter</span>
+              </button>
+            </div>
+          </div>
+        `}
+      </div>
+    `;
+  }).join('');
+
+  // Assemble container with Header, Cards, and Pagination
+  container.innerHTML = `
+    <!-- Header Summary -->
+    <div class="auth-card p-5 sm:p-6 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 mb-4 bg-white rounded-2xl border border-slate-200 shadow-xs">
+      <div class="space-y-0.5">
+        <h3 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight">${escapeHtml(currentTitle)} (${items.length})</h3>
+        <p class="text-xs text-slate-500">${escapeHtml(currentSubtitle)}</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          onclick="fetchAuthorityData()"
+          class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition flex items-center gap-1.5"
+        >
+          <svg class="w-3.5 h-3.5 auth-refresh-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          <span>Refresh</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Cards List -->
+    <div class="space-y-4">
+      ${cardsHtml}
+    </div>
+
+    <!-- Pagination -->
+    ${totalPages > 1 ? `
+      <div class="p-4 bg-white rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600 shadow-xs mt-4">
+        <div>Showing ${startIdx + 1} to ${Math.min(startIdx + authState.pageSize, total)} of ${total} requests</div>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            onclick="prevAuthorityPage()"
+            ${authState.page <= 1 ? 'disabled class="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-400 cursor-not-allowed"' : 'class="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 font-semibold"'}
+          >
+            Previous
+          </button>
+          <span class="font-bold text-slate-800">Page ${authState.page} of ${totalPages}</span>
+          <button
+            type="button"
+            onclick="nextAuthorityPage()"
+            ${authState.page >= totalPages ? 'disabled class="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-400 cursor-not-allowed"' : 'class="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 font-semibold"'}
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    ` : ''}
+  `;
+}
+
+/**
+ * Counselor Parent Call Action
+ * Initiates phone call and displays dynamic active calling status indicator on the card
+ */
+function startCounselorParentCall(itemId, parentPhone, parentName, evt) {
+  if (!parentPhone || parentPhone === '-') {
+    if (typeof showToast === 'function') {
+      showToast('Parent phone number is not available for this student.', 'warning');
+    }
+    return;
+  }
+
+  // Display clear UI calling indicator on that request card
+  const indicator = document.getElementById(`callingIndicator_${itemId}`);
+  if (indicator) {
+    indicator.classList.remove('hidden');
+    indicator.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  if (typeof showToast === 'function') {
+    showToast(`Calling parent ${parentName || ''} at ${parentPhone}...`, 'info');
+  }
+}
+
+/**
+ * Counselor Talked to Parent Toggle
+ * Enables/disables Approve button and updates visual confirmation
+ */
+function toggleCounselorParentTalked(itemId, isChecked) {
+  const approveBtn = document.getElementById(`counselorApproveBtn_${itemId}`) || document.getElementById(`roleApproveBtn_${itemId}`);
+  const helpText = document.getElementById(`counselorTalkedHelp_${itemId}`);
+  const indicator = document.getElementById(`callingIndicator_${itemId}`);
+
+  if (approveBtn) {
+    if (isChecked) {
+      approveBtn.disabled = false;
+      approveBtn.className = 'px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition cursor-pointer shadow-xs active:scale-95 flex items-center gap-1.5';
+      if (helpText) {
+        helpText.innerHTML = '<span class="inline-flex items-center gap-1 text-emerald-700 font-bold"><svg class="w-3.5 h-3.5 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span>Parent verification confirmed</span></span>';
+      }
+      if (indicator) {
+        indicator.innerHTML = `
+          <div class="flex items-center gap-2 text-emerald-900 text-xs font-bold">
+            <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <span>Parent Contact Verified</span>
+          </div>
+          <span class="text-[11px] font-bold text-emerald-800 bg-white px-2 py-0.5 rounded-full border border-emerald-300">Verified</span>
+        `;
+      }
+    } else {
+      approveBtn.disabled = true;
+      approveBtn.className = 'px-4 py-2 bg-slate-200 text-slate-400 rounded-xl text-xs font-bold transition cursor-not-allowed opacity-60 shadow-none flex items-center gap-1.5';
+      if (helpText) {
+        helpText.innerHTML = '<span class="inline-flex items-center gap-1 text-amber-700 font-medium"><svg class="w-3.5 h-3.5 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg><span>Mandatory before approval</span></span>';
+      }
+    }
+  }
+}
+
+/**
+ * Universal Authority Role Approval Handler (Counselor, Advisor, HOD, Principal, Warden)
+ * Enforces mandatory "Talked to Parent" check strictly for Counselor Gate Pass & Leave.
+ * Allows direct approval for Advisor and HOD, and for Counselor OD requests.
+ */
+async function executeRoleApprove(itemId, isOD) {
+  const user = window.loggedUser;
+  if (!user || !user.role) return;
+
+  const role = String(user.role).toLowerCase().replace(/[\s-]+/g, '_');
+
+  // Guard for Counselor: Ensure Talked to Parent is checked for Gate Pass and Leave
+  if (role === 'counselor' && !isOD) {
+    const cb = document.getElementById(`counselorTalkedParent_${itemId}`);
+    if (!cb || !cb.checked) {
+      if (typeof showToast === 'function') {
+        showToast('You must select "Talked to Parent" before approving this request.', 'warning');
+      }
+      return;
+    }
+  }
+
+  const approveBtn = document.getElementById(`roleApproveBtn_${itemId}`) || document.getElementById(`counselorApproveBtn_${itemId}`);
+  if (approveBtn) {
+    approveBtn.disabled = true;
+    approveBtn.innerText = 'Approving...';
+  }
+
+  try {
+    if (isOD) {
+      let endpoint = '/api/onduty/approve/counselor';
+      let payload = { id: itemId, counselorName: user?.name };
+
+      if (role === 'advisor') {
+        endpoint = '/api/onduty/approve/advisor';
+        payload = { id: itemId, advisorName: user?.name };
+      } else if (role === 'hod') {
+        endpoint = '/api/onduty/approve/hod';
+        payload = { id: itemId, hodName: user?.name };
+      }
+
+      await Api.post(endpoint, payload);
+    } else {
+      let endpoint = '/api/approvals/counselor';
+      let payload = { passId: itemId, counselorName: user?.name, parentCalled: true };
+
+      if (role === 'advisor') {
+        endpoint = '/api/approvals/advisor';
+        payload = { passId: itemId, advisorName: user?.name, parentCalledFallback: true };
+      } else if (role === 'hod') {
+        endpoint = '/api/approvals/hod';
+        payload = { passId: itemId, hodName: user?.name };
+      } else if (role === 'principal') {
+        endpoint = '/api/approvals/principal';
+        payload = { passId: itemId, principalName: user?.name };
+      } else if (role.includes('warden')) {
+        endpoint = '/api/approvals/warden';
+        payload = { passId: itemId, wardenName: user?.name };
+      }
+
+      await Api.post(endpoint, payload);
+    }
+
+    if (typeof showToast === 'function') {
+      const nextRole = role === 'counselor' ? 'Class Advisor' : (role === 'advisor' ? 'Head of Department' : 'final clearance');
+      showToast(`Request approved successfully and forwarded to ${nextRole}!`, 'success');
+    }
+
+    fetchAuthorityData();
+  } catch (err) {
+    console.error('Role approval error:', err);
+    if (typeof showToast === 'function') {
+      showToast('Approval error: ' + (err.message || 'Unknown error'), 'error');
+    }
+    if (approveBtn) {
+      approveBtn.disabled = false;
+      approveBtn.innerText = role === 'hod' ? 'Approve Clearance' : 'Approve & Forward';
+    }
+  }
+}
+
+// Backward compatible alias
+const executeCounselorApprove = executeRoleApprove;
+
+/**
  * Fetch and render student roster for the authority
  */
 async function fetchAuthorityStudents() {
@@ -702,7 +1462,7 @@ async function fetchAuthorityStudents() {
 
   try {
     const role = String(user.role).toLowerCase().replace(/[\s-]+/g, '_');
-    let q = '?limit=1000';
+    let q = '?limit=5000&all=true';
 
     if (role === 'counselor') {
       // Counselors filter by their assigned roll range or counselor name
@@ -822,6 +1582,29 @@ function renderAuthorityReports() {
 
   const pendEl = document.getElementById('repTotalPending');
   if (pendEl) pendEl.innerText = pending;
+
+  // Toggle Counselor Daily Attendance Excel generator card
+  const user = window.loggedUser;
+  const role = String(user?.role || '').toLowerCase().replace(/[\s-]+/g, '_');
+  const counselorAttCard = document.getElementById('authCounselorAttendanceReportCard');
+  if (counselorAttCard) {
+    if (role === 'counselor') {
+      counselorAttCard.classList.remove('hidden');
+      const batchInput = document.getElementById('attReportBatch');
+      if (batchInput && (!batchInput.value || batchInput.value === '2023-2027')) {
+        const sr = String(user.startRoll || '').trim();
+        if (sr.length >= 6) {
+          const yy = parseInt(sr.slice(4, 6), 10);
+          if (!isNaN(yy)) {
+            const startYear = 2000 + yy;
+            batchInput.value = `${startYear}-${startYear + 4}`;
+          }
+        }
+      }
+    } else {
+      counselorAttCard.classList.add('hidden');
+    }
+  }
 }
 
 /**
@@ -887,6 +1670,12 @@ function openAuthorityDetailModal(id, isOD) {
     dateText = `From Date: ${item.fromDate || item.leaveDate || '-'} to ${item.toDate || '-'}`;
   } else {
     dateText = `Departure: ${item.departureDate || item.leaveDate || '-'} at ${item.departureTime || item.leaveTime || '-'} | Return: ${item.expectedReturnDate || '-'} at ${item.expectedReturnTime || '-'}`;
+    if (item.exitTime && item.exitTime !== '-') {
+      dateText += ` | Exit Scanned: ${item.exitTime}`;
+    }
+    if (item.returnTime && item.returnTime !== '-') {
+      dateText += ` | Entry Scanned: ${item.returnTime}`;
+    }
   }
   const dateEl = document.getElementById('authModalDates');
   if (dateEl) dateEl.innerText = dateText;
@@ -1004,6 +1793,17 @@ async function executeApproveCurrentItem(id, isOD) {
 
   const role = String(user.role).toLowerCase().replace(/[\s-]+/g, '_');
 
+  // Guard for Counselor: Ensure Talked to Parent is checked
+  if (role === 'counselor') {
+    const cb = document.getElementById(`counselorTalkedParent_${id}`);
+    if (cb && !cb.checked) {
+      if (typeof showToast === 'function') {
+        showToast('Approval blocked: You must confirm "Talked to Parent" before approving.', 'warning');
+      }
+      return;
+    }
+  }
+
   try {
     if (isOD) {
       let endpoint = '/api/onduty/approve/counselor';
@@ -1119,5 +1919,13 @@ window.promptRejectCurrentItem = promptRejectCurrentItem;
 window.onAuthoritySearchInput = onAuthoritySearchInput;
 window.prevAuthorityPage = prevAuthorityPage;
 window.nextAuthorityPage = nextAuthorityPage;
+window.renderCounselorCardsView = renderCounselorCardsView;
+window.renderAuthorityCardsView = renderCounselorCardsView;
+window.startCounselorParentCall = startCounselorParentCall;
+window.toggleCounselorParentTalked = toggleCounselorParentTalked;
+window.executeCounselorApprove = executeCounselorApprove;
+window.executeRoleApprove = executeRoleApprove;
+window.getFilteredRequests = getFilteredRequests;
+window.downloadCounselorAttendanceExcel = typeof downloadCounselorAttendanceExcel !== 'undefined' ? downloadCounselorAttendanceExcel : (window.downloadCounselorAttendanceExcel || null);
 window.authState = authState;
 

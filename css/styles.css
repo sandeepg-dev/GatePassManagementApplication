@@ -577,6 +577,22 @@ body.theme-authority {
   background-image: none !important;
   color: #0f172a !important;
   padding: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  height: auto !important;
+  min-height: 100vh !important;
+}
+
+body.theme-authority #authorityDashboardLayout {
+  min-height: 100vh !important;
+  height: auto !important;
+  overflow-y: visible !important;
+  overflow-x: hidden !important;
+}
+
+body.theme-authority #authSidebarAside {
+  height: auto !important;
+  max-height: none !important;
 }
 
 body.theme-authority #dashScreen {

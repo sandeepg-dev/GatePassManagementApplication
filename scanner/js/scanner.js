@@ -1,7 +1,7 @@
 /**
  * GRT IET • Security Gate Clearance Terminal
  * Professional Barcode / QR Scanner & Student Movement Engine
- * Handles Hostel Exit/Return and Day Scholar Exit (No Return Required)
+ * Supports Hosteller Exit / Return (Scanned In Campus) and Day Scholar Exit
  */
 
 let isProcessing = false;
@@ -11,8 +11,71 @@ let currentDeviceId = null;
 let videoDevices = [];
 let selectedDeviceIndex = 0;
 
+// Scan debounce & hardware barcode buffer
+let lastScannedCode = '';
+let lastScanTimestamp = 0;
+let hardwareBarcodeBuffer = '';
+let lastKeypressTime = 0;
+
 const video = document.getElementById('video');
 const beep = document.getElementById('beepSound');
+
+/**
+ * Robust College ID / Barcode / QR Code Identifier Extractor
+ * Handles 12-digit Register Numbers, Roll Numbers (21CS001), JSON payloads, URLs,
+ * and Code 39 wrapper symbols (*...*).
+ */
+function extractStudentIdentifier(raw) {
+  if (!raw) return '';
+  let str = String(raw).trim();
+
+  // 1. Try parsing JSON if card QR encodes a JSON payload
+  if (str.startsWith('{') && str.endsWith('}')) {
+    try {
+      const parsed = JSON.parse(str);
+      const possibleId = parsed.rollNo || parsed.regNo || parsed.roll || parsed.registerNumber || parsed.id || parsed.studentId;
+      if (possibleId) return String(possibleId).trim().toUpperCase();
+    } catch (e) {}
+  }
+
+  // 2. Try extracting from URL parameters (e.g. https://.../verify?roll=110324104081)
+  if (str.includes('http://') || str.includes('https://') || str.includes('?')) {
+    try {
+      const url = new URL(str, window.location.origin);
+      const p = url.searchParams.get('roll') || url.searchParams.get('rollNo') || url.searchParams.get('regNo') || url.searchParams.get('id');
+      if (p) return p.trim().toUpperCase();
+    } catch (e) {}
+  }
+
+  // 3. Match labeled prefixes like "Reg No: 110324104081", "Roll: 21CS001", "ID: 110324104081"
+  const labelMatch = str.match(/(?:reg(?:ister)?(?:\s*no|\s*number)?|roll(?:\s*no|\s*number)?|student\s*id|id)\s*[:=-]?\s*([A-Za-z0-9]+)/i);
+  if (labelMatch && labelMatch[1]) {
+    return labelMatch[1].trim().toUpperCase();
+  }
+
+  // 4. Strip common barcode wrapper characters like * (Code 39), %, ?, $, /, +, whitespace
+  const stripped = str.replace(/^[*%?#]+|[*%?#]+$/g, '').trim();
+
+  // 5. Match standard 12-digit college register number (e.g. 110324104081)
+  const reg12Match = stripped.match(/\d{12}/);
+  if (reg12Match) {
+    return reg12Match[0];
+  }
+
+  // 6. Match alphanumeric college roll numbers like 21CS001, 22IT045, etc.
+  const rollCodeMatch = stripped.match(/[0-9]{2}[A-Za-z]{2,4}[0-9]{2,4}/i);
+  if (rollCodeMatch) {
+    return rollCodeMatch[0].toUpperCase();
+  }
+
+  // 7. General alphanumeric token fallback
+  const cleanTokenMatch = stripped.match(/[A-Za-z0-9_-]{4,20}/);
+  if (cleanTokenMatch) {
+    return cleanTokenMatch[0].toUpperCase();
+  }
+
+  return stripped.toUpperCase();
+}
 
 // Digital IST Clock
 function startGateClock() {
@@ -32,57 +95,6 @@ function startGateClock() {
   }
   update();
   setInterval(update, 1000);
-}
-
-// Backend Endpoint Configuration (for standalone / custom deployments)
-function getBackendApiBase() {
-  const custom = localStorage.getItem('SCANNER_BACKEND_URL');
-  if (custom && custom.trim()) {
-    return custom.trim().replace(/\/+$/, '');
-  }
-  return '';
-}
-
-function updateBackendDisplay() {
-  const display = document.getElementById('serverUrlDisplay');
-  const base = getBackendApiBase();
-  if (display) {
-    display.innerText = base ? base.replace(/^https?:\/\//, '') : 'Default';
-  }
-}
-
-function openServerConfigModal() {
-  const modal = document.getElementById('serverConfigModal');
-  const input = document.getElementById('backendUrlInput');
-  if (input) input.value = getBackendApiBase();
-  if (modal) modal.classList.remove('hidden');
-}
-
-function closeServerConfigModal() {
-  const modal = document.getElementById('serverConfigModal');
-  if (modal) modal.classList.add('hidden');
-}
-
-function saveServerConfig() {
-  const input = document.getElementById('backendUrlInput');
-  let val = (input?.value || '').trim();
-  if (val) {
-    if (!val.startsWith('http://') && !val.startsWith('https://')) {
-      val = 'https://' + val;
-    }
-    val = val.replace(/\/+$/, '');
-    localStorage.setItem('SCANNER_BACKEND_URL', val);
-  } else {
-    localStorage.removeItem('SCANNER_BACKEND_URL');
-  }
-  updateBackendDisplay();
-  closeServerConfigModal();
-}
-
-function resetServerConfig() {
-  localStorage.removeItem('SCANNER_BACKEND_URL');
-  updateBackendDisplay();
-  closeServerConfigModal();
 }
 
 // Mode Selection Handling
@@ -111,9 +123,23 @@ function setScanMode(mode) {
   }
 }
 
-// Verification Core
-async function verifyPass(rollNumber) {
-  if (isProcessing || !rollNumber) return;
+/**
+ * Verification & Movement Recording Core
+ */
+async function verifyPass(rawInput) {
+  const cleanRoll = extractStudentIdentifier(rawInput);
+  if (!cleanRoll) return;
+
+  const now = Date.now();
+  // Prevent duplicate accidental scans of the same ID within 3.5 seconds
+  if (cleanRoll === lastScannedCode && (now - lastScanTimestamp < 3500)) {
+    console.log('Debouncing duplicate accidental scan for:', cleanRoll);
+    return;
+  }
+  if (isProcessing) return;
+
+  lastScannedCode = cleanRoll;
+  lastScanTimestamp = now;
   isProcessing = true;
 
   try {
@@ -123,7 +149,6 @@ async function verifyPass(rollNumber) {
     }
   } catch (e) {}
 
-  const cleanRoll = String(rollNumber).trim().toUpperCase();
   const resultBox = document.getElementById('scanResult');
   const scanStatus = document.getElementById('scanStatus');
 
@@ -136,11 +161,11 @@ async function verifyPass(rollNumber) {
     resultBox.className = 'p-3.5 rounded-lg text-xs bg-slate-800 border border-slate-700 text-slate-300 flex items-center gap-2';
     resultBox.innerHTML = `
       <svg class="w-4 h-4 text-emerald-400 animate-spin shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
-      <span>Querying movement clearance for Roll No: <strong class="font-mono text-white">${cleanRoll}</strong> (${currentScanType.toUpperCase()})...</span>
+      <span>Querying movement clearance for Register No: <strong class="font-mono text-white">${cleanRoll}</strong> (${currentScanType.toUpperCase()})...</span>
     `;
   }
 
-  const endpoint = `${getBackendApiBase()}/api/scan-pass`;
+  const endpoint = '/api/scan-pass';
 
   try {
     const res = await fetch(endpoint, {
@@ -161,33 +186,33 @@ async function verifyPass(rollNumber) {
       const isReturn = data.action === 'return';
 
       if (isReturn) {
-        // HOSTELLER RETURN
-        resultBox.className = 'p-4 rounded-xl text-xs bg-slate-950 border border-blue-500/80 text-white shadow-xl space-y-2.5 text-left';
+        // HOSTELLER RETURN (Status: Scanned In Campus)
+        resultBox.className = 'p-4 rounded-xl text-xs bg-slate-950 border border-teal-500/80 text-white shadow-xl space-y-2.5 text-left';
         resultBox.innerHTML = `
           <div class="flex items-center justify-between border-b border-slate-800 pb-2">
             <div class="flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-blue-400"></span>
-              <span class="font-bold text-blue-300 uppercase tracking-wide">Campus Return Recorded</span>
+              <span class="w-2 h-2 rounded-full bg-teal-400"></span>
+              <span class="font-bold text-teal-300 uppercase tracking-wide">Campus Entry Recorded</span>
             </div>
-            <span class="text-[10px] font-mono font-bold bg-blue-950 text-blue-300 px-2 py-0.5 rounded border border-blue-700">HOSTELLER RETURN</span>
+            <span class="text-[10px] font-mono font-bold bg-teal-950 text-teal-300 px-2 py-0.5 rounded border border-teal-700">SCANNED IN CAMPUS</span>
           </div>
 
           <div class="grid grid-cols-2 gap-2 text-slate-300">
             <div><span class="text-slate-400">Student:</span> <strong class="text-white">${pass.name || 'Student'}</strong></div>
-            <div><span class="text-slate-400">Roll No:</span> <strong class="font-mono text-white">${pass.rollNo}</strong></div>
+            <div><span class="text-slate-400">Register No:</span> <strong class="font-mono text-white">${pass.rollNo}</strong></div>
             <div><span class="text-slate-400">Dept/Year:</span> <span class="text-slate-200">${pass.dept || 'ENGG'} - ${pass.yearSec || '-'}</span></div>
-            <div><span class="text-slate-400">Category:</span> <span class="text-blue-300 font-semibold">Hostel Resident</span></div>
+            <div><span class="text-slate-400">Category:</span> <span class="text-teal-300 font-semibold">Hostel Resident</span></div>
           </div>
 
-          <div class="p-2.5 bg-slate-900 rounded-lg border border-blue-500/30">
-            <div class="text-[10px] uppercase font-bold text-blue-300 tracking-wider">Recorded Return Date & Time (IST)</div>
+          <div class="p-2.5 bg-slate-900 rounded-lg border border-teal-500/30">
+            <div class="text-[10px] uppercase font-bold text-teal-300 tracking-wider">Recorded Entry Date & Time (IST)</div>
             <div class="text-sm font-mono font-bold text-white mt-0.5">${pass.returnTime}</div>
             <div class="text-[10px] text-slate-400 mt-1">Campus Exit Was: <span class="font-mono text-slate-300">${pass.exitTime || '-'}</span></div>
           </div>
 
-          <div class="text-[11px] text-emerald-400 flex items-center gap-1.5 pt-0.5">
+          <div class="text-[11px] text-teal-300 flex items-center gap-1.5 pt-0.5">
             <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-            <span>Hostel re-entry confirmed. Movement lifecycle completed.</span>
+            <span>Hostel campus return confirmed. Status updated to <strong>Scanned In Campus</strong> across dashboards.</span>
           </div>
         `;
       } else {
@@ -208,9 +233,9 @@ async function verifyPass(rollNumber) {
 
           <div class="grid grid-cols-2 gap-2 text-slate-300">
             <div><span class="text-slate-400">Student:</span> <strong class="text-white">${pass.name || 'Student'}</strong></div>
-            <div><span class="text-slate-400">Roll No:</span> <strong class="font-mono text-white">${pass.rollNo}</strong></div>
+            <div><span class="text-slate-400">Register No:</span> <strong class="font-mono text-white">${pass.rollNo}</strong></div>
             <div><span class="text-slate-400">Dept/Year:</span> <span class="text-slate-200">${pass.dept || 'ENGG'} - ${pass.yearSec || '-'}</span></div>
-            <div><span class="text-slate-400">Category:</span> <span class="${isHosteller ? 'text-blue-300' : 'text-emerald-300'} font-semibold">${pass.accommodation || data.accommodation}</span></div>
+            <div><span class="text-slate-400">Category:</span> <span class="${isHosteller ? 'text-amber-300' : 'text-emerald-300'} font-semibold">${pass.accommodation || data.accommodation}</span></div>
           </div>
 
           <div class="p-2.5 bg-slate-900 rounded-lg border ${isHosteller ? 'border-amber-500/30' : 'border-emerald-500/30'}">
@@ -220,7 +245,7 @@ async function verifyPass(rollNumber) {
 
           <div class="text-[11px] ${isHosteller ? 'text-amber-300' : 'text-emerald-300'} flex items-center gap-1.5">
             <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <span>${isHosteller ? 'Hosteller campus departure logged. Return scan required upon arrival.' : 'Day Scholar exit logged. No return scan required.'}</span>
+            <span>${isHosteller ? 'Status updated to <strong>Exited</strong> on authority dashboards. Return scan required upon arrival.' : 'Day Scholar exit logged (Status: <strong>Exited</strong>). Pass lifecycle completed.'}</span>
           </div>
 
           <!-- PARENT WHATSAPP NOTIFICATION ACTION -->
@@ -230,8 +255,11 @@ async function verifyPass(rollNumber) {
           </button>
         `;
       }
+
+      // Refresh live movement history
+      loadScanHistory();
     } else if (resultBox) {
-      // REJECTION OR ERROR
+      // REJECTION OR CLEARANCE DENIED
       resultBox.className = 'p-4 rounded-xl text-xs bg-slate-950 border border-rose-500/80 text-white shadow-xl space-y-2 text-left';
       resultBox.innerHTML = `
         <div class="flex items-center justify-between border-b border-slate-800 pb-2">
@@ -265,21 +293,78 @@ async function verifyPass(rollNumber) {
           </div>
           <span class="text-[10px] font-mono font-bold bg-amber-950 text-amber-300 px-2 py-0.5 rounded border border-amber-700">LOCAL QUEUE</span>
         </div>
-        <div class="text-xs text-slate-200">Roll No <strong class="font-mono text-white">${cleanRoll}</strong> queued locally (${queue.length} pending).</div>
+        <div class="text-xs text-slate-200">Register No <strong class="font-mono text-white">${cleanRoll}</strong> queued locally (${queue.length} pending).</div>
         <div class="text-[10px] text-slate-400">Will automatically sync to central database when connection restores.</div>
       `;
     }
+  } finally {
+    // Release processing lock after 2.5 seconds
+    setTimeout(() => {
+      isProcessing = false;
+      const input = document.getElementById('manualRoll');
+      if (input) {
+        input.value = '';
+        input.focus();
+      }
+    }, 2500);
   }
+}
 
-  // Release lock after 3 seconds for next scan
-  setTimeout(() => {
-    isProcessing = false;
-    const input = document.getElementById('manualRoll');
-    if (input) {
-      input.value = '';
-      input.focus();
+/**
+ * Live Movement History Loader (Requirement 5)
+ * Fetches recent scan history with:
+ * Student Name, Register Number, Student Type, Exit Date & Time, Entry/Return Date & Time, Current Status
+ */
+async function loadScanHistory() {
+  const tableBody = document.getElementById('scanHistoryTableBody');
+  if (!tableBody) return;
+
+  try {
+    const res = await fetch('/api/scan-history?limit=25');
+    if (!res.ok) return;
+
+    const data = await res.json();
+    if (!data.success || !Array.isArray(data.history) || data.history.length === 0) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="6" class="py-4 text-center text-slate-500">No recent campus movement records found.</td>
+        </tr>
+      `;
+      return;
     }
-  }, 3200);
+
+    tableBody.innerHTML = data.history.map(item => {
+      const isHostel = item.accommodation === 'Hosteller';
+      const isExited = item.status === 'Exited';
+      const isReturned = item.status === 'Scanned In Campus' || item.status === 'Returned';
+
+      const statusBadge = isExited
+        ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-950 text-amber-300 border border-amber-800">Exited</span>'
+        : isReturned
+        ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-950 text-teal-300 border border-teal-800">Scanned In</span>'
+        : `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300">${item.status}</span>`;
+
+      return `
+        <tr class="hover:bg-slate-900/60 transition">
+          <td class="py-2.5 px-2.5">
+            <div class="font-bold text-white text-xs truncate max-w-[130px]" title="${item.name}">${item.name}</div>
+            <div class="text-[9px] text-slate-500">${item.dept} - ${item.yearSec}</div>
+          </td>
+          <td class="py-2.5 px-2.5 font-bold text-slate-200">${item.rollNo}</td>
+          <td class="py-2.5 px-2.5">
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-semibold ${isHostel ? 'bg-amber-950 text-amber-300' : 'bg-blue-950 text-blue-300'}">
+              ${isHostel ? 'Hosteller' : 'Day Scholar'}
+            </span>
+          </td>
+          <td class="py-2.5 px-2.5 text-slate-300">${item.exitTime || '-'}</td>
+          <td class="py-2.5 px-2.5 ${isHostel ? 'text-teal-300 font-semibold' : 'text-slate-500'}">${item.returnTime || '-'}</td>
+          <td class="py-2.5 px-2.5 text-right">${statusBadge}</td>
+        </tr>
+      `;
+    }).join('');
+  } catch (err) {
+    console.warn('Could not load scan history:', err);
+  }
 }
 
 // WhatsApp Parent Alert Helper
@@ -292,7 +377,7 @@ function sendParentWhatsApp(studentName, rollNo, dept, parentPhone, movementTime
     return;
   }
 
-  const message = `GRT IET GATE CLEARANCE NOTICE%0A%0AStudent: ${studentName}%0ARoll No: ${rollNo}%0ADepartment: ${dept}%0AMovement: Campus Departure%0ATime: ${movementTime} IST%0AStatus: Verified through Security Gate Terminal%0A%0AGRT Institute of Engineering and Technology, Tiruttani.`;
+  const message = `GRT IET GATE CLEARANCE NOTICE%0A%0AStudent: ${studentName}%0ARegister No: ${rollNo}%0ADepartment: ${dept}%0AMovement: Campus Departure%0ATime: ${movementTime} IST%0AStatus: Verified through Security Gate Terminal%0A%0AGRT Institute of Engineering and Technology, Tiruttani.`;
   window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
 }
 
@@ -336,7 +421,7 @@ async function syncOfflineScans() {
   const queue = getOfflineQueue();
   if (!queue || queue.length === 0) return;
 
-  const endpoint = `${getBackendApiBase()}/api/scan-pass`;
+  const endpoint = '/api/scan-pass';
   const remaining = [];
 
   for (const item of queue) {
@@ -355,6 +440,7 @@ async function syncOfflineScans() {
   }
 
   saveOfflineQueue(remaining);
+  loadScanHistory();
 }
 
 // Camera Scanner Setup (ZXing)
@@ -387,9 +473,10 @@ function startScannerWithDevice(deviceId) {
   codeReader.decodeFromVideoDevice(deviceId, 'video', (result, err) => {
     if (result && !isProcessing) {
       const rawText = result.getText();
-      let rollMatch = rawText.match(/\b\d{12}\b/);
-      const roll = rollMatch ? rollMatch[0] : rawText.trim();
-      verifyPass(roll);
+      const extractedRoll = extractStudentIdentifier(rawText);
+      if (extractedRoll) {
+        verifyPass(extractedRoll);
+      }
     }
   });
 }
@@ -401,12 +488,37 @@ function switchCamera() {
   startScannerWithDevice(videoDevices[selectedDeviceIndex].deviceId);
 }
 
+// Global Hardware USB / Bluetooth Barcode Scanner Listener
+window.addEventListener('keydown', (e) => {
+  const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+  const isInput = activeTag === 'input' || activeTag === 'textarea';
+
+  const currentTime = Date.now();
+  if (currentTime - lastKeypressTime > 200) {
+    hardwareBarcodeBuffer = '';
+  }
+  lastKeypressTime = currentTime;
+
+  if (e.key === 'Enter') {
+    if (hardwareBarcodeBuffer.length >= 4) {
+      e.preventDefault();
+      const extracted = extractStudentIdentifier(hardwareBarcodeBuffer);
+      hardwareBarcodeBuffer = '';
+      if (extracted) {
+        verifyPass(extracted);
+      }
+    }
+  } else if (e.key.length === 1) {
+    hardwareBarcodeBuffer += e.key;
+  }
+});
+
 // Initialization
 window.addEventListener('DOMContentLoaded', () => {
   startGateClock();
-  updateBackendDisplay();
   updateOfflineBadge();
   initCameraScanner();
+  loadScanHistory();
 
   window.addEventListener('online', () => {
     const scanStatus = document.getElementById('scanStatus');
@@ -416,3 +528,9 @@ window.addEventListener('DOMContentLoaded', () => {
     syncOfflineScans();
   });
 });
+
+// Exports for testing / global access
+window.extractStudentIdentifier = extractStudentIdentifier;
+window.verifyPass = verifyPass;
+window.loadScanHistory = loadScanHistory;
+window.setScanMode = setScanMode;

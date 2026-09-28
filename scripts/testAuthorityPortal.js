@@ -18,12 +18,6 @@ const requiredIds = [
   'authProfileName',
   'authProfileRole',
   'authBellBadge',
-  'authTopNav_dashboard',
-  'authTopNav_pass',
-  'authTopNav_leave',
-  'authTopNav_onduty',
-  'authTopNav_roster',
-  'authTopNav_reports',
   'authSidebarRoleTitle',
   'authSidebarJurisdictionBadge',
   'authSidebarRosterLabel',
@@ -72,6 +66,12 @@ requiredIds.forEach(id => {
   assert(indexHtml.includes(`id="${id}"`), `Missing required element ID: ${id}`);
 });
 console.log(`✓ All ${requiredIds.length} required Authority Portal DOM IDs verified in index.html.`);
+
+// Verify top navigation links are completely removed (all navigation strictly in sidebar)
+['authTopNav_dashboard', 'authTopNav_pass', 'authTopNav_leave', 'authTopNav_onduty', 'authTopNav_roster', 'authTopNav_reports'].forEach(topId => {
+  assert(!indexHtml.includes(`id="${topId}"`), `Top navigation element ID "${topId}" must be removed from header`);
+});
+console.log('✓ Top navigation items completely removed from header (all navigation strictly in sidebar).');
 
 // Forbidden Elements in Main Dashboard Area
 const forbiddenSnippets = [

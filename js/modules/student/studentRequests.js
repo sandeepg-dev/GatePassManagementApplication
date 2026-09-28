@@ -73,7 +73,7 @@
    */
   function isPassFullyApproved(p) {
     if (!p || p.status === 'Rejected') return false;
-    if (p.status === 'Approved' || p.status === 'Completed' || p.status === 'Exited' || p.exitStatus === 'Exited Campus' || p.exitStatus === 'Returned to College') {
+    if (p.status === 'Approved' || p.status === 'Completed' || p.status === 'Exited' || p.status === 'Scanned In Campus' || p.status === 'Returned' || p.exitStatus === 'Exited Campus' || p.exitStatus === 'Returned to College') {
       return true;
     }
 
@@ -120,10 +120,36 @@
       };
     }
 
-    if (s === 'Approved' || s === 'Approved – Gate Pass Ready' || s === 'Completed' || s === 'Exited' || s === 'Returned') {
+    if (s === 'Exited') {
+      const exitTimeStr = p.exitTime && p.exitTime !== '-' ? `Exited Campus • ${p.exitTime}` : 'Exited Campus';
       return {
-        statusText: '✓ Approved – Gate Pass Ready',
-        authorityText: '✓ All Authorities Approved',
+        statusText: 'Exited',
+        authorityText: exitTimeStr,
+        statusClass: 'px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold font-mono inline-flex items-center gap-1',
+        authorityClass: 'text-amber-800 font-semibold',
+        isApproved: true,
+        isRejected: false,
+        currentStep: 'exited'
+      };
+    }
+
+    if (s === 'Scanned In Campus' || s === 'Entered Campus' || s === 'Returned') {
+      const returnTimeStr = p.returnTime && p.returnTime !== '-' ? `Entered Campus • ${p.returnTime}` : 'Entered Campus';
+      return {
+        statusText: 'Scanned In Campus',
+        authorityText: returnTimeStr,
+        statusClass: 'px-2.5 py-1 bg-teal-50 text-teal-800 border border-teal-300 rounded-lg text-xs font-bold font-mono inline-flex items-center gap-1',
+        authorityClass: 'text-teal-800 font-semibold',
+        isApproved: true,
+        isRejected: false,
+        currentStep: 'returned'
+      };
+    }
+
+    if (s === 'Approved' || s === 'Approved – Gate Pass Ready' || s === 'Completed') {
+      return {
+        statusText: 'Approved',
+        authorityText: 'All Authorities Approved • Awaiting Gate Exit Scan',
         statusClass: 'px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-300 rounded-lg text-xs font-bold font-mono inline-flex items-center gap-1',
         authorityClass: 'text-emerald-700 font-semibold',
         isApproved: true,
@@ -267,7 +293,7 @@
    */
   function buildApprovalStepperHtml(p, isHosteller) {
     const s = String(p.status || '');
-    const isApproved = s === 'Approved' || s === 'Approved – Gate Pass Ready' || s === 'Completed' || s === 'Exited' || s === 'Returned';
+    const isApproved = s === 'Approved' || s === 'Approved – Gate Pass Ready' || s === 'Completed' || s === 'Exited' || s === 'Scanned In Campus' || s === 'Returned';
     const isRejected = s === 'Rejected' || p.rejection?.rejected;
     const rejRole = String(p.rejection?.role || p.rejection?.roleTitle || p.rejectedBy || '').toLowerCase();
 
@@ -674,7 +700,7 @@
             <div class="font-semibold text-xs text-slate-900 leading-snug truncate" title="${escapeAttr(item.title)}">
               ${escapeHtml(item.title)}
             </div>
-            ${item.dest ? `<div class="text-[11px] text-blue-700 font-medium truncate mt-0.5" title="Venue: ${escapeAttr(item.dest)}">📍 ${escapeHtml(item.dest)}</div>` : ''}
+            ${item.dest ? `<div class="text-[11px] text-blue-700 font-medium truncate mt-0.5" title="Venue: ${escapeAttr(item.dest)}"><span class="text-slate-400 font-semibold uppercase text-[9px] mr-1">Venue:</span>${escapeHtml(item.dest)}</div>` : ''}
             <div class="text-[11px] text-slate-500 font-mono mt-0.5">
               ${escapeHtml(item.schedule)}
             </div>
@@ -792,7 +818,7 @@
             <div class="font-semibold text-xs text-slate-900 truncate" title="${escapeAttr(reasonDisplay)}">
               ${escapeHtml(reasonDisplay)}
             </div>
-            ${destDisplay ? `<div class="text-[11px] text-blue-700 font-medium truncate" title="Destination: ${escapeAttr(destDisplay)}">📍 ${escapeHtml(destDisplay)}</div>` : ''}
+            ${destDisplay ? `<div class="text-[11px] text-blue-700 font-medium truncate" title="Destination: ${escapeAttr(destDisplay)}"><span class="text-slate-400 font-semibold uppercase text-[9px] mr-1">To:</span>${escapeHtml(destDisplay)}</div>` : ''}
             <div class="text-[11px] text-slate-500 font-mono mt-0.5">
               <span>Dep: ${depDisplay}</span> → <span>Ret: ${retDisplay}</span>
             </div>

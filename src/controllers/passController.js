@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const xlsx = require('xlsx');
 const Pass = require('../models/Pass');
 const OnDuty = require('../models/OnDuty');
 const Student = require('../models/Student');
@@ -527,9 +528,263 @@ async function clearAllPasses(req, res) {
   }
 }
 
+/**
+ * Helper to normalize date strings to YYYY-MM-DD
+ */
+function normalizeDateYMD(val) {
+  if (!val) return null;
+  const s = String(val).trim();
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if (m) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+  try {
+    const d = new Date(s);
+    if (!isNaN(d.getTime())) {
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+  } catch (_) {}
+  return null;
+}
+
+/**
+ * Builds the official Counselor Daily Attendance Workbook matching the institutional reference sheet
+ */
+function buildCounselorAttendanceWorkbook(students, leavePasses, config = {}) {
+  const wb = xlsx.utils.book_new();
+
+  const batch = config.batch || '2023-2027';
+  const acadYear = config.academicYear || 'Academic Year 2024-2027 ODD SEMESTER';
+  const yearSem = config.yearSem || '2 / III';
+  const period = config.period || 'AUG 2024 - DEC 2024';
+  const totalDays = parseInt(config.totalDays, 10) || 40;
+  const targetYear = parseInt(config.targetYear, 10) || 2026;
+  const targetMonth = parseInt(config.targetMonth, 10) || 9;
+
+  // Pre-calculate date string for each working day
+  const dayDates = [];
+  for (let d = 1; d <= totalDays; d++) {
+    let m = targetMonth;
+    let y = targetYear;
+    let dayInMonth = d;
+    if (dayInMonth > 30) {
+      m = targetMonth + 1;
+      dayInMonth = d - 30;
+      if (m > 12) { m = 1; y++; }
+    }
+    dayDates.push(`${y}-${String(m).padStart(2, '0')}-${String(dayInMonth).padStart(2, '0')}`);
+  }
+
+  // Row 0: College Header
+  const r0 = ['GRT INSTITUTE OF ENGINEERING AND TECHNOLOGY, Tiruttani'];
+  // Row 1: Document Title
+  const r1 = ['STUDENTS DAILY ATTENDANCE SHEET'];
+  // Row 2: Metadata (Batch, Academic Year, Year/Sem)
+  const r2 = ['BATCH: ' + batch, '', '', '', '', '', acadYear, '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'YEAR / SEM: ' + yearSem];
+
+  // Row 3-6: Column headers matching reference
+  // Col A: S. NO. | Col B: REG No. | Col C: STUDENT NAME | Col D: 'w d' | Col E..: 1, 2, ...
+  const r3 = ['S. NO.', 'REG No.', 'STUDENT NAME', 'w d'];
+  const r4 = ['', '', '', 'd'];
+  const r5 = ['', '', '', 'm'];
+  const r6 = ['', '', '', period];
+
+  for (let i = 1; i <= totalDays; i++) {
+    r3.push(i);
+    r4.push(i);
+    r5.push('');
+    r6.push('');
+  }
+
+  const aoa = [r0, r1, r2, r3, r4, r5, r6];
+
+  // Index leave requests by roll number
+  const leavesByRoll = {};
+  (leavePasses || []).forEach(p => {
+    const r = String(p.rollNo || '').trim().toUpperCase();
+    if (!leavesByRoll[r]) leavesByRoll[r] = [];
+    const from = normalizeDateYMD(p.fromDate || p.leaveDate || p.departureDate);
+    const to = normalizeDateYMD(p.toDate || p.expectedReturnDate || p.fromDate || p.leaveDate);
+    if (from || to) {
+      leavesByRoll[r].push({ from: from || to, to: to || from });
+    }
+  });
+
+  // Student Data Rows
+  students.forEach((s, idx) => {
+    const roll = String(s.rollNo || '').trim().toUpperCase();
+    const row = [idx + 1, s.rollNo, s.name, ''];
+    const studentLeaves = leavesByRoll[roll] || [];
+
+    for (let i = 0; i < totalDays; i++) {
+      const targetYMD = dayDates[i];
+      let isAbsent = false;
+
+      for (const lv of studentLeaves) {
+        if (targetYMD >= lv.from && targetYMD <= lv.to) {
+          isAbsent = true;
+          break;
+        }
+      }
+
+      // P = Present, A = Absent
+      row.push(isAbsent ? 'A' : 'P');
+    }
+    aoa.push(row);
+  });
+
+  const ws = xlsx.utils.aoa_to_sheet(aoa);
+
+  // Column widths: S.No (6), Reg No (16), Student Name (26), 'w d' (5), Day cols (3.8 each)
+  const lastColIdx = 3 + totalDays;
+  const cols = [{ wch: 6 }, { wch: 16 }, { wch: 26 }, { wch: 5 }];
+  for (let i = 0; i < totalDays; i++) {
+    cols.push({ wch: 3.8 });
+  }
+  ws['!cols'] = cols;
+
+  // Institutional cell merges
+  ws['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: lastColIdx } }, // Header
+    { s: { r: 1, c: 0 }, e: { r: 1, c: lastColIdx } }, // Title
+    { s: { r: 3, c: 0 }, e: { r: 5, c: 0 } },          // S. NO.
+    { s: { r: 3, c: 1 }, e: { r: 5, c: 1 } },          // REG No.
+    { s: { r: 3, c: 2 }, e: { r: 5, c: 2 } },          // STUDENT NAME
+    { s: { r: 6, c: 3 }, e: { r: 6, c: lastColIdx } }  // AUG 2024 - DEC 2024 period banner
+  ];
+
+  xlsx.utils.book_append_sheet(wb, ws, 'daily attendance-1');
+
+  // Sheet 2: STUDENT INFORMATION
+  const infoAoa = [
+    ['STUDENT INFORMATION - COUNSELOR MENTEE ROSTER'],
+    ['BATCH: ' + batch, 'ACADEMIC YEAR: ' + acadYear, 'YEAR / SEM: ' + yearSem],
+    ['S.NO', 'REG NO', 'STUDENT NAME', 'DEPARTMENT', 'SECTION', 'ACCOMMODATION', 'PARENT NAME', 'PARENT CONTACT']
+  ];
+  students.forEach((s, idx) => {
+    infoAoa.push([
+      idx + 1,
+      s.rollNo,
+      s.name,
+      s.dept || 'CSE',
+      s.yearSec || 'A',
+      s.accommodation || 'Day Scholar',
+      s.parentName || s.fatherName || '-',
+      s.parentContact || s.mobile || '-'
+    ]);
+  });
+  const wsInfo = xlsx.utils.aoa_to_sheet(infoAoa);
+  wsInfo['!cols'] = [{ wch: 6 }, { wch: 16 }, { wch: 26 }, { wch: 14 }, { wch: 10 }, { wch: 15 }, { wch: 22 }, { wch: 16 }];
+  xlsx.utils.book_append_sheet(wb, wsInfo, 'STUDENT INFORMATION');
+
+  return wb;
+}
+
+/**
+ * Downloads the official Counselor Attendance Sheet as an Excel (.xlsx) file
+ */
+async function getCounselorAttendanceSheet(req, res) {
+  try {
+    const {
+      counselorName,
+      startRoll,
+      endRoll,
+      batch = '2023-2027',
+      academicYear = 'Academic Year 2024-2027 ODD SEMESTER',
+      yearSem = '2 / III',
+      period = 'AUG 2024 - DEC 2024',
+      targetMonth = 9,
+      targetYear = 2026,
+      totalDays = 40
+    } = req.query;
+
+    let studentFilter = {};
+    if (startRoll && endRoll) {
+      studentFilter.rollNo = {
+        $gte: String(startRoll).trim().toUpperCase(),
+        $lte: String(endRoll).trim().toUpperCase()
+      };
+    } else if (counselorName) {
+      studentFilter.counselorName = { $regex: counselorName.trim(), $options: 'i' };
+    }
+
+    const students = await Student.find(studentFilter).sort({ rollNo: 1 });
+    const studentRolls = students.map(s => s.rollNo);
+
+    const leavePasses = await Pass.find({
+      rollNo: { $in: studentRolls },
+      $or: [
+        { requestCategory: 'leave' },
+        { isLeave: true }
+      ]
+    });
+
+    const wb = buildCounselorAttendanceWorkbook(students, leavePasses, {
+      batch,
+      academicYear,
+      yearSem,
+      period,
+      targetMonth: parseInt(targetMonth, 10) || 9,
+      targetYear: parseInt(targetYear, 10) || 2026,
+      totalDays: parseInt(totalDays, 10) || 40
+    });
+
+    const buf = xlsx.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    const safeBatch = String(batch).replace(/[^a-zA-Z0-9_-]/g, '_');
+    const filename = `COUNSELLING_DETAILS_${safeBatch}.xlsx`;
+
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    return res.send(buf);
+  } catch (err) {
+    console.error('Error generating counselor attendance sheet:', err);
+    return res.status(500).json({ success: false, message: 'Failed to generate attendance sheet: ' + err.message });
+  }
+}
+
+/**
+ * Returns raw attendance data for Counselor's mentees and leave requests
+ */
+async function getCounselorAttendanceData(req, res) {
+  try {
+    const { counselorName, startRoll, endRoll } = req.query;
+    let studentFilter = {};
+    if (startRoll && endRoll) {
+      studentFilter.rollNo = {
+        $gte: String(startRoll).trim().toUpperCase(),
+        $lte: String(endRoll).trim().toUpperCase()
+      };
+    } else if (counselorName) {
+      studentFilter.counselorName = { $regex: counselorName.trim(), $options: 'i' };
+    }
+
+    const students = await Student.find(studentFilter).sort({ rollNo: 1 });
+    const studentRolls = students.map(s => s.rollNo);
+
+    const leavePasses = await Pass.find({
+      rollNo: { $in: studentRolls },
+      $or: [
+        { requestCategory: 'leave' },
+        { isLeave: true }
+      ]
+    });
+
+    return res.json({
+      success: true,
+      students,
+      leavePasses,
+      count: students.length
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+}
+
 module.exports = {
   getPasses,
   applyPass,
-  clearAllPasses
+  clearAllPasses,
+  buildCounselorAttendanceWorkbook,
+  getCounselorAttendanceSheet,
+  getCounselorAttendanceData
 };
 

@@ -1,48 +1,68 @@
 /**
- * Gate Physical Barcode Scanner & Departure Controller
+ * Gate Physical Barcode Scanner & Movement Controller
+ * Campus PassPro • GRT Institute of Engineering and Technology
+ * Supports Hosteller Exit / Return (Scanned In Campus) and Day Scholar Exit
  */
 const Pass = require('../models/Pass');
+const Student = require('../models/Student');
 const { getISTTimeString } = require('../utils/formatters');
 
 /**
- * Scan pass barcode at security gate, verify 20-minute validity, and record campus exit
- */
-/**
- * Hosteller Gate Barcode & Roll Number Scanner Controller
- * Restricts Exit/Return scanner to HOSTELLER students only.
- * Records actual scanned exit date & time and return date & time in IST.
+ * Scan pass barcode / ID card at security gate, verify approval, and record campus movement
  */
 async function scanPass(req, res) {
   try {
     const cleanRollNo = (req.body.rollNo || '').trim().toUpperCase();
     const scanType = req.body.scanType || 'auto'; // 'auto' | 'exit' | 'return' | 'entry'
+
     if (!cleanRollNo) {
-      return res.status(400).json({ success: false, message: 'Please provide roll number' });
+      return res.status(400).json({ success: false, message: 'Please provide student ID or roll number.' });
     }
 
     const now = new Date();
     const nowIST = getISTTimeString(now);
 
-    // 1. Fetch student pass records
-    const studentPasses = await Pass.find({ rollNo: cleanRollNo }).sort({ createdAt: -1 });
+    // 1. Fetch student registered information and pass records
+    const [studentPasses, registeredStudent] = await Promise.all([
+      Pass.find({ rollNo: cleanRollNo }).sort({ createdAt: -1 }),
+      Student.findOne({ rollNo: cleanRollNo }).lean()
+    ]);
 
-    if (!studentPasses || studentPasses.length === 0) {
+    // Handle unregistered ID cards with a clear message
+    if ((!studentPasses || studentPasses.length === 0) && !registeredStudent) {
       return res.status(404).json({
         success: false,
-        action: 'not_found',
-        message: `No gate pass record found for Roll No: ${cleanRollNo}.`
+        action: 'unregistered',
+        message: `Invalid / Unregistered ID Card: No student record found for Register No "${cleanRollNo}". Access denied.`
+      });
+    }
+
+    // Handle registered student with zero gate passes
+    if (!studentPasses || studentPasses.length === 0) {
+      const studentName = registeredStudent?.name || 'Student';
+      const studentDept = registeredStudent?.dept || 'Engineering';
+      const studentType = registeredStudent?.accommodation || 'Day Scholar';
+      return res.status(404).json({
+        success: false,
+        action: 'no_pass',
+        student: registeredStudent,
+        message: `Student ${studentName} (${cleanRollNo}, ${studentDept} • ${studentType}) is registered, but has no active gate pass application on file.`
       });
     }
 
     // 2. Identify Student Accommodation (Hosteller vs Day Scholar)
     const latestPass = studentPasses[0];
-    const isHosteller = (/hoste?l|^h$/i.test(latestPass.accommodation || '') && !/day/i.test(latestPass.accommodation || ''));
+    const accommodationSource = latestPass.accommodation || registeredStudent?.accommodation || '';
+    const isHosteller = (/hoste?l|^h$/i.test(accommodationSource) && !/day/i.test(accommodationSource));
     const accommodation = isHosteller ? 'Hosteller' : 'Day Scholar';
+    const studentName = latestPass.name || registeredStudent?.name || 'Student';
 
-    // 3. Find active passes in various states
+    // 3. Find active passes in various movement lifecycle states
     const exitedPass = studentPasses.find(p => p.status === 'Exited');
     const approvedPass = studentPasses.find(p => p.status === 'Approved');
-    const returnedPass = studentPasses.find(p => p.status === 'Returned');
+    const returnedPass = studentPasses.find(p => p.status === 'Scanned In Campus' || p.status === 'Returned');
+    const pendingPass = studentPasses.find(p => String(p.status || '').toLowerCase().includes('pending'));
+    const rejectedPass = studentPasses.find(p => p.status === 'Rejected' || p.rejection?.rejected);
 
     // =========================================================================
     // CASE 1: DAY SCHOLARS (Exit Scan Only; Return Scan Not Required)
@@ -55,18 +75,18 @@ async function scanPass(req, res) {
           action: 'invalid_mode',
           accommodation: 'Day Scholar',
           requiresReturn: false,
-          message: `Return scan is not applicable for Day Scholars. Student ${latestPass.name || cleanRollNo} (${cleanRollNo}) scans for Campus Exit only.`
+          message: `Return scan is not applicable for Day Scholars. Student ${studentName} (${cleanRollNo}) scans for Campus Exit only.`
         });
       }
 
-      // If already exited, their day pass is complete
+      // If already exited and no new approved pass exists, prevent duplicate exit scan
       if (exitedPass && !approvedPass) {
         return res.status(400).json({
           success: false,
-          action: 'completed',
+          action: 'already_exited',
           accommodation: 'Day Scholar',
           requiresReturn: false,
-          message: `Day Scholar ${exitedPass.name} (${cleanRollNo}) already exited campus on ${exitedPass.exitTime || 'recorded exit time'}. Day Scholar pass lifecycle complete.`
+          message: `Day Scholar ${studentName} (${cleanRollNo}) already exited campus on ${exitedPass.exitTime || 'recorded exit time'}. Day Scholar pass lifecycle complete.`
         });
       }
 
@@ -82,9 +102,10 @@ async function scanPass(req, res) {
         return res.json({
           success: true,
           action: 'exit',
+          status: 'Exited',
           accommodation: 'Day Scholar',
           requiresReturn: false,
-          message: `Campus Exit recorded for Day Scholar ${approvedPass.name} (${cleanRollNo}) at ${nowIST}. No return scan required.`,
+          message: `Campus Exit recorded for Day Scholar ${studentName} (${cleanRollNo}) at ${nowIST}. No return scan required.`,
           pass: approvedPass
         });
       }
@@ -92,23 +113,25 @@ async function scanPass(req, res) {
 
     // =========================================================================
     // CASE 2: HOSTELLERS (Must scan Exit when leaving and Return when coming back)
+    // Status Flow: Approved Gate Pass → Scan ID → Exited → Scan ID Again → Scanned In Campus
     // =========================================================================
     if (isHosteller) {
-      // Subcase 2A: Return Scan (explicit return or auto when student is Exited)
+      // Subcase 2A: Return / Entry Scan (explicit return or auto when student is Exited)
       if (scanType === 'return' || scanType === 'entry' || (scanType === 'auto' && exitedPass)) {
         if (exitedPass) {
-          exitedPass.status = 'Returned';
+          exitedPass.status = 'Scanned In Campus';
           exitedPass.exitStatus = 'Exited Campus';
-          exitedPass.returnStatus = 'Returned to Campus';
+          exitedPass.returnStatus = 'Scanned In Campus';
           exitedPass.returnTime = nowIST;
           await exitedPass.save();
 
           return res.json({
             success: true,
             action: 'return',
+            status: 'Scanned In Campus',
             accommodation: 'Hosteller',
-            requiresReturn: true,
-            message: `Campus Return recorded for Hosteller ${exitedPass.name} (${cleanRollNo}) at ${nowIST}. Safely returned to campus.`,
+            requiresReturn: false,
+            message: `Campus Return recorded for Hosteller ${studentName} (${cleanRollNo}) at ${nowIST}. Safely entered campus.`,
             pass: exitedPass
           });
         }
@@ -118,14 +141,14 @@ async function scanPass(req, res) {
             return res.status(400).json({
               success: false,
               accommodation: 'Hosteller',
-              message: `Cannot record return: Hosteller ${approvedPass.name} (${cleanRollNo}) has not scanned for Campus Exit yet. Please scan for Exit first.`
+              message: `Cannot record campus return: Hosteller ${studentName} (${cleanRollNo}) has not scanned for Campus Exit yet. Please scan for Exit first.`
             });
           }
           if (returnedPass) {
             return res.status(400).json({
               success: false,
               accommodation: 'Hosteller',
-              message: `Hosteller ${returnedPass.name} (${cleanRollNo}) has already returned to campus on ${returnedPass.returnTime || 'N/A'}.`
+              message: `Hosteller ${studentName} (${cleanRollNo}) has already completed campus entry at ${returnedPass.returnTime || 'N/A'}.`
             });
           }
           return res.status(400).json({
@@ -148,9 +171,10 @@ async function scanPass(req, res) {
           return res.json({
             success: true,
             action: 'exit',
+            status: 'Exited',
             accommodation: 'Hosteller',
             requiresReturn: true,
-            message: `Campus Exit recorded for Hosteller ${approvedPass.name} (${cleanRollNo}) at ${nowIST}. Return scan required upon arrival.`,
+            message: `Campus Exit recorded for Hosteller ${studentName} (${cleanRollNo}) at ${nowIST}. Return scan required upon arrival.`,
             pass: approvedPass
           });
         }
@@ -160,14 +184,14 @@ async function scanPass(req, res) {
             return res.status(400).json({
               success: false,
               accommodation: 'Hosteller',
-              message: `Hosteller ${exitedPass.name} (${cleanRollNo}) already exited campus on ${exitedPass.exitTime || 'recorded exit time'}. Switch scanner to Return Mode when student arrives back.`
+              message: `Hosteller ${studentName} (${cleanRollNo}) already exited campus on ${exitedPass.exitTime || 'recorded exit time'}. Switch to Return Mode when student arrives back.`
             });
           }
           if (returnedPass) {
             return res.status(400).json({
               success: false,
               accommodation: 'Hosteller',
-              message: `Previous gate pass was already completed and returned on ${returnedPass.returnTime || 'N/A'}. No new approved pass found.`
+              message: `Previous gate pass for ${studentName} (${cleanRollNo}) was completed on ${returnedPass.returnTime || 'N/A'}. No new approved pass found.`
             });
           }
           return res.status(400).json({
@@ -180,22 +204,30 @@ async function scanPass(req, res) {
     }
 
     // =========================================================================
-    // CASE 3: Common Inactive / Pending / Expired Checks
+    // CASE 3: Common Inactive / Pending / Rejected Checks
     // =========================================================================
-    if (returnedPass) {
+    if (returnedPass && !approvedPass && !exitedPass) {
       return res.status(400).json({
         success: false,
         accommodation,
-        message: `Student ${returnedPass.name} (${cleanRollNo}) pass was already completed on ${returnedPass.returnTime || 'recorded time'}.`
+        message: `Student ${studentName} (${cleanRollNo}) completed campus entry on ${returnedPass.returnTime || 'recorded time'}. Gate pass lifecycle is complete.`
       });
     }
 
-    const pendingPass = studentPasses.find(p => String(p.status).startsWith('Pending'));
     if (pendingPass) {
       return res.status(400).json({
         success: false,
         accommodation,
-        message: `Gate pass for ${cleanRollNo} is still pending clearance (${pendingPass.status}). Authority approval required before gate movement scan.`
+        message: `Gate pass for ${studentName} (${cleanRollNo}) is still pending clearance (${pendingPass.status}). Authority approval required before gate exit scan.`
+      });
+    }
+
+    if (rejectedPass) {
+      const rejReason = rejectedPass.rejectionReason || rejectedPass.rejection?.reason || 'Clearance not granted';
+      return res.status(400).json({
+        success: false,
+        accommodation,
+        message: `Gate pass for ${studentName} (${cleanRollNo}) was rejected: "${rejReason}". Clearance denied.`
       });
     }
 
@@ -209,6 +241,48 @@ async function scanPass(req, res) {
   }
 }
 
+/**
+ * Get recent scanning & campus movement history
+ * Provides complete scan history with:
+ * Student Name, Register Number, Student Type, Exit Date & Time, Entry/Return Date & Time, Current Status
+ */
+async function getScanHistory(req, res) {
+  try {
+    const limit = Math.min(parseInt(req.query?.limit) || 30, 100);
+
+    const passes = await Pass.find({
+      $or: [
+        { status: { $in: ['Exited', 'Scanned In Campus', 'Returned'] } },
+        { exitTime: { $exists: true, $nin: ['', '-'] } }
+      ]
+    })
+      .sort({ updatedAt: -1, createdAt: -1 })
+      .limit(limit)
+      .lean();
+
+    const history = passes.map(p => {
+      const isHostel = (/hoste?l|^h$/i.test(p.accommodation || '') && !/day/i.test(p.accommodation || ''));
+      return {
+        _id: p._id,
+        name: p.name || 'Student',
+        rollNo: p.rollNo || '-',
+        accommodation: isHostel ? 'Hosteller' : 'Day Scholar',
+        dept: p.dept || '-',
+        yearSec: p.yearSec || '-',
+        exitTime: p.exitTime || '-',
+        returnTime: isHostel ? (p.returnTime || '-') : 'Not Applicable (Day Scholar)',
+        status: p.status === 'Returned' ? 'Scanned In Campus' : (p.status || 'Exited'),
+        updatedAt: p.updatedAt || p.createdAt
+      };
+    });
+
+    return res.json({ success: true, history });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message || 'Failed to fetch scan history' });
+  }
+}
+
 module.exports = {
-  scanPass
+  scanPass,
+  getScanHistory
 };

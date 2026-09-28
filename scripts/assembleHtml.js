@@ -37,6 +37,7 @@ function assembleIndexHtml() {
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://unpkg.com/@zxing/library@latest"></script>
 
   <!-- External Design System Stylesheet -->
@@ -85,6 +86,7 @@ function assembleIndexHtml() {
   <script src="/js/utils.js?v=3.2.0"></script>
   <script src="/js/api.js?v=3.2.0"></script>
   <script src="/js/services/pdfService.js?v=3.2.0"></script>
+  <script src="/js/services/attendanceExcelService.js?v=3.2.0"></script>
   <script src="/js/modules/student/studentNavigation.js?v=3.2.0"></script>
   <script src="/js/modules/student/studentForms.js?v=3.2.0"></script>
   <script src="/js/modules/student/studentRequests.js?v=3.2.0"></script>

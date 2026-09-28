@@ -1955,8 +1955,96 @@ async function downloadAllRecordsCSV() {
   showToast('All records CSV exported successfully!', 'success');
 }
 
+/**
+ * Downloads all On-Duty (OD) letters compiled into a single PDF
+ */
+async function downloadAllODLettersPDF() {
+  const odList = await getEffectiveODList();
+  if (!odList || odList.length === 0) {
+    return showToast('No On-Duty letters found to export.', 'warning');
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const logoBase64 = await getCollegeLogoBase64();
+  const watermarkBase64 = await getCollegeLogoWatermarkBase64();
+  const bannerBase64 = await getCollegeBannerBase64();
+
+  odList.forEach((od, idx) => {
+    if (idx > 0) doc.addPage();
+    renderOfficialODLetterPage(doc, od, logoBase64, watermarkBase64, bannerBase64);
+  });
+
+  const uRole = window.loggedUser?.role || 'od_letters';
+  doc.save(`GRTIET_OD_Letters_${uRole}_${Date.now()}.pdf`);
+  showToast(`Exported ${odList.length} On-Duty letters successfully!`, 'success');
+}
+
+/**
+ * Downloads all Gate Pass clearance letters compiled into a single PDF
+ */
+async function downloadAllGatePassLettersPDF() {
+  const allPasses = await getEffectivePassList();
+  const passes = (allPasses || []).filter(p => p.requestCategory !== 'leave' && p.type !== 'leave');
+  if (!passes || passes.length === 0) {
+    return showToast('No Gate Pass letters found to export.', 'warning');
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const logoBase64 = await getCollegeLogoBase64();
+  const watermarkBase64 = await getCollegeLogoWatermarkBase64();
+  const bannerBase64 = await getCollegeBannerBase64();
+
+  passes.forEach((pass, idx) => {
+    if (idx > 0) doc.addPage();
+    renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64, bannerBase64);
+  });
+
+  const uRole = window.loggedUser?.role || 'gatepass_letters';
+  doc.save(`GRTIET_GatePass_Letters_${uRole}_${Date.now()}.pdf`);
+  showToast(`Exported ${passes.length} Gate Pass letters successfully!`, 'success');
+}
+
+/**
+ * Downloads all Leave requisition letters compiled into a single PDF
+ */
+async function downloadAllLeaveLettersPDF() {
+  const allPasses = await getEffectivePassList();
+  const leaves = (allPasses || []).filter(p => p.requestCategory === 'leave' || p.type === 'leave' || (!p.departureDate && (p.fromDate || p.leaveDate)));
+  if (!leaves || leaves.length === 0) {
+    return showToast('No Leave letters found to export.', 'warning');
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const logoBase64 = await getCollegeLogoBase64();
+  const watermarkBase64 = await getCollegeLogoWatermarkBase64();
+  const bannerBase64 = await getCollegeBannerBase64();
+
+  leaves.forEach((leave, idx) => {
+    if (idx > 0) doc.addPage();
+    renderOfficialGatePassLetterPage(doc, leave, logoBase64, watermarkBase64, bannerBase64);
+  });
+
+  const uRole = window.loggedUser?.role || 'leave_letters';
+  doc.save(`GRTIET_Leave_Letters_${uRole}_${Date.now()}.pdf`);
+  showToast(`Exported ${leaves.length} Leave letters successfully!`, 'success');
+}
+
+/**
+ * Downloads comprehensive institutional Auditing PDF
+ */
+async function downloadAuditingPDF(includeOD = true) {
+  return downloadMasterPDF(includeOD);
+}
+
 window.downloadMasterPDF = downloadMasterPDF;
+window.downloadAuditingPDF = downloadAuditingPDF;
 window.downloadAllCompleteLettersPDF = downloadAllCompleteLettersPDF;
+window.downloadAllODLettersPDF = downloadAllODLettersPDF;
+window.downloadAllGatePassLettersPDF = downloadAllGatePassLettersPDF;
+window.downloadAllLeaveLettersPDF = downloadAllLeaveLettersPDF;
 window.downloadOfficialLetterOnlyPDF = downloadOfficialLetterOnlyPDF;
 window.downloadGatePassCardPDF = downloadGatePassCardPDF;
 window.downloadGatePassPDF = downloadGatePassCardPDF;

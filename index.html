@@ -10,6 +10,7 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://unpkg.com/@zxing/library@latest"></script>
 
   <!-- External Design System Stylesheet -->
@@ -608,33 +609,8 @@
           </div>
         </div>
 
-        <!-- Center: Top Navigation Links -->
-        <nav class="hidden lg:flex items-center gap-6 text-xs font-semibold text-slate-600">
-          <button type="button" onclick="switchAuthorityMainTab('verification')" id="authTopNav_dashboard" class="auth-top-btn py-1.5 text-blue-700 border-b-2 border-blue-700 font-bold transition flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-            <span>Dashboard</span>
-          </button>
-          <button type="button" onclick="switchAuthorityMainTab('gatepass')" id="authTopNav_pass" class="auth-top-btn py-1.5 text-slate-600 hover:text-slate-900 transition font-medium flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-            <span>Gate Pass</span>
-          </button>
-          <button type="button" onclick="switchAuthorityMainTab('leave')" id="authTopNav_leave" class="auth-top-btn py-1.5 text-slate-600 hover:text-slate-900 transition font-medium flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            <span>Leave Request</span>
-          </button>
-          <button type="button" onclick="switchAuthorityMainTab('onduty')" id="authTopNav_onduty" class="auth-top-btn py-1.5 text-slate-600 hover:text-slate-900 transition font-medium flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-            <span>OD Requests</span>
-          </button>
-          <button type="button" onclick="switchAuthorityMainTab('roster')" id="authTopNav_roster" class="auth-top-btn py-1.5 text-slate-600 hover:text-slate-900 transition font-medium flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-            <span id="authTopNavRosterLabel">Ward Students</span>
-          </button>
-          <button type="button" onclick="switchAuthorityMainTab('reports')" id="authTopNav_reports" class="auth-top-btn py-1.5 text-slate-600 hover:text-slate-900 transition font-medium flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-            <span>Reports</span>
-          </button>
-        </nav>
+        <!-- Top Navigation Container (Hidden: All Navigation strictly in Left Sidebar) -->
+        <nav id="authTopNavContainer" class="hidden" style="display: none !important;"></nav>
 
         <!-- Right: Notifications & Profile Pill -->
         <div class="flex items-center gap-3">
@@ -670,105 +646,111 @@
         </div>
       </header>
 
-      <!-- 2. Main Portal Layout: Left Sidebar + Right Main Area -->
-      <div class="max-w-7xl w-full mx-auto flex-1 flex flex-col md:flex-row px-4 sm:px-6 py-6 gap-6">
+      <!-- 2. Main Portal Layout: Left Sidebar + Right Main Area (Full Width Optimization) -->
+      <div class="w-full max-w-[1600px] mx-auto flex-1 flex flex-col md:flex-row px-4 sm:px-6 lg:px-8 py-6 gap-6">
 
-        <!-- Left Sidebar (Role Header & Navigation) -->
-        <aside class="w-full md:w-60 shrink-0 space-y-4">
+        <!-- Left Sidebar (Role Header & High-Readability Navigation) -->
+        <aside class="w-full md:w-68 lg:w-72 shrink-0 space-y-4" id="authSidebarAside">
           <!-- Role & Jurisdiction Card -->
           <div class="auth-card p-4 space-y-1">
             <div id="authSidebarRoleTitle" class="text-sm font-bold text-slate-900 tracking-tight">Class Counselor</div>
             <div id="authSidebarJurisdictionBadge" class="text-[11px] font-mono text-slate-500 font-medium break-words">Ward: 110324104081 - 110324104100</div>
           </div>
 
-          <!-- Vertical Navigation Menu -->
-          <nav class="auth-card p-2 space-y-1 text-xs">
+          <!-- Vertical Navigation Menu with Increased Readable Font Size -->
+          <nav class="auth-card p-2.5 space-y-1.5 text-sm sm:text-base font-semibold" id="authSidebarNav">
             <button
               type="button"
               onclick="switchAuthorityMainTab('verification')"
               id="authSideBtn_verification"
-              class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition text-left auth-side-active"
+              class="w-full flex items-center justify-between px-3.5 py-3 rounded-xl font-bold transition text-left auth-side-active"
             >
-              <div class="flex items-center gap-2.5">
-                <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-                <span>Verification Desk</span>
+              <div class="flex items-center gap-3">
+                <svg class="w-5 h-5 text-blue-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                <span class="text-sm sm:text-base font-bold">Verification Desk</span>
               </div>
-              <span id="authSideBadge_verification" class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-800 font-mono">0</span>
+              <span id="authSideBadge_verification" class="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-mono">0</span>
             </button>
 
+            <!-- Ward Student List Option -->
             <button
               type="button"
               onclick="switchAuthorityMainTab('roster')"
               id="authSideBtn_roster"
-              class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition text-left font-medium"
+              class="w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition text-left font-semibold"
             >
-              <div class="flex items-center gap-2.5">
-                <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                <span id="authSidebarRosterLabel">Ward Student List</span>
+              <div class="flex items-center gap-3">
+                <svg class="w-5 h-5 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                <span id="authSidebarRosterLabel" class="text-sm sm:text-base font-semibold">Ward Student List</span>
               </div>
             </button>
 
+            <!-- Gate Pass Request -->
             <button
               type="button"
               onclick="switchAuthorityMainTab('gatepass')"
               id="authSideBtn_gatepass"
-              class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition text-left font-medium"
+              class="w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition text-left font-semibold"
             >
-              <div class="flex items-center gap-2.5">
-                <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                <span>Gate Pass Requests</span>
+              <div class="flex items-center gap-3">
+                <svg class="w-5 h-5 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                <span class="text-sm sm:text-base font-semibold">Gate Pass Request</span>
               </div>
-              <span id="authSideBadge_gatepass" class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-mono">0</span>
+              <span id="authSideBadge_gatepass" class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-mono">0</span>
             </button>
 
+            <!-- Leave Request -->
             <button
               type="button"
               onclick="switchAuthorityMainTab('leave')"
               id="authSideBtn_leave"
-              class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition text-left font-medium"
+              class="w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition text-left font-semibold"
             >
-              <div class="flex items-center gap-2.5">
-                <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                <span>Leave Requests</span>
+              <div class="flex items-center gap-3">
+                <svg class="w-5 h-5 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <span class="text-sm sm:text-base font-semibold">Leave Request</span>
               </div>
-              <span id="authSideBadge_leave" class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-mono">0</span>
+              <span id="authSideBadge_leave" class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-mono">0</span>
             </button>
 
+            <!-- OD Request -->
             <button
               type="button"
               onclick="switchAuthorityMainTab('onduty')"
               id="authSideBtn_onduty"
-              class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition text-left font-medium"
+              class="w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition text-left font-semibold"
             >
-              <div class="flex items-center gap-2.5">
-                <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                <span>OD Requests</span>
+              <div class="flex items-center gap-3">
+                <svg class="w-5 h-5 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                <span class="text-sm sm:text-base font-semibold">OD Request</span>
               </div>
-              <span id="authSideBadge_onduty" class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-mono">0</span>
+              <span id="authSideBadge_onduty" class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-mono">0</span>
             </button>
 
+            <!-- Approved Records -->
             <button
               type="button"
               onclick="switchAuthorityMainTab('approved')"
               id="authSideBtn_approved"
-              class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition text-left font-medium"
+              class="w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition text-left font-semibold"
             >
-              <div class="flex items-center gap-2.5">
-                <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <span>Approved Records</span>
+              <div class="flex items-center gap-3">
+                <svg class="w-5 h-5 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span class="text-sm sm:text-base font-semibold">Approved Records</span>
               </div>
-              <span id="authSideBadge_approved" class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-mono">0</span>
+              <span id="authSideBadge_approved" class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-mono">0</span>
             </button>
 
+            <!-- Reports -->
             <button
               type="button"
               onclick="switchAuthorityMainTab('reports')"
               id="authSideBtn_reports"
-              class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition text-left font-medium"
+              class="w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition text-left font-semibold"
             >
-              <div class="flex items-center gap-2.5">
-                <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                <span>Reports</span>
+              <div class="flex items-center gap-3">
+                <svg class="w-5 h-5 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                <span class="text-sm sm:text-base font-semibold">Reports</span>
               </div>
             </button>
           </nav>
@@ -791,6 +773,15 @@
               <span id="authWelcomeBadge" class="px-3 py-1.5 rounded-xl text-xs font-mono font-semibold bg-blue-50 text-blue-700 border border-blue-200">
                 Authorized Session
               </span>
+              <button
+                type="button"
+                id="clearAllDataBtn"
+                onclick="confirmAndClearAllData()"
+                class="hidden px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-semibold transition items-center gap-1.5"
+                title="Clear all requests in your jurisdiction"
+              >
+                <span>Clear Queue</span>
+              </button>
             </div>
           </div>
 
@@ -872,8 +863,11 @@
               </div>
             </div>
 
-            <!-- Main Table Card -->
-            <div class="auth-card overflow-hidden">
+            <!-- Dedicated Request Cards Container for Counselor Portal -->
+            <div id="counselorCardsContainer" class="hidden space-y-4"></div>
+
+            <!-- Main Table Card (for non-counselor authority roles) -->
+            <div id="authTableContainer" class="auth-card overflow-hidden">
               <!-- Card Header -->
               <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
                 <div class="space-y-0.5">
@@ -1024,41 +1018,288 @@
               </div>
             </div>
 
-            <!-- PDF Export Action Card -->
-            <div class="auth-card p-6 flex flex-wrap items-center justify-between gap-4">
-              <div class="space-y-1">
-                <h3 class="text-base font-bold text-slate-900 tracking-tight">Institutional Dossier Export</h3>
-                <p class="text-xs text-slate-500">Generate and download official PDF audit reports containing all gate passes, leaves, and OD records.</p>
+            <!-- Official Counselor Students Daily Attendance Excel (.xlsx) Hub -->
+            <div id="authCounselorAttendanceReportCard" class="auth-card p-6 space-y-5 bg-gradient-to-br from-white via-white to-emerald-50/40 border border-emerald-200/90 shadow-sm rounded-2xl">
+              <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-emerald-100">
+                <div class="flex items-center gap-3">
+                  <span class="p-2.5 rounded-xl bg-emerald-100 text-emerald-800 shadow-2xs border border-emerald-200">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                  </span>
+                  <div>
+                    <h3 class="text-base sm:text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
+                      <span>Students Daily Attendance Sheet</span>
+                      <span class="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-600 text-white shadow-2xs">Excel .XLSX</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Automated date-wise attendance computed directly from approved Leave Requests (P = Present, A = Absent).</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200">
+                    Assigned Mentees Only
+                  </span>
+                </div>
               </div>
-              <div class="flex items-center gap-2">
+
+              <!-- Configuration Form Fields (Editable Batch, Academic Year, etc.) -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
+                <!-- 1. BATCH (Manually enterable/editable per requirement) -->
+                <div class="space-y-1.5">
+                  <label for="attReportBatch" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Batch <span class="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="attReportBatch"
+                    value="2023-2027"
+                    placeholder="e.g. 2023-2027"
+                    class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition shadow-2xs"
+                  />
+                  <p class="text-[11px] text-slate-400">Manually editable cohort batch</p>
+                </div>
+
+                <!-- 2. Academic Year / Sem -->
+                <div class="space-y-1.5">
+                  <label for="attReportAcadYear" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Academic Year / Semester
+                  </label>
+                  <input
+                    type="text"
+                    id="attReportAcadYear"
+                    value="Academic Year 2024-2027 ODD SEMESTER"
+                    class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition shadow-2xs"
+                  />
+                  <p class="text-[11px] text-slate-400">Institutional academic session</p>
+                </div>
+
+                <!-- 3. Year / Sem -->
+                <div class="space-y-1.5">
+                  <label for="attReportYearSem" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Year / Sem
+                  </label>
+                  <input
+                    type="text"
+                    id="attReportYearSem"
+                    value="2 / III"
+                    class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition shadow-2xs"
+                  />
+                  <p class="text-[11px] text-slate-400">Academic year &amp; semester roman</p>
+                </div>
+
+                <!-- 4. Period Banner -->
+                <div class="space-y-1.5">
+                  <label for="attReportPeriod" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Period Banner
+                  </label>
+                  <input
+                    type="text"
+                    id="attReportPeriod"
+                    value="AUG 2024 - DEC 2024"
+                    class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition shadow-2xs"
+                  />
+                  <p class="text-[11px] text-slate-400">Heading span on daily attendance table</p>
+                </div>
+              </div>
+
+              <!-- Secondary Row: Days count & Download Button -->
+              <div class="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-slate-100">
+                <div class="flex items-center gap-3">
+                  <div class="flex items-center gap-2">
+                    <label for="attReportDaysCount" class="text-xs font-bold text-slate-600">Column Count:</label>
+                    <select
+                      id="attReportDaysCount"
+                      class="px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:ring-emerald-500 outline-none shadow-2xs"
+                    >
+                      <option value="40" selected>40 Working Days (Reference Template)</option>
+                      <option value="31">31 Calendar Days</option>
+                      <option value="30">30 Calendar Days</option>
+                    </select>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <label for="attReportMonth" class="text-xs font-bold text-slate-600">Month:</label>
+                    <select
+                      id="attReportMonth"
+                      class="px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:ring-emerald-500 outline-none shadow-2xs"
+                    >
+                      <option value="9" selected>September 2026</option>
+                      <option value="10">October 2026</option>
+                      <option value="8">August 2026</option>
+                      <option value="11">November 2026</option>
+                      <option value="12">December 2026</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Generate & Download Button -->
                 <button
                   type="button"
-                  id="topBulkPdfBtn"
-                  onclick="downloadMasterPDF()"
-                  class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-xs active:scale-95"
+                  id="downloadAttendanceExcelBtn"
+                  onclick="downloadCounselorAttendanceExcel()"
+                  class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-2.5 shadow-sm active:scale-95 cursor-pointer"
+                  title="Generate and download counselor students daily attendance sheet as Excel (.xlsx)"
                 >
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                  <span>Download Master Dossier (PDF)</span>
+                  <svg class="w-4 h-4 text-emerald-100" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                  <span>Download Attendance Excel (.xlsx)</span>
                 </button>
-                <button
-                  type="button"
-                  id="topBulkLettersBtn"
-                  onclick="downloadAllCompleteLettersPDF()"
-                  class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-semibold transition flex items-center gap-2 active:scale-95"
-                >
-                  <svg class="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
-                  <span>Export Letters</span>
-                </button>
-                <button
-                  type="button"
-                  id="clearAllDataBtn"
-                  onclick="confirmAndClearAllData()"
-                  class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 active:scale-95"
-                  title="Clear all requests in your jurisdiction"
-                >
-                  <svg class="w-3.5 h-3.5 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                  <span>Clear Queue</span>
-                </button>
+              </div>
+            </div>
+
+            <!-- Comprehensive Reports & Document Download Hub -->
+            <div class="auth-card p-6 space-y-5">
+              <div class="space-y-1">
+                <h3 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight">Official Reports &amp; Document Downloads</h3>
+                <p class="text-xs text-slate-500">Download official institutional auditing reports and compiled student clearance letters for your jurisdiction.</p>
+              </div>
+
+              <!-- Dedicated Download Grid -->
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- 1. Auditing PDF (Master Audit Dossier) -->
+                <div class="p-4 rounded-xl border border-slate-200 bg-white hover:border-blue-300 transition shadow-2xs space-y-3 flex flex-col justify-between">
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                      <span class="p-2 rounded-lg bg-blue-50 text-blue-700">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                      </span>
+                      <h4 class="text-sm font-bold text-slate-900">Auditing PDF</h4>
+                    </div>
+                    <p class="text-xs text-slate-500">Complete institutional audit report of student movement clearances, timestamps, and endorsements.</p>
+                  </div>
+                  <button
+                    type="button"
+                    id="topBulkPdfBtn"
+                    onclick="downloadAuditingPDF ? downloadAuditingPDF() : downloadMasterPDF()"
+                    class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-2xs active:scale-95 cursor-pointer"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    <span>Download Auditing PDF</span>
+                  </button>
+                </div>
+
+                <!-- 2. All OD Letters -->
+                <div class="p-4 rounded-xl border border-slate-200 bg-white hover:border-indigo-300 transition shadow-2xs space-y-3 flex flex-col justify-between">
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                      <span class="p-2 rounded-lg bg-indigo-50 text-indigo-700">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                      </span>
+                      <h4 class="text-sm font-bold text-slate-900">All OD Letters</h4>
+                    </div>
+                    <p class="text-xs text-slate-500">Compiled official letters for institutional On-Duty student requisitions with college letterhead.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onclick="downloadAllODLettersPDF()"
+                    class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-2xs active:scale-95 cursor-pointer"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    <span>Download All OD Letters</span>
+                  </button>
+                </div>
+
+                <!-- 3. All Gate Pass Letters / Records -->
+                <div class="p-4 rounded-xl border border-slate-200 bg-white hover:border-emerald-300 transition shadow-2xs space-y-3 flex flex-col justify-between">
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                      <span class="p-2 rounded-lg bg-emerald-50 text-emerald-700">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                      </span>
+                      <h4 class="text-sm font-bold text-slate-900">All Gate Pass Letters</h4>
+                    </div>
+                    <p class="text-xs text-slate-500">Compiled official letters and records for all student campus gate pass clearances.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onclick="downloadAllGatePassLettersPDF()"
+                    class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-2xs active:scale-95 cursor-pointer"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    <span>Download All Gate Passes</span>
+                  </button>
+                </div>
+
+                <!-- 4. All Leave-related Letters / Records -->
+                <div class="p-4 rounded-xl border border-slate-200 bg-white hover:border-amber-300 transition shadow-2xs space-y-3 flex flex-col justify-between">
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                      <span class="p-2 rounded-lg bg-amber-50 text-amber-700">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                      </span>
+                      <h4 class="text-sm font-bold text-slate-900">All Leave Letters</h4>
+                    </div>
+                    <p class="text-xs text-slate-500">Compiled official requisition letters and records for verified student academic and home leaves.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onclick="downloadAllLeaveLettersPDF()"
+                    class="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-2xs active:scale-95 cursor-pointer"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    <span>Download All Leave Letters</span>
+                  </button>
+                </div>
+
+                <!-- 5. All Official Letters Combined Archive -->
+                <div class="p-4 rounded-xl border border-slate-200 bg-white hover:border-slate-400 transition shadow-2xs space-y-3 flex flex-col justify-between">
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                      <span class="p-2 rounded-lg bg-slate-100 text-slate-700">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
+                      </span>
+                      <h4 class="text-sm font-bold text-slate-900">All Letters Archive</h4>
+                    </div>
+                    <p class="text-xs text-slate-500">Consolidated single PDF containing all generated official letters across all categories.</p>
+                  </div>
+                  <button
+                    type="button"
+                    id="topBulkLettersBtn"
+                    onclick="downloadAllCompleteLettersPDF()"
+                    class="w-full py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-2xs active:scale-95 cursor-pointer"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    <span>Export All Letters (PDF)</span>
+                  </button>
+                </div>
+
+                <!-- 6. CSV / Excel Audit Data -->
+                <div class="p-4 rounded-xl border border-slate-200 bg-white hover:border-slate-400 transition shadow-2xs space-y-3 flex flex-col justify-between">
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                      <span class="p-2 rounded-lg bg-slate-100 text-slate-700">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                      </span>
+                      <h4 class="text-sm font-bold text-slate-900">Spreadsheet Data</h4>
+                    </div>
+                    <p class="text-xs text-slate-500">Download complete tabular CSV audit file compatible with Microsoft Excel and Google Sheets.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onclick="downloadAllRecordsCSV()"
+                    class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-2xs active:scale-95 cursor-pointer"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    <span>Download CSV Records</span>
+                  </button>
+                </div>
+
+                <!-- 7. Students Daily Attendance Sheet (.xlsx) -->
+                <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50/20 hover:border-emerald-400 transition shadow-2xs space-y-3 flex flex-col justify-between">
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                      <span class="p-2 rounded-lg bg-emerald-100 text-emerald-800">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                      </span>
+                      <h4 class="text-sm font-bold text-slate-900">Attendance Sheet (.xlsx)</h4>
+                    </div>
+                    <p class="text-xs text-slate-500">Institutional daily attendance sheet matching official template with leave-based absent/present markers.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onclick="downloadCounselorAttendanceExcel()"
+                    class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-2xs active:scale-95 cursor-pointer"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    <span>Download Attendance (.xlsx)</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1905,6 +2146,7 @@
   <script src="/js/utils.js?v=3.2.0"></script>
   <script src="/js/api.js?v=3.2.0"></script>
   <script src="/js/services/pdfService.js?v=3.2.0"></script>
+  <script src="/js/services/attendanceExcelService.js?v=3.2.0"></script>
   <script src="/js/modules/student/studentNavigation.js?v=3.2.0"></script>
   <script src="/js/modules/student/studentForms.js?v=3.2.0"></script>
   <script src="/js/modules/student/studentRequests.js?v=3.2.0"></script>
