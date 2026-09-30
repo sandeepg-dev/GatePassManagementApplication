@@ -384,6 +384,23 @@
   async function openGatePassCardModal(pass) {
     if (!pass) return;
 
+    // Authorities (Counselor, Advisor, HOD, Principal, Warden) only view formal letter
+    const u = window.loggedUser;
+    if (u?.role && ['counselor', 'advisor', 'hod', 'principal', 'warden'].includes(String(u.role).toLowerCase())) {
+      if (typeof window.viewFormalLetter === 'function') {
+        return window.viewFormalLetter(pass);
+      }
+    }
+
+    // The actual Gate Pass should be displayed only after the final required approval is completed
+    const isApprovedChecker = window.isPassFullyApproved || (typeof isPassFullyApproved === 'function' ? isPassFullyApproved : null);
+    if (isApprovedChecker && !isApprovedChecker(pass)) {
+      if (typeof showToast === 'function') {
+        showToast('Gate Pass is generated only after all required institutional approvals are completed.', 'warning');
+      }
+      return;
+    }
+
     const modal = document.getElementById('gatePassCardModal');
     if (!modal) return;
 

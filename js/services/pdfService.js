@@ -515,8 +515,8 @@ async function downloadMasterPDF() {
  * @param {string|null} [watermarkBase64]
  */
 function renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64, bannerBase64) {
-  const logo = logoBase64 || cachedCollegeLogoBase64;
-  const watermark = watermarkBase64 || cachedCollegeLogoWatermarkBase64;
+  const logo = logoBase64 || (typeof cachedCollegeLogoBase64 !== 'undefined' ? cachedCollegeLogoBase64 : null);
+  const watermark = watermarkBase64 || (typeof cachedCollegeLogoWatermarkBase64 !== 'undefined' ? cachedCollegeLogoWatermarkBase64 : null);
 
   const deptUpper = String(pass.dept || 'ENGINEERING').toUpperCase();
 
@@ -1929,9 +1929,15 @@ async function downloadGatePassCardPDF(pass) {
   }
 
   const u = window.loggedUser;
+  // Approval authorities (Counselor, Advisor, HOD, Principal, Warden) must only receive the official Gate Pass Letter PDF
+  if (u?.role && ['counselor', 'advisor', 'hod', 'principal', 'warden'].includes(String(u.role).toLowerCase())) {
+    return await downloadOfficialLetterOnlyPDF(pass);
+  }
+
+  // The actual Gate Pass/Pass card should be generated only after the final required approval is completed
   const isApprovedChecker = window.isPassFullyApproved || (typeof isPassFullyApproved === 'function' ? isPassFullyApproved : null);
-  if (u?.role === 'student' && isApprovedChecker && !isApprovedChecker(pass)) {
-    return showToast('Gate Pass is hidden until all required institutional approvals are completed.', 'warning');
+  if (isApprovedChecker && !isApprovedChecker(pass)) {
+    return showToast('Gate Pass is generated only after all required institutional approvals are completed.', 'warning');
   }
 
   const { jsPDF } = window.jspdf;
@@ -1976,6 +1982,24 @@ async function downloadOfficialLetterOnlyPDF(pass) {
     }
   }
 
+  // Guarantee latest pass records refreshed from API when available
+  const targetId = pass._id || pass.id;
+  const targetRoll = pass.rollNo || pass.registrationNumber;
+  if (targetId || targetRoll) {
+    try {
+      const q = targetId ? `_id=${encodeURIComponent(targetId)}` : `rollNo=${encodeURIComponent(targetRoll)}`;
+      const res = await fetch(`/api/passes?${q}`);
+      if (res.ok) {
+        const json = await res.json();
+        const records = Array.isArray(json) ? json : (json.data || json.passes || []);
+        const fresh = (targetId && records.find(p => String(p._id) === String(targetId))) || records[0];
+        if (fresh) {
+          pass = { ...pass, ...fresh };
+        }
+      }
+    } catch (e) {}
+  }
+
   if (pass.requestCategory === 'leave' || pass.type === 'leave' || pass.isLeave) {
     return await downloadLeaveLetterPDF(pass);
   }
@@ -1983,11 +2007,6 @@ async function downloadOfficialLetterOnlyPDF(pass) {
     if (typeof downloadOnDutyLetterPDF === 'function') {
       return await downloadOnDutyLetterPDF(pass);
     }
-  }
-
-  // Gate Pass Request -> Gate Pass Card PDF
-  if (typeof downloadGatePassCardPDF === 'function') {
-    return await downloadGatePassCardPDF(pass);
   }
 
   const { jsPDF } = window.jspdf;
@@ -1999,7 +2018,7 @@ async function downloadOfficialLetterOnlyPDF(pass) {
   renderOfficialGatePassLetterPage(doc, pass, logoBase64, watermarkBase64, bannerBase64);
 
   doc.save(`GRTIET_Gate_Pass_Letter_${pass.rollNo || 'Letter'}.pdf`);
-  showToast(`Official Gate Pass PDF downloaded for Roll No: ${pass.rollNo || ''}`, 'success');
+  showToast(`Official Gate Pass Letter PDF downloaded for Roll No: ${pass.rollNo || ''}`, 'success');
 }
 
 /**
@@ -2007,6 +2026,10 @@ async function downloadOfficialLetterOnlyPDF(pass) {
  * @param {object} pass
  */
 async function downloadSinglePassPDF(pass) {
+  const u = window.loggedUser;
+  if (u?.role && ['counselor', 'advisor', 'hod', 'principal', 'warden'].includes(String(u.role).toLowerCase())) {
+    return await downloadOfficialLetterOnlyPDF(pass);
+  }
   return await downloadGatePassCardPDF(pass);
 }
 

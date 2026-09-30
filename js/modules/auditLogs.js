@@ -411,12 +411,6 @@ function renderAuthorityApprovedSection(passes) {
         </td>
         <td class="text-right">
           <div class="flex items-center justify-end gap-1.5">
-            ${!isOD ? `
-              <button onclick="downloadGatePassCardPDF(${escapeAttr(p)})" class="px-2.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl shadow-xs transition inline-flex items-center gap-1 active:scale-95 text-xs" title="Download Official Gate Pass Card">
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
-                <span>Gate Pass</span>
-              </button>
-            ` : ''}
             <button onclick="${isOD ? `downloadOnDutyLetterPDF(${escapeAttr(p)})` : `downloadOfficialLetterOnlyPDF(${escapeAttr(p)})`}" class="px-2.5 py-1.5 bg-indigo-700 hover:bg-indigo-800 text-white font-bold rounded-xl shadow-xs transition inline-flex items-center gap-1 active:scale-95 text-xs" title="Download Official Letter">
               <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
               <span>${isOD ? 'OD Letter' : 'Letter'}</span>
@@ -649,12 +643,6 @@ function renderAuthorityAllRecordsSection(passes) {
         </td>
         <td class="text-right">
           <div class="flex items-center justify-end gap-1.5">
-            ${!isOD ? `
-              <button onclick="downloadGatePassCardPDF(${escapeAttr(p)})" class="px-2.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl shadow-xs transition inline-flex items-center gap-1 active:scale-95 text-xs" title="Download Official Gate Pass Card">
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
-                <span>Gate Pass</span>
-              </button>
-            ` : ''}
             <button onclick="${isOD ? `downloadOnDutyLetterPDF(${escapeAttr(p)})` : `downloadOfficialLetterOnlyPDF(${escapeAttr(p)})`}" class="px-2.5 py-1.5 bg-indigo-700 hover:bg-indigo-800 text-white font-bold rounded-xl shadow-xs transition inline-flex items-center gap-1 active:scale-95 text-xs" title="Download Official Letter">
               <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
               <span>${isOD ? 'OD Letter' : 'Letter'}</span>
@@ -936,7 +924,6 @@ function renderExtGPAllSection(passes) {
       <td>${statusBadge(p)}</td>
       <td class="text-right">
         <div class="flex items-center justify-end gap-1.5">
-          <button onclick="downloadGatePassCardPDF(${escapeAttr(p)})" class="px-2.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl shadow-xs transition inline-flex items-center gap-1 active:scale-95 text-xs">Gate Pass</button>
           <button onclick="downloadOfficialLetterOnlyPDF(${escapeAttr(p)})" class="px-2.5 py-1.5 bg-indigo-700 hover:bg-indigo-800 text-white font-bold rounded-xl shadow-xs transition inline-flex items-center gap-1 active:scale-95 text-xs">Letter</button>
         </div>
       </td>
@@ -1104,7 +1091,9 @@ function viewFormalLetter(pass) {
   const subtitleEl = document.getElementById('letterModalSubtitle');
 
   if (subtitleEl) {
-    subtitleEl.innerText = 'Tiruttani • Formal Leave Requisition Letter';
+    subtitleEl.innerText = (pass && (pass.requestCategory === 'leave' || pass.type === 'leave' || pass.isLeave))
+      ? 'Tiruttani • Formal Leave Requisition Letter'
+      : 'Tiruttani • Formal Gate Pass Requisition Letter';
   }
 
   if (contentEl) contentEl.innerText = pass.formalLetter || buildOfficialGatePassText(pass) || '';
